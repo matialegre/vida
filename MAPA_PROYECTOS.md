@@ -57,5 +57,6 @@
 
 ## El sistema de agentes (construido 2026-07-07)
 - `C:\Users\Pandemonium\.claude\CLAUDE.md` — MODO DIRECTOR global (se carga en toda sesión)
-- `C:\Users\Pandemonium\.claude\agents\` — `director.md` (opus, orquestador) + `energia.md` + `comms.md` + `muestreador.md` + `hardware.md` + `firmware.md` + `utn.md` (cada uno con contexto real de los repos, DoD y protocolo)
-- `C:\Users\Pandemonium\Documents\MATI-HQ\` — `PORTFOLIO.md` (maestro) · `PLAN_MES.md` (7-jul→18-ago, día por día) · `CALENDARIO_UTN_2026.md` · `MAPA_PROYECTOS.md` (este archivo) · `dominios\*.md` (6 bitácoras)
+- `C:\Users\Pandemonium\.claude\agents\` — **9 agentes** (los VIVOS que carga Claude Code): `director` (opus, orquestador) · `energia` · `comms` · `muestreador` · `hardware` · `firmware` · `utn` · `comercial` (ventas/marketing, ejecuta PLATA.md) · `verificador` (calidad, generator≠evaluator, último gate)
+- `C:\Users\Pandemonium\Documents\MATI-HQ\` — `PORTFOLIO.md` (maestro) · `PLAN_MES.md` (7-jul→18-ago, día por día) · `PLATA.md` · `CALENDARIO_UTN_2026.md` · `MAPA_PROYECTOS.md` (este archivo) · `CLAUDE.md` (modo comando: designación en paralelo) · `dominios\*.md` (7 bitácoras) · `agentes\` (BACKUP de los 9 agentes — los vivos son los de `~/.claude/agents/`; re-sincronizar el backup al editarlos)
+- Repo remoto del cuartel: **github.com/matialegre/vida** (push al cerrar cada sesión)
