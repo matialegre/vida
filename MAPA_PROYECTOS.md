@@ -27,13 +27,13 @@ Archivos viejos: `Documents\_ARCHIVO_GALGAS_referencias` · `Desktop\_ARCHIVO_RA
 - ⚠️ Lecciones: headers huérfanos nunca incluidos en .ino (`power_saving.h` etc.) · `analogRead()` en ISR (no repetir) · README describe protocolo viejo (mentira histórica).
 
 ## 3. RuView / datalogger (carpeta "RASPBERRY")
-- **Raíz VÁLIDA (triple anidada):** `C:\Users\Pandemonium\Desktop\RASPBERRY\RASPBERRY\RASPBERRY` — las carpetas de afuera son copias viejas (lo advierte `QUE_HACER.md §2`). Hay un `RASPBERRY.rar` en Documents.
+- **Raíz:** `C:\Proyectos\datalogger` (migrado y desanidado 2026-07-07; copias viejas en `Desktop\_ARCHIVO_RASPBERRY_copias_viejas`; hay un `RASPBERRY.rar` en Documents).
 - **Fuente de verdad:** `QUE_HACER.md` (al 2026-06-19). Gobernanza: AGENTS.md, DECISIONS.md, PROGRESS.md, feature_list.json, verify.py.
 - Clave: `firmwares/pico2w-node/` (nodo canónico MicroPython: `nodo.py`, `config.py`, `config.P1/P2/P3.json`, drivers, `flash_node.ps1`) · `firmwares/esp32s3-com11/esp32_dashboard/esp32_dashboard.ino` (gateway Arduino C ~62KB) · `vercel-dashboard/` (cloud: vercel-dashboard-indol-one.vercel.app, `api/index.js`, Supabase tabla `ruview_readings`) · `pc-sniffer/` · `recolector/` (harvesting LTC3588: specs PCB, plan, PDFs, compras) · `docs/power-budget.md`
 - Reglas: JAMÁS mDNS (beacon UDP 50505 `RUVIEW`) · no mandar `eco on` a P1/P2 (quedan inalcanzables) · LoRa 433 SF7 frame `RV1|src|dst|pid|ttl|tipo|via|payload`.
 
 ## 4. FrioSeguro (Panamerican / SaaS Bahía) — palanca de plata
-- **Raíz:** `C:\Users\Pandemonium\Desktop\AgenteBahia-master (1)\AgenteBahia-master (1)\AgenteBahia-master\FRIOSEGUROCLOUD-master\FRIOSEGUROCLOUD-master`
+- **Raíz:** `C:\Proyectos\frioseguro` (consolidado 2026-07-07: ganó la copia Desktop con +3 meses de trabajo; copias viejas en `Documents\_ARCHIVO_FRIOSEGURO_copia_vieja` y `Desktop\_ARCHIVO_AgenteBahia`)
 - **Spec maestra:** `FRIOSEGURO_MEGAPROMPT.md` en la carpeta padre (~27KB: 5 PCBs, pinout, schema, reglas de negocio)
 - ⚠️ Existe OTRA copia en `C:\Users\Pandemonium\Documents\FRIOSEGUROCLOUD-master` — verificar cuál está más nueva antes de tocar.
 - Clave: `firmware_modular/` (v4.0.0, headers por dominio, `config_SANTA_CRUZ.h`) · `web-dashboard/` (Netlify) · `android-app/` + `frioseguro-android/` (APK v17) · `supabase/` (schema_v2, ~15 migraciones) · `ALDI DISEÑO.kicad_*` (PCB) · `ESTADO_ACTUAL.md` (verdad al 09/03/2026)
@@ -41,7 +41,7 @@ Archivos viejos: `Documents\_ARCHIVO_GALGAS_referencias` · `Desktop\_ARCHIVO_RA
 - **Inventario físico en casa:** 5 PCBs fabricadas (2 SIM800 + 3 WiFi), 20 sondas DS18B20, 10 reed, 5 ESP32, relés.
 
 ## 5. Cosechador de energía (replicación paper)
-- **Raíz:** `C:\Users\Pandemonium\Documents\COSECHADOR ENERGIA`
+- **Raíz:** `C:\Proyectos\cosechador` (migrado 2026-07-07)
 - Paper a replicar: `MEAS-D-25-07766.pdf` (Machado et al., Measurement — NO es de Matías). El otro PDF (`Implementacin_...Rotativo.pdf`) está marcado OBSOLETO (decisión D12).
 - Clave: `AGENTS.md`, `PROGRESS.md`, `DECISIONS.md`, `docs\setup-completo.md`, `docs\architecture.md`. Estado ~10%: BOM ~$154.500 sin comprar, sin firmware, sin git.
 
@@ -68,6 +68,6 @@ Archivos viejos: `Documents\_ARCHIVO_GALGAS_referencias` · `Desktop\_ARCHIVO_RA
 
 ## El sistema de agentes (construido 2026-07-07)
 - `C:\Users\Pandemonium\.claude\CLAUDE.md` — MODO DIRECTOR global (se carga en toda sesión)
-- `C:\Users\Pandemonium\.claude\agents\` — **9 agentes** (los VIVOS que carga Claude Code): `director` (opus, orquestador) · `energia` · `comms` · `muestreador` · `hardware` · `firmware` · `utn` · `comercial` (ventas/marketing, ejecuta PLATA.md) · `verificador` (calidad, generator≠evaluator, último gate)
+- `C:\Users\Pandemonium\.claude\agents\` — **18 agentes** (los VIVOS; ESTE listado es la única fuente de verdad de conteos): `director` · `energia` · `comms` · `muestreador` · `hardware` · `firmware` · `esquematico` · `pcb` (ambos con modo autónomo KiCad 10: kicad-cli + pcbnew) · `backend` · `frontend` · `diseno` · `utn` · `comercial` · `oportunidades` · `verificador` · `tester` (Playwright, estilo ERP) · `cronista` · `tendencias`. **14 bitácoras** en `dominios\` (director→PORTFOLIO · verificador→dominio auditado · cronista→diario/ · tendencias→tendencias/).
 - `C:\Users\Pandemonium\Documents\MATI-HQ\` — `PORTFOLIO.md` (maestro) · `PLAN_MES.md` (7-jul→18-ago, día por día) · `PLATA.md` · `CALENDARIO_UTN_2026.md` · `MAPA_PROYECTOS.md` (este archivo) · `CLAUDE.md` (modo comando: designación en paralelo) · `dominios\*.md` (7 bitácoras) · `agentes\` (BACKUP de los 9 agentes — los vivos son los de `~/.claude/agents/`; re-sincronizar el backup al editarlos)
 - Repo remoto del cuartel: **github.com/matialegre/vida** (push al cerrar cada sesión)

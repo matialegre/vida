@@ -51,7 +51,7 @@ Con 10 módulos de relé: control remoto de bombas/luces/portones/hornos + "aler
 - Construir un producto NUEVO antes de que FrioSeguro tenga 5 abonos activos.
 
 ## 🥇 Métrica única de esta línea de trabajo
-**Abonos mensuales activos** (FrioSeguro + Modulia). Todo lo demás es vanidad. Meta sugerida: **3 abonos FrioSeguro activos antes del 18-ago** (arranque de clases), 5 antes de octubre.
+**Abonos mensuales activos** (FrioSeguro + Modulia). Todo lo demás es vanidad. Metas (corregidas por auditoría 2026-07-07 — las anteriores eran aritméticamente imposibles con el trial de 30 días): **1 piloto comercial instalado en julio · 1 abono COBRADO antes del 18-ago · 3 en pipeline al 18-ago · 3-5 abonos activos antes de octubre.** Fechas de largada (únicas, alineadas con PLAN_MES v3): piloto casero 9-jul · precio+pitch 10-jul · primera visita 13-jul.
 
 ## Canal WhatsApp (decisión 2026-07-07)
 **1 celu + 1 chip comercial dedicado con WhatsApp Business** (gratis; perfil de empresa, catálogo, etiquetas). El personal queda personal. NADA de 5 chips ni emuladores (ban de Meta casi seguro + problema que no existe: el cuello es tener abonos, no mandar mensajes). La venta de FrioSeguro es presencial; WhatsApp = follow-up. El outreach de Modulia ya lo hace el número secundario del ERP (OpenClaw, @whatsapp-comms) — no duplicar. Escalar a WhatsApp Business API (oficial, paga) recién con 10+ abonos.

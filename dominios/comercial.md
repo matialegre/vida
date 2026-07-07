@@ -9,9 +9,10 @@ Pipeline + bitácora. El agente lo lee al arrancar y lo actualiza al cerrar. Doc
 
 Estados: identificado → contactado → demo hecha → piloto → ABONO → (churn)
 
-## Metas
-- 3 abonos FrioSeguro activos antes del 18-ago-2026
-- 5 abonos antes de octubre
+## Metas (v3, alineadas con PLAN_MES y PLATA)
+- 1 piloto comercial instalado en julio · 1 abono COBRADO antes del 18-ago · 3 en pipeline al 18-ago · 3-5 activos antes de octubre
+- Slots de venta: mediodía 12:15-12:55 (lun/mié fijo) + viernes a la mañana + sábado tarde
+- Legal (semana 2): monotributo + contrato con límite de responsabilidad + link de cobro probado
 - 1 acción comercial de Modulia por semana (vigilancia, ejecuta el equipo del ERP)
 
 ## Material producido

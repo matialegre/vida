@@ -18,7 +18,7 @@ Regla de desempate diaria: si un día no alcanza para todo, sobrevive lo que ten
 | Fecha | Qué | Proyecto |
 |---|---|---|
 | **2026-08-01** | Cierre de cuadernillos de TP de Sistemas de Control Industrial | UTN |
-| **~2026-08-10** | Arranque 2° cuatrimestre — **LAS ÚLTIMAS 5 MATERIAS de la carrera**: Sistemas de Control, Electrónica de Potencia, Economía, Inglés 2, Diseño y Manufactura de Circuitos Electrónicos | UTN |
+| **2026-08-18** | Inicio de clases 2° cuatrimestre — **LAS ÚLTIMAS 5 MATERIAS**: Sistemas de Control, Electrónica de Potencia, Economía, Inglés 2, Diseño y Manufactura de Circuitos Impresos. Finales: llamados 3-7 y 10-14 ago (fechas UTN: ver `CALENDARIO_UTN_2026.md`, única fuente) | UTN |
 | Sin fecha de cátedra (los agenda Matías) | **Finales POR PROYECTO** de materias ya cursadas: TC2, Medidas Electrónicas 2, Tecnología, Sist. de Control Industrial, Electrónica Industrial | UTN |
 | **Fin de año 2026** | **Proyecto de LABORATORIO de Sistemas de Control** (materia que cursa 2° cuatri) | UTN |
 | 2026-2° cuatri | **Elegir el PROYECTO FINAL de carrera** (aún indefinido — decisión estratégica: alinearlo con datalogger GIMAP / harvesting / FrioSeguro) | UTN |
@@ -28,7 +28,7 @@ Regla de desempate diaria: si un día no alcanza para todo, sobrevive lo que ten
 ## 🗂️ Los proyectos (estado al 2026-07-07)
 
 ### P0 — galgas-supabase (LA PRIORIDAD TÉCNICA)
-`C:\Users\Pandemonium\Documents\GALGAS CON SUPABASE\galgas-supabase`
+`C:\Proyectos\galgas` (repo: github.com/matialegre/galgas · pendientes: `QUE_FALTA.md`)
 Reescritura cloud-first del sistema de galgas para Dreyfus (REDLER RPRB3). Fusión: física/DSP del GIMAP clásico + cliente Supabase de FrioSeguro. **Validado E2E en banco**: readings con deep sleep, provisioning, comandos con ack, OTA cloud (0.1.2→0.1.3), self-trigger alerta. Fuente de verdad del repo: `act.md` (las docs raíz están desactualizadas).
 **Pendiente para octubre:** RX completo (hoy heartbeat-only; falta Realtime subscriber + LCD + buzzer + gateway HTTP del PLAN v5) · test con galga FÍSICA real (hoy `DEV_SIMULATE_ADC`) · test con LiPo real (hoy `DEV_BENCH_NO_BATTERY`) · re-flashear B · OTA que distinga A/B · bucket firmware con URL firmada · brownout USB · integrar mockup SCADA `redler/` al dashboard.
 TLS: cert **GTS Root R4** + HTTPClient simple (lección aprendida, no repetir el debug).
@@ -40,17 +40,17 @@ TLS: cert **GTS Root R4** + HTTPClient simple (lección aprendida, no repetir el
 - **TC2 / Medidas Electrónicas 2 / Tecnología**: Matías debe un proyecto por materia. **NO HAY MATERIAL EN DISCO** — primera acción: bajar consignas del aula virtual.
 
 ### P1 — FrioSeguro (LA PALANCA DE PLATA)
-`...\AgenteBahia-master\FRIOSEGUROCLOUD-master\FRIOSEGUROCLOUD-master` (+ `FRIOSEGURO_MEGAPROMPT.md` en el padre)
+`C:\Proyectos\frioseguro` (megaprompt en `docs\` · repo: github.com/matialegre/frioseguro · pendientes: `QUE_FALTA.md`)
 Monitoreo de frío/puertas. Origen: Panamerican Cerro Moro (7 reefers). Destino comercial: SaaS para comercios de Bahía. **Inventario listo para vender: 5 PCBs, 20 sondas DS18B20, 10 reed switches, 5 ESP32, relés, IP fija propia.**
 **Pendiente:** validar SIM800/OTA/NTP en hardware · flashear módulos nuevos · migración SQL columnas nuevas · credenciales de producción · circuito físico SIM800 · retención de datos. Dashboard Netlify y APK v17 ya operativos.
 
 ### P0 — RuView / datalogger — **TERMINARLO PRIMERO, antes del trabajo Dreyfus (orden de Matías 2026-07-07, "por las dudas")**
-`C:\Users\Pandemonium\Desktop\RASPBERRY\RASPBERRY\RASPBERRY` ⚠️ **la carpeta válida es la MÁS INTERNA (triple anidada)**
+`C:\Proyectos\datalogger` (repo: github.com/matialegre/datalogger · pendientes: `QUE_FALTA.md` · desanidado, la copia vieja quedó en `Desktop\_ARCHIVO_RASPBERRY_copias_viejas`)
 Red de vibración: Pico 2 W (MPU6050 50Hz→SD+FFT) → LoRa 433 mesh "RV1" → ESP32-S3 gateway → Vercel → Supabase. Visión: **datalogger fino alineado con las galgas**, perfil de energía "el mejor del planeta".
 **Pendiente:** ECO-LoRa (sleep clase A) NO implementado — no mandar `eco on` a P1/P2 · driver INA219 para consumo real · prueba de alcance + salto repetidor · calibrar RSSI-distancia · decisión MicroPython vs C/C++ en nodos para low-power/muestreo determinista.
 
 ### P2 — Cosechador de energía (investigación)
-`C:\Users\Pandemonium\Documents\COSECHADOR ENERGIA`
+`C:\Proyectos\cosechador` (repo: github.com/matialegre/cosechador · pendientes: `QUE_FALTA.md`)
 Replicación del paper MEAS-D-25-07766 (harvesting piezo → LTC3588 → supercaps → detector de incendios sin batería). ~10%: BOM completo (~$154.500), nada comprado, sin firmware. 6 fases planificadas. Se cruza con `recolector/` de RuView (mismo LTC3588+supercaps).
 
 ### P0 permanente — ERP / Modulia (5hs diarias garantizadas — NUNCA olvidarlo)
