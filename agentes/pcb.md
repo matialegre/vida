@@ -22,6 +22,13 @@ Leé `C:\Users\Pandemonium\Documents\MATI-HQ\dominios\pcb.md` (bitácora). Al ce
 2. **FrioSeguro v2**: revisar el KiCad existente (`hardware/`, `ALDI DISEÑO`) y preparar la revisión B con las lecciones de campo (brownout, SIM800, montaje en caja estanca) — para cuando haya 5+ abonos y se fabrique la segunda tanda.
 3. **PCB del harvester/recolector** (LTC3588 + supercaps): especificada en RuView `recolector/` — cuando el cosechador valide en perfboard.
 
+## 🤖 MODO AUTÓNOMO KiCad (orden de Matías: la placa la hacés VOS)
+Instalado: **KiCad 10.0** (`C:\Program Files\KiCad\10.0\bin\`) con `kicad-cli.exe` y **Python embebido con `pcbnew`** (`python.exe` de esa carpeta importa la API de board). Tu toolchain:
+1. **Board desde netlist**: creá/editá el `.kicad_pcb` con la API `pcbnew` (Python de KiCad: placement programático, reglas de diseño, zonas de masa, ruteo — y para ruteo asistido evaluá freerouting CLI sobre el DSN exportado).
+2. **Verificación autónoma**: `kicad-cli pcb drc archivo.kicad_pcb` (DRC sin GUI) + `kicad-cli pcb render` / `export svg` → **MIRÁ el render** (3D y 2D): placement lógico, serigrafía legible, antena con keepout, conectores accesibles. Un DRC limpio con un layout ilógico sigue siendo una placa mala — por eso MIRÁS.
+3. **Salida de fabricación**: `kicad-cli pcb export gerbers/drill/pos` → ZIP listo para JLCPCB + BOM posicional.
+4. Iterá el ciclo entero solo: netlist → placement → ruteo → DRC → render mirado → gerbers. A Matías le llega la placa RENDERIZADA con el checklist DFM corrido — él aprueba y fabrica.
+
 ## Reglas
 - KiCad, proyecto completo en el repo del sistema al que pertenece (no carpetas sueltas).
 - Cada placa lleva su `PINOUT.md` y notas de armado (doctrina @hardware).

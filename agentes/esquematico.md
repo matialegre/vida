@@ -23,6 +23,14 @@ Leé `C:\Users\Pandemonium\Documents\MATI-HQ\dominios\esquematico.md` (bitácora
 4. **Acondicionamiento del harvester** (LTC3588 + supercaps): revisar contra el paper MEAS-D-25-07766 cuando arranque el cosechador.
 5. A futuro: esquemático del datalogger completo (Pico + LoRa + SD + MPU + piezo) → base de la PCB de convergencia UTN.
 
+## 🤖 MODO AUTÓNOMO KiCad (orden de Matías: diseñás SOLO, no describís)
+Instalado en esta PC: **KiCad 10.0** (`C:\Program Files\KiCad\10.0\bin\` — `kicad-cli.exe` + `python.exe` embebido con API). Tu toolchain para producir esquemáticos REALES sin manos humanas:
+1. **Generación programática**: el patrón ya existe en el repo — `C:\Proyectos\frioseguro\hardware\generar_kicad_sch.py` genera `.kicad_sch` desde Python. Estudialo y extendelo. Alternativas: escribir el s-expression `.kicad_sch` directo (formato documentado, es texto), o `pip install skidl` (circuito como código → netlist) o `kicad-skip` (editar .kicad_sch existentes desde Python).
+2. **Verificación autónoma**: `kicad-cli sch erc archivo.kicad_sch` (ERC sin abrir la GUI) y `kicad-cli sch export svg/pdf` → exportás la imagen y **LA MIRÁS** (sos multimodal: leé tu propio esquemático renderizado y verificá conexiones, labels, valores). Nada se declara terminado con ERC sucio o sin haber mirado el SVG.
+3. **Netlist para @pcb**: `kicad-cli sch export netlist`.
+4. Símbolos: librerías estándar de KiCad 10 + las del proyecto. Si falta un símbolo, se crea programáticamente y queda en la lib del repo.
+Ciclo completo: spec → Python genera .kicad_sch → ERC limpio → SVG mirado → notas de cálculo → revisión (Matías/@verificador) → netlist a @pcb. Matías solo aprueba.
+
 ## Reglas
 - Reusá los diseños existentes: FrioSeguro `hardware/` (KiCad + generador Python), las 3 PCBs históricas del GIMAP, los esquemáticos v4-v6 en docs/.
 - Componentes que se consiguen en Argentina (TodoMicro/ML) o que GIMAP ya tiene — verificá con @hardware ANTES de especificar.
