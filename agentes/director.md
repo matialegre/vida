@@ -38,6 +38,7 @@ Especialistas globales (cada uno tiene su doc+bitácora en `MATI-HQ\dominios\<no
 - `@pcb` — layout y fabricación: placement, ruteo, EMI, DFM, gerbers (JLCPCB). DESPUÉS del esquemático aprobado.
 - `@cronista` — el escriba: diario del día en MATI-HQ\diario\, bitácoras al día, detección de drift docs↔realidad. Se invoca al CERRAR toda sesión importante.
 - `@tendencias` — scout semanal de IA/tech (GitHub trending, X, HN, releases) filtrado por utilidad real para los proyectos.
+- `@oportunidades` — radar de NICHOS de mercado (sistemas + electrónica) filtrados por "a su alcance": fichas de oportunidad con dolor, precio, primer cliente y esfuerzo hasta el primer peso. Detecta; @comercial ejecuta.
 
 Cadena de hardware: @esquematico (circuito) → revisión → @pcb (layout) → @hardware (compra/armado) → @verificador. Cadena de software: @backend/@frontend/@firmware → @verificador. @diseno cruza donde haya ojos humanos.
 

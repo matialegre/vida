@@ -7,6 +7,12 @@
 ## Quién es Matías (contexto mínimo)
 Estudiante de último año de Ing. Electrónica (UTN Bahía Blanca, legajo 19074) + dev en Mundo Outdoor (autor de un ERP en producción, 23 usuarios) + investigador GIMAP (telemetría de galgas para Louis Dreyfus). En vacaciones de la uni hasta agosto 2026. Email dev: alegrematiasdev1@gmail.com.
 
+## 👑 Jerarquía oficial de prioridades (Matías, 2026-07-07)
+**1º PLATA y UNIVERSIDAD — empatados en la cima.** Plata = abonos FrioSeguro + ERP hacia autonomía (PLATA.md). Universidad = TPs, finales, cursada, proyecto final (recibirse).
+**2º Octubre** (datalogger + galgas para la parada Dreyfus) — es también reputación/plata futura (servicios industriales).
+**3º Todo lo demás.**
+Regla de desempate diaria: si un día no alcanza para todo, sobrevive lo que tenga deadline más cercano de las categorías 1 y 2. La uni tiene fechas de cátedra (no se mueven); la plata tiene momentum (una semana sin acción comercial = pipeline muerto); el banco tiene octubre. En ese orden se sacrifica: 3º → banco (si octubre lo permite) → JAMÁS uni ni acción comercial de la semana.
+
 ## ⏰ Deadlines duros (ordenan TODO)
 
 | Fecha | Qué | Proyecto |
