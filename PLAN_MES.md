@@ -18,7 +18,7 @@
 |---|---|---|
 | 08:00–08:20 | ☕ Director | Estado + LA tarea del día |
 | 08:20–12:15 | 🔬 PROFUNDO | Banco/firmware (galgas → FrioSeguro) |
-| 13:00–17:30 | 🏢 Oficina | Mundo Outdoor (intocable) |
+| 13:00–17:30 | 🏢 Oficina = ERP | Mundo Outdoor: el bloque diario del ERP/Modulia (mín. 5hs/día contando remoto). Meta de fondo: que el ERP quede andando solo (soporte → agente IA) |
 | 17:30–18:15 | Corte real | Sin pantalla |
 | 18:15–19:45 | 📄 LIVIANO | Uni: TPs → después ESTUDIO DEL FINAL |
 | 19:45→ | Libre | Vida |

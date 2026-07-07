@@ -2,8 +2,19 @@
 
 > **PARA EL PRÓXIMO AGENTE (Opus 4.6 o quien venga):** este archivo es tu mapa del disco. Fue escrito por Claude Fable el 2026-07-07 tras analizar cada repo con subagentes. Leé primero `PORTFOLIO.md` (estado+plan), después esto (dónde está cada cosa). El sistema completo: `~/.claude/CLAUDE.md` (modo Director global) + `~/.claude/agents/` (7 agentes) + esta carpeta MATI-HQ (docs+bitácoras). ⚠️ La memoria persistente de Fable vive en `C:\Users\Pandemonium\.claude\projects\C--Users-Pandemonium-Documents-BACKUP-MATI-ERP\memory\` — solo se carga en sesiones abiertas en la carpeta del ERP; por eso TODO lo importante está duplicado acá.
 
-## 1. galgas-supabase — EL PROYECTO P0 (parada Dreyfus octubre)
-- **Raíz:** `C:\Users\Pandemonium\Documents\GALGAS CON SUPABASE\galgas-supabase`
+## ⚡ MIGRACIÓN 2026-07-07 — RUTAS NUEVAS (las viejas quedaron como _ARCHIVO_*, nada borrado)
+| Proyecto | Ruta NUEVA | GitHub (privados) | Pendientes |
+|---|---|---|---|
+| galgas | `C:\Proyectos\galgas` | github.com/matialegre/galgas | `QUE_FALTA.md` en el repo |
+| datalogger | `C:\Proyectos\datalogger` | github.com/matialegre/datalogger | `QUE_FALTA.md` |
+| frioseguro | `C:\Proyectos\frioseguro` | github.com/matialegre/frioseguro | `QUE_FALTA.md` |
+| cosechador | `C:\Proyectos\cosechador` | github.com/matialegre/cosechador | `QUE_FALTA.md` |
+| cuartel (este) | `C:\Users\Pandemonium\Documents\MATI-HQ` | github.com/matialegre/vida | — |
+
+Archivos viejos: `Documents\_ARCHIVO_GALGAS_referencias` · `Desktop\_ARCHIVO_RASPBERRY_copias_viejas` · `Documents\_ARCHIVO_FRIOSEGURO_copia_vieja` · `Desktop\_ARCHIVO_AgenteBahia`. Rutinas cloud activas: briefing Director diario 8:00 · scout tendencias dom 18:00 · investigación rotativa mié 18:00 (todas Opus, corren contra el repo vida).
+
+## 1. galgas — EL PROYECTO P0 (parada Dreyfus octubre)
+- **Raíz:** `C:\Proyectos\galgas` (ex `GALGAS CON SUPABASE\galgas-supabase` — migrado, ahora sin espacios como exige el repo)
 - **Fuente de verdad:** `act.md` (sesiones 1-8; las docs raíz/README están DESACTUALIZADAS)
 - Clave: `firmware/` (3 sketches ESP32 + `shared/`; principal: `ota_wm_pp` v3.6.x) · `backend/supabase/` (migraciones append-only, NO editar viejas) · `web/` (dashboard React deployado: dreyfus-gimap.netlify.app) · `redler/` (mockup SCADA a integrar) · `tools/` (logger/sniffer/simulator Python) · `data/field_captures/` (CSVs reales Dreyfus feb-2026 — **READ-ONLY, no tocar jamás**) · `docs/` (PLAN_v5, ADRs 0001-0005, debug TLS) · `scripts/` (SETUP.ps1, sync_*.ps1) · `bins_*/` (binarios OTA)
 - Supabase proyecto: `wtjjxhoyoqeicrydsppg` (sa-east-1). TLS: cert **GTS Root R4** + HTTPClient simple (NO reabrir ese debug, está resuelto).

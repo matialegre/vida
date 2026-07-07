@@ -47,9 +47,13 @@ Red de vibración: Pico 2 W (MPU6050 50Hz→SD+FFT) → LoRa 433 mesh "RV1" → 
 `C:\Users\Pandemonium\Documents\COSECHADOR ENERGIA`
 Replicación del paper MEAS-D-25-07766 (harvesting piezo → LTC3588 → supercaps → detector de incendios sin batería). ~10%: BOM completo (~$154.500), nada comprado, sin firmware. 6 fases planificadas. Se cruza con `recolector/` de RuView (mismo LTC3588+supercaps).
 
-### P2 — ERP / Modulia (tiene su propio equipo)
+### P0 permanente — ERP / Modulia (5hs diarias garantizadas — NUNCA olvidarlo)
 `C:\Users\Pandemonium\Documents\BACKUP MATI ERP\codigo` (original en `D:\ERP MUNDO OUTDOOR`)
-En producción (Mundo Outdoor, Montagne, TallerEuro, Cassano) + SaaS multi-rubro en curso. **Se gobierna con SU `.claude` (37 agents, empresario como CEO). El Director de acá no lo microgestiona — solo lo balancea contra el resto del tiempo.**
+En producción (Mundo Outdoor, Montagne, TallerEuro, Cassano) + SaaS multi-rubro en curso. Se gobierna con SU `.claude` (37 agents, @empresario como CEO) — el Director no lo microgestiona, pero lo tiene SIEMPRE en el mapa porque:
+- **Matías le dedica mínimo 5hs/día** (el bloque 13:00-17:30 ES el ERP + horas remotas) — es su frente diario más grande, no un proyecto lateral.
+- **Objetivo declarado (2026-07-07): que quede ANDANDO SOLO** — soporte cubierto por un agente de IA (o pagado), onboarding y cobros automatizados. Cada sesión de ERP debería acercar eso: menos dependencia de Matías, no más features.
+- **Es el mejor activo de venta**: "cadena de 13 locales lo usa hace 2 años" — se vende solo con referencia.
+- **Es infraestructura para todo lo demás**: servidor físico + IP fija + dominios de Mundo Outdoor pueden hostear servicios del resto del portfolio. Regla Ponytail: lo que ya anda en Supabase/Netlify/Vercel NO se migra; el server propio es capacidad libre para lo NUEVO/pesado (video, MQTT, workers, backups pesados).
 
 ### P3 — Otros
 - CV/búsqueda laboral: `C:\Users\Pandemonium\Desktop\CV` (CV v6 ES/EN + `buscar_empleos.py` corriendo).
