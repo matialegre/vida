@@ -70,3 +70,16 @@ Shunt-cal: resistor de precisión en paralelo a un brazo → deformación simula
 - Deriva térmica: registrar temp, compensar.
 - Verificar A=B con shunt-cal en planta antes de confiar en datos.
 - Alcance real emisor→receptor en el entorno metálico de la planta.
+
+---
+# 🔄 REVISIÓN CRÍTICA (2026-07-08, pedida por Matías — generator≠evaluator aplicado al propio diseño)
+
+## Corrección estratégica: DOS ETAPAS en vez de rediseño total para octubre
+El diseño original (ATmega clean-sheet) es correcto como destino pero ARRIESGADO como plan de octubre (firmware desde cero + cursada desde 18-ago). Corrección:
+- **v2.5 → OCTUBRE (bajo riesgo):** REUSAR el firmware ESP32 validado de galgas-supabase (deep sleep + OTA + cal NVS ya probados E2E) con 4 cambios quirúrgicos: (1) ADC 24-bit (HX711/ADS1232) en lugar del ADC interno, (2) shunt-cal, (3) power chain corregida (sin boost, puente gateado por el ADC, batería correcta), (4) emisores reportando por **LoRa (SPI)** en vez de WiFi — el wake WiFi (~600mAs/conexión) era el asesino; el TX LoRa (~20mAs) no. Con eso el ESP32 promedia ~0.15mA → 1 año alcanzable. El "NO ESP32" absoluto era incorrecto: es "NO ESP32-con-WiFi-en-el-emisor".
+- **v3 → PROYECTO FINAL (sin deadline encima):** el clean-sheet ATmega/STM32L del paper, alimentado con los datos de campo que la v2.5 traiga de octubre. Mejor tesis: comparación real v2 → v2.5 → v3.
+
+## Correcciones técnicas al paper
+1. **INA333 NO queda "reemplazado"**: dos caminos válidos — (A) mantener INA333 + ADS1220 (máxima performance, reusa lo conocido) o (B) ADS1232 integrado (menos partes). El paper debe mostrar ambos.
+2. **Verificar DISPONIBILIDAD EN ARGENTINA antes de fijar BOM**: HX711 = en todos lados; ADS1232 y LiSOCl2 Saft = confirmar MercadoLibre/TodoMicro/DigiKey-AR ANTES. Si el ADS1232 no se consigue: INA333+ADS1220 o HX711 seleccionado. Alternativas de batería si LiSOCl2 es cara/escasa: evaluar con números (una LiPo grande con presupuesto medido, pack alcalino D — con sus contras de autodescarga/frío documentados).
+3. El paper queda VÁLIDO como diseño v3/Proyecto Final; agregar sección de estrategia en dos etapas.
