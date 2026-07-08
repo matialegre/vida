@@ -62,6 +62,12 @@ Archivos viejos: `Documents\_ARCHIVO_GALGAS_referencias` · `Desktop\_ARCHIVO_RA
 ## 8. CV y búsqueda laboral
 - **Raíz:** `C:\Users\Pandemonium\Desktop\CV` — `CV_Matias_Alegre_v6.pdf/.html` + `_EN` · `buscar_empleos.py` (scraper corriendo, historial en `empleos_historial.json`, salida `empleos_remotos.html`) · `donde_mandar.py/html`
 
+## 8b. Carpetas reveladas (auditoría nocturna 2026-07-08)
+- **`Documents\Refineria`** 🔴 — Desafío Refinería (challenge universitario, visita real a Refinería Bahía Blanca jun-2026): captura de instrumentos de lab (Anton Paar DMA 4500 M por RS-232, OptiDist) → ESP32/Pico MicroPython → ESP-NOW → Supabase/Netlify. Firmware reutilizable en `campo/`. Pieza de portfolio IoT industrial. Entregado.
+- **`Documents\CHUBON`** 🔴 — E-commerce **"Dosis Repuestos"** EN PRODUCCIÓN (dosisrepuestos.netlify.app): Next.js 14 + Supabase + MercadoPago + Netlify, con git. **TERCER cliente real** (además de TallerEuro/Cassano y Mundo Outdoor). Pendiente: `MP_ACCESS_TOKEN` en Netlify. Contiene listas de precios reales del cliente.
+- **`Documents\TALLER EURO`** ⚠️ — Cliente ancla Cassano: propuesta técnica ERP + sitio en Vercel (mod. 2-jul-2026) **+ archivo contable REAL del taller 2018-2023** (facturas AFIP, cuentas corrientes con deudas nominadas, patentes, seguros). **DECISIÓN DE CUSTODIA pendiente de Matías — jamás publicar.**
+- **`Documents\Proyecto Android SO`** 🟢 — app "ESP32 Controller" (Kotlin/Compose) con BLE simulado, 1 día de trabajo (mar-2026), APK placeholder. Obsoleto; retomable como app companion solo si se rehace sobre firmware real.
+
 ## 9. Sin código / pendientes de analizar
 - Kiosco Ofiuco: `C:\Users\Pandemonium\Documents\KIOSCO OFIUCO PACO\kioscofiuco-master (1)` — SOLO README (el código no está; el README nació de la plantilla "SISTEMA MATI").
 - **Carpetas en Documents AÚN NO ANALIZADAS** (preguntarle a Matías cuáles importan): `GALGAS POST DREY (2)` (¡suena a post-Dreyfus, puede ser relevante!), `GIMAP`, `Datalogger Acelerometro4`, `Refineria`, `CHUBON`, `TALLER EURO`, `Proyecto ERP`, `Proyecto Android SO`, `Arduino`, `jesustodomadera`, `maddenstreet`, `mattyaldi`, `cumple70vasco`.
