@@ -40,3 +40,11 @@ Las propuestas corregidas están al final de `propuestas/PROPUESTA_SCI.md` y `PR
 ## Bitácora
 - 2026-07-08 — Decisión: finales de Conde vía LAB (montar/integrar PLCs), no empresa. Empresa = opcional.
 - 2026-07-07 — Agente creado por Claude Fable con mapa completo. Próximo paso: (1) verificar TP SCI contra cuadernillo + pasar a plantilla docx; (2) Matías consigue consignas/reglamento de los 5 finales-por-proyecto.
+
+## 🔑 CORRECCIÓN CLAVE — chat real con Conde (2026-07-08, del historial de WhatsApp)
+1. **NO HAY FECHA DE ENTREGA DURA.** Conde (6-jul): "me olvidé de ponerle fecha... una vez que completen el TP, lo suben y ahí les paso el cursado". → El "1-ago" del calendario NO es deadline de Conde. Flujo: completar → subir a plataforma → Conde revisa → cursado. Menos presión, pero hay que COMPLETARLO bien igual.
+2. ⚠️ **La evaluación es ORAL/presentación INDIVIDUAL en clase** (Conde 22-jun): refinó las preguntas CONTRA la IA; hay que "explicar el desarrollo de los problemas en clase, con medios propios". → El cuadernillo generado es PUNTO DE PARTIDA y GUÍA DE ESTUDIO; Matías DEBE entender y poder defender cada problema. No subir sin estudiar.
+3. **HART (E.a) — software exacto** (Conde 15-may): PactWare 5.0 o 4.1 + librería Pepperl&Fuchs (o Vega) + driver módem HART Viator + DTM genérico HART. Todo gratis. INSTALAR EN NOTEBOOK = escritorio (se puede YA); configurar instrumento real = lab. "El hart lo tenemos en el laboratorio".
+4. **A.1 (P&ID):** Conde compartió links Emerson (caudal + dimensionamiento de placas orificio "como les mostré en clase"). El P&ID/datos de A.1 PUEDEN estar ya en material de clase — Matías revisa apuntes/aula virtual antes de pedirlo.
+5. Clases a veces por Zoom (utn.zoom.us). Instancias evaluatorias ya habilitadas desde 22-jun.
+CONSECUENCIA: baja la urgencia de deadline; SUBE la importancia de que Matías ESTUDIE el cuadernillo para defenderlo. El mensaje a Conde ahora es para: coordinar lab (HART) + pedir P&ID si no lo tiene + confirmar formato de entrega.
