@@ -33,5 +33,10 @@ Ventajas a jugar SIEMPRE en la propuesta: cliente real (Dreyfus/GIMAP), aval de 
 - El datalogger/galgas (micros) va SOLO a: TC2 (front-end analógico), Medidas 2 (metrología), Tecnología (PCB), Proyecto Final. NO a Conde.
 Las propuestas corregidas están al final de `propuestas/PROPUESTA_SCI.md` y `PROPUESTA_ELECTRONICA_INDUSTRIAL.md` (sección "PROPUESTA CORREGIDA").
 
+## 🎯 Dirección elegida para los finales de Conde (Director, 2026-07-08)
+**Base = LABORATORIO de la UTN, NO una empresa.** Menos riesgo, sin dependencia de terceros, Conde es dueño del lab, fierro ya disponible. La empresa de Bahía queda como garnish OPCIONAL (calibrar 1 instrumento real allá si un contacto dice sí fácil), nunca como núcleo del que dependa el final.
+**Jugada maestra: proponerle a Conde MONTAR/INTEGRAR el laboratorio de PLCs** como el proyecto — cubre las DOS materias (Elec.Ind = lazo de instrumento con transmisor+calibración; SCI = control+SCADA+PLCs en red), le deja algo permanente a la cátedra (Conde lo ama → mejor vínculo → firma el Proyecto Final), cero plata, cero coordinación externa. Confirmar alcance con Conde en el mensaje de reserva de lab.
+
 ## Bitácora
+- 2026-07-08 — Decisión: finales de Conde vía LAB (montar/integrar PLCs), no empresa. Empresa = opcional.
 - 2026-07-07 — Agente creado por Claude Fable con mapa completo. Próximo paso: (1) verificar TP SCI contra cuadernillo + pasar a plantilla docx; (2) Matías consigue consignas/reglamento de los 5 finales-por-proyecto.
