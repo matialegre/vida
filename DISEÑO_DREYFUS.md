@@ -83,3 +83,12 @@ El diseño original (ATmega clean-sheet) es correcto como destino pero ARRIESGAD
 1. **INA333 NO queda "reemplazado"**: dos caminos válidos — (A) mantener INA333 + ADS1220 (máxima performance, reusa lo conocido) o (B) ADS1232 integrado (menos partes). El paper debe mostrar ambos.
 2. **Verificar DISPONIBILIDAD EN ARGENTINA antes de fijar BOM**: HX711 = en todos lados; ADS1232 y LiSOCl2 Saft = confirmar MercadoLibre/TodoMicro/DigiKey-AR ANTES. Si el ADS1232 no se consigue: INA333+ADS1220 o HX711 seleccionado. Alternativas de batería si LiSOCl2 es cara/escasa: evaluar con números (una LiPo grande con presupuesto medido, pack alcalino D — con sus contras de autodescarga/frío documentados).
 3. El paper queda VÁLIDO como diseño v3/Proyecto Final; agregar sección de estrategia en dos etapas.
+
+# 🔄 REVISIÓN 2 (2026-07-08, mismo día): CAMBIO DE CONTEXTO → GO a la v3
+Dato nuevo de Matías: está DE VACACIONES (hasta ~18-ago) y sumó un COMPAÑERO CRACK EN ANALÓGICA. Eso invierte el cálculo de riesgo de la Revisión 1:
+- **DECISIÓN: GO al clean-sheet v3 para octubre**, con división de trabajo: compañero = front-end analógico completo + power chain (su fuerte, era "la peluda"); Matías = firmware + sistema + radio + calibración + integración cloud.
+- Corrección: el firmware del ATmega NO es "bare-metal desde cero" — ATmega328P = chip de Arduino (Pro Mini): framework Arduino + LowPower lib (ya planeado en el cosechador). Territorio conocido.
+- **RED DE SEGURIDAD (no negociable): la v2.5 (ESP32 validado + ADC 24-bit) queda como plan B vivo.** Checkpoint duro ~15-SEP: si el nodo v3 pasa banco (ruido, sleep µA MEDIDO, shunt-cal A=B, autonomía proyectada) → v3 a la parada; si no → v2.5 a la parada y v3 sigue como Proyecto Final. Octubre garantizado en ambos escenarios.
+- Plan 6 semanas (de a 2): S1-2 validar bloques (ruido ADC con galga real, sleep µA, LoRa, pulso TX sobre LiSOCl2+supercap) · S3-4 integrar + shunt-cal + A=B · S5-6 endurecer + resistencia + descarga acelerada + checklist campo.
+- UTN: verificar si el Proyecto Final admite equipo de 2 (el compañero como co-autor lo fortalece).
+- PENDIENTE: nombre del compañero → RED_HUMANA.md (roster).
