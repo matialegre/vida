@@ -25,7 +25,15 @@
 
 **Sábado:** 09-13 banco (GIMAP) · tarde: slot de visita/instalación comercial si hay. **Domingo:** libre + 20:00 revisión semanal (30 min) con el reporte de tendencias.
 
-## 📅 Semana 1 — 7-12 jul · "Plata + RX + TP, todo arranca"
+## 🚨 ALERTA TP SCI (checklist 2026-07-07: `UNIVERSIDAD UTN\sistema de control industrial\CHECKLIST_ENTREGA_TP_SCI.md`)
+El TP NO estaba casi listo: **~46h restantes** (9✅/20⚠️/17❌), con ~12h de LABORATORIO (faltan TODOS los archivos de proyecto reales: .dvp WPLSoft, .lsc LOGO!, MicroWin, RSLogix, CODESYS — lo "implementado" era pseudo-ladder en HTML) y el formato exige Word/plantilla (el HTML no vale como entrega; el cuadro de datos del alumno está VACÍO).
+**Reajuste obligado (la UNI gana las mañanas — jerarquía PLATA+UNI):**
+- **URGENTÍSIMO HOY/MAÑANA: mensaje a Conde para reservar laboratorio** — con receso 20-31 jul, el MAR 14-JUL puede ser el único día de lab antes del cierre 1-ago. Preguntar también si hay acceso en receso o primeros días de agosto.
+- Los feriados 9-10 jul pasan a ser mayormente de TP SCI (WPLSoft .dvp + LOGO! .lsc + pasaje a Word con plantilla), no de banco. El piloto FrioSeguro casero (2h) se mantiene el jueves — es corto.
+- Las mañanas de la semana 2 se reparten: TP SCI primero hasta bajar el riesgo, datalogger después. La entrega ya no es el 14-jul: **nueva meta de entrega: 28-31 jul** (checkpoint duro sigue 21-jul para medir avance).
+- Riesgo de software: MicroWin/Designer 6 pueden no andar en Win11 → prever VM o PC del lab (resolver ANTES del martes de lab).
+
+## 📅 Semana 1 — 7-12 jul · "Plata + RX + TP, todo arranca" (⚠️ leer ALERTA de arriba: los feriados son mayormente del TP)
 | Día | Mañana/día | Mediodía 12:15 | Noche (mono-tarea) |
 |---|---|---|---|
 | Mar 7 | (hoy: sistema construido ✅) | — | Checklist TP SCI + **inscripción a las 5 materias** |

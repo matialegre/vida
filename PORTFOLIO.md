@@ -66,6 +66,9 @@ En producción (Mundo Outdoor, Montagne, TallerEuro, Cassano) + SaaS multi-rubro
 - Kiosco Ofiuco: solo README (sin código en disco). Congelado salvo que aparezca el repo.
 - Carpetas aún NO analizadas en Documents: `GALGAS POST DREY (2)`, `GIMAP`, `Datalogger Acelerometro4`, `Refineria`, `CHUBON`, `TALLER EURO`, `Proyecto Android SO` — pedirle a Matías cuáles importan.
 
+## ⚠️ DECISIÓN URGENTE DE MARCA (detectada 2026-07-07 por @comercial)
+**"FrioSeguro" ya existe como empresa** (*Frío Seguro Monitoreo del Frío S.R.L.*, CUIT 30-71874481-0, frioseguro.com, app en Play Store) con el MISMO modelo en CABA/Zona Norte. Valida el negocio, pero es riesgo marcario: **Matías debe elegir nombre nuevo para el producto comercial ANTES del primer folleto/contrato** (chequear INPI). El código/repos pueden seguir llamándose frioseguro internamente. Detalle en `comercial\PRECIOS_FRIOSEGURO.md`.
+
 ## 💪 Recursos (NO son cuello de botella)
 - **Sistemas (vía Mundo Outdoor):** servidor físico disponible, dominios, PCs, compras de infra — lo que haga falta.
 - **Hardware (vía GIMAP):** stock enorme ya en mano (mucho más que lo listado en FrioSeguro) + capacidad de compra de lo que falte.

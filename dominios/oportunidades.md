@@ -3,13 +3,53 @@
 Fichas de oportunidad + bitacora. Formato de ficha: ver ~/.claude/agents/oportunidades.md (copia en ../agentes/).
 
 ## Fichas de oportunidad
-(vacio - se llenan con investigacion verificada, max 2-3 por sesion)
+
+### FICHA 1 — Farmacias de Bahia Blanca: registro de cadena de frio AUTOMATICO (argumento normativo)
+*(investigada 2026-07-07, fuentes verificadas)*
+- **Nicho:** farmacias de Bahia Blanca y region. El directorio del [Colegio de Farmaceuticos filial Bahia Blanca](https://www.colfarmabb.org.ar/farmacias) lista **205 farmacias** (ciudad + zona: Ing. White, Monte Hermoso, Tornquist, Dorrego, Pedro Luro, Patagones). Solo en el casco urbano, decenas alcanzables a pie/bici.
+- **Dolor:** la [Disposicion ANMAT 3475/2005](https://www.argentina.gob.ar/normativa/nacional/disposici%C3%B3n-3475-2005-107238/texto) exige mediciones de temperatura "constantes y seguras, con registros escritos" y frecuencia suficiente para corregir anomalias "en el mas breve lapso posible"; el [Manual de almacenamiento de vacunas del Ministerio de Salud](https://www.argentina.gob.ar/sites/default/files/bancos/2022-12/manual-almacenamiento-vacunas-nivel-operativo.pdf) exige 2-8 grados C y registro de todo evento de ruptura. Hoy lo resuelven con **planilla de papel 2 veces por dia** ([planilla oficial de Colfarma PBA](https://www.colfarma.info/colfarma/wp-content/uploads/2019/04/PLANILLA-DE-CADENA-DE-FRIO.pdf)) — nadie mide de noche ni el finde, que es exactamente cuando se pierde la heladera. Valor en juego: una heladera de vacunas privadas (antigripal, VSR, neumococo) guarda facil **$2-4M ARS** (estimado — validar con precio de lista de 2-3 vacunas en una farmacia; la vacuna congelada se DESCARTA, no se nota a simple vista).
+- **Quien lo resuelve hoy:** nadie local. [Frio Seguro (frioseguro.com)](https://www.frioseguro.com/) hace exactamente este servicio con abono mensual pero **solo CABA y Zona Norte** (ademas confirma que el modelo abono funciona… y que la marca esta tomada: renombrar YA). Testo Saveris 2 = hardware importado caro + [licencia cloud ~38 EUR/anio por logger](https://portal.testo.com/en-US/products/saveris-2), sin servicio ni instalacion local. Dataloggers USB (Elitech RC-5) obligan a descargar a mano: no alertan.
+- **Solucion con lo que hay:** kit ESP32+DS18B20 en la heladera de vacunas + dashboard + alertas + **PDF mensual automatico con el formato de la planilla de Colfarma** (unico desarrollo nuevo: plantilla de reporte, ~1 dia con agentes). **~90% ya construido.** Reed switch = alerta puerta abierta (upsell Linea 4).
+- **Como se cobra:** instalacion (recupera hardware) + abono. Referencias: monitoreo de alarma promedio **$86.657/mes** ([indice CEMARA](https://www.cemara.org.ar/indice-de-precios)), Verisure desde $67.000+IVA. Un abono de **$25-40k/mes** por "nunca mas planilla + alerta antes de perder $2M en vacunas" es barato en comparacion y a 10 farmacias > 1 sueldo junior. Precio final lo fija Matias con el Director (regla PLATA.md).
+- **Primer cliente hipotetico:** Farmacia 12 de Octubre (12 de Octubre 642) o Farmacia 25 de Mayo (25 de Mayo 502) — reales, del directorio del Colegio. Jugada fina: presentarse ANTES al Colegio de Farmaceuticos filial Bahia (via colfarmabb.org.ar) y ofrecer demo — si el Colegio lo recomienda, son 205 leads con sello.
+- **Esfuerzo hasta el primer peso:** **S** (kits listos, falta plantilla PDF + visita).
+- **Veredicto: EXPLOTAR YA.** Es la Linea 1 de PLATA.md con el mejor argumento de venta (normativo, no opcional) y el nicho mas denso y cuantificado.
+
+### FICHA 2 — Veterinarias: combo ERP + monitoreo de heladera (doble abono, misma visita)
+*(investigada 2026-07-07)*
+- **Nicho:** veterinarias de Bahia Blanca. [veterinarias.com.ar lista 18](https://www.veterinarias.com.ar/bahia-blanca.html) con nombre y direccion; contando consultorios y pet shops con vacunatorio el universo real es mayor (estimado 30-45 — validar con Google Maps y el Circulo de Veterinarios regional).
+- **Dolor doble:** (1) las vacunas veterinarias (antirrabica etc.) exigen 2-8 grados C y **se inutilizan si se congelan** ([normativa antirrabica](https://www.veterinariargentina.com/revista/2019/02/normativa-para-el-uso-vacuna-antirrabica-humana/), [guia rabia Res. 1144](https://servicios.infoleg.gob.ar/infolegInternet/anexos/310000-314999/311546/RES1144.pdf)) — stock congelado = vacunas aplicadas que no inmunizan (riesgo legal) o descarte; (2) gestion en papel/Excel de turnos, historias clinicas y stock. Nadie les vende las dos cosas juntas.
+- **Solucion con lo que hay:** la demo de veterinaria del ERP **ya existe** (1 de los 14 rubros) + kit de frio listo. **~95% construido.** Es la ficha con mayor reuso de activos de todas: una visita, dos productos, dos abonos.
+- **Como se cobra:** abono ERP rubro veterinaria + abono monitoreo (mismas referencias de precio que Ficha 1). Cross-sell en ambos sentidos: cliente de frio -> lead de Modulia y viceversa (ya doctrina en PLATA.md Linea 2).
+- **Primer cliente hipotetico:** Veterinaria Agrosan (Av. Colon 670) o Clinica Veterinaria del Sol (Zeballos 110) — reales, del directorio. Elegir la que tenga vacunatorio activo y dueno joven (mas permeable a app).
+- **Esfuerzo hasta el primer peso:** **S** para el kit de frio, **M** para cerrar el combo completo.
+- **Veredicto: EXPLOTAR YA** como segunda ola: mismas semanas de visitas que Ficha 1 (farmacia y veterinaria comparten barrio), pitch casi identico + demo ERP en la tablet.
+
+### FICHA 3 — Comercios de frio de Bahia post-catastrofes: "el temporal no te avisa, esto si" (carnicerias, congelados, quintas)
+*(investigada 2026-07-07)*
+- **Nicho:** carnicerias, autoservicios, distribuidoras de congelados y casas de fin de semana de Bahia. Ciudad golpeada DOS veces en 15 meses: [temporal dic-2023](https://www.canal26.com/general/2025/03/08/el-otro-temporal-de-bahia-blanca-el-dramatico-fenomeno-de-2023-que-tambien-dejo-muertos-y-serios-destrozos/) (rafagas 180 km/h, 13 muertos, **dias sin luz**) e [inundacion mar-2025](https://es.wikipedia.org/wiki/Inundaci%C3%B3n_en_Bah%C3%ADa_Blanca_de_2025) (300 mm en 9 hs, 18+ muertos, [perdidas comerciales millonarias que "nadie se anima a estimar"](https://www.lanacion.com.ar/sociedad/que-nos-declaren-zona-de-desastre-las-millonarias-perdidas-en-bahia-blanca-que-nadie-se-anima-a-nid08032025/)). Comerciantes sin generador tiraron TODO ([testimonios](https://www.laizquierdadiario.com/Distintos-barrios-de-Bahia-realizan-cortes-siguen-sin-luz-desde-el-temporal)). El miedo al corte esta fresco y es LOCAL: ningun vendedor de CABA puede decir "yo estuve".
+- **Dolor:** un freezer/camara que se corta un finde = cientos de miles a millones en mercaderia. El comerciante se entera el lunes. En quintas/casas de finde, se entera a los 15 dias.
+- **Quien lo resuelve hoy:** las alarmas locales (X-28, Sur Seguridad, G3, Verisure) monitorean INTRUSOS, no frio — verificado: [no aparece ningun proveedor de monitoreo de temperatura en Bahia](http://www.surseguridad.com.ar/). Lo mas cercano es [Dodbit EcoTemp](https://dodbit.com/avisador-de-corte-de-energia-y-temperatura-sms-y-llamado/): avisador GSM 2G por SMS, venta unica, **sin dashboard, sin historial, sin servicio, sin instalador** (precio no publicado — validar por su WhatsApp; equipos similares en ML, buscar "avisador corte energia").
+- **Solucion con lo que hay:** el mismo kit: DS18B20 en camara/freezer + deteccion de corte de energia (el ESP32 reporta perdida de alimentacion; agregar supercap/bateria minima si hace falta) + reed en puerta de camara + rele para sirena (Linea 4). **~85-90% construido** (falta empaquetar la alerta "corte de luz" como feature explicita).
+- **Como se cobra:** instalacion + abono $15-30k/mes — la mitad o un tercio del [abono de alarma promedio $86.657 (CEMARA)](https://www.cemara.org.ar/indice-de-precios) que estos mismos comercios YA pagan, con pitch: "la alarma te cuida de los chorros; esto te cuida de perder la camara entera".
+- **Primer cliente hipotetico:** [Miccio's Carnes Premium](https://www.miccios.com.ar/) (mayorista bahiense con camaras y transporte refrigerado propios — real, con web) o [Bajo Cero Alimentos Congelados](https://bajocero.sed.com.ar/). Un mayorista con varias camaras = varios sensores = ticket mayor y referencia potente para las carnicerias chicas.
+- **Esfuerzo hasta el primer peso:** **S**.
+- **Veredicto: EXPLOTAR YA** — es la MISMA venta que Fichas 1-2 con otro pitch (miedo local en vez de normativa). Las quintas/casas de finde: variante de baja prioridad (ticket menor, cliente disperso), solo si caen solas por boca a boca.
+
+### Semilla evaluada y mandada a INCUBAR — Acopios/agro (termometria de granos, CO2, vibracion)
+Dato verificado: la adopcion de termometria es **baja en acopios chicos y medianos** ([INTA: radiografia del acopio](https://repositoriosdigitales.mincyt.gob.ar/vufind/Record/INTADig_d5669d533a2f7a2ceafe53d70c078258)), perdidas de 3-5% o mas por mal manejo poscosecha, y existe demanda de soluciones tipo [CO2NTROL (INTA+IEA)](https://co2ntrol.com.ar/) y [GrainVision](https://www.grainvision.com.ar/). Bahia tiene Sociedad de Acopiadores propia (acopiadoresdebahia.com.ar). PERO: ciclo de venta largo, requiere desarrollo (sensores en masa de grano != DS18B20 en heladera) y PLATA.md manda esperar la credencial Dreyfus (post-octubre, Linea 3). **Incubar hasta octubre**; retomar con el datalogger RuView terminado.
 
 ## Semillas a investigar (detectadas 2026-07-07)
-- Veterinarias: heladera de vacunas = FrioSeguro + son rubro del ERP (combo doble venta)
-- Farmacias: cadena de frio regulada = FrioSeguro con argumento normativo
-- Acopios/agro region: monitoreo temperatura granos + vibracion equipos (credencial Dreyfus)
-- Combo ERP+hardware por rubro: nadie local ofrece ambos (foso competitivo)
+- ~~Veterinarias~~ -> FICHA 2 (2026-07-07)
+- ~~Farmacias~~ -> FICHA 1 (2026-07-07)
+- ~~Acopios/agro region~~ -> evaluada, INCUBAR hasta post-octubre (ver nota bajo fichas)
+- Combo ERP+hardware por rubro: validado parcialmente (Fichas 1-2 lo usan); quedan 12 rubros por mapear hardware complementario
+- NUEVA: panaderias/heladerias/rotiserias de Bahia — mismo kit, mismo pitch de Ficha 3, sin investigar aun
+- NUEVA: presentacion institucional al Colegio de Farmaceuticos filial Bahia como canal (1 demo -> 205 leads con sello)
+
+## Avisos al Director
+- **URGENTE (2026-07-07): la marca "FrioSeguro" esta TOMADA.** Existe [frioseguro.com](https://www.frioseguro.com/), empresa argentina que vende exactamente lo mismo (monitoreo de frio con abono mensual, dataloggers, visita tecnica) en CABA y Zona Norte. No es amenaza territorial hoy (no opera en Bahia) pero SI es colision de marca directa: renombrar ANTES de imprimir pitch/tarjetas/WhatsApp Business (ya estaba previsto — esto lo confirma y lo hace previo a todo material comercial). Lado positivo: valida el modelo de negocio calcado.
 
 ## Bitacora
 - 2026-07-07 - Agente creado por Claude Fable a pedido de Matias (radar de nichos "a mi alcance").
+- 2026-07-07 - Primera investigacion completa (local, la rutina cloud fallo). 3 fichas escritas: (1) farmacias/registro normativo de frio, (2) veterinarias combo ERP+frio, (3) comercios de frio post-temporales. Semilla agro evaluada y mandada a incubar. Detectada colision de marca frioseguro.com -> aviso URGENTE al Director. Numeros clave verificados: 205 farmacias (Colegio filial BB), 18+ veterinarias listadas, abono alarma promedio $86.657/mes (CEMARA) como referencia de precio, cero competidores de monitoreo de frio en Bahia.
