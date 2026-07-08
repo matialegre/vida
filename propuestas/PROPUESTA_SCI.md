@@ -1,3 +1,9 @@
+> # ⛔ CORRECCIÓN CRÍTICA (Matías, 2026-07-08)
+> **Conde NO va a aceptar un proyecto basado en microcontroladores (ESP32/Pico).** Para SCI y Electrónica Industrial quiere PLC + INSTRUMENTO INDUSTRIAL real, sí o sí.
+> **Esta propuesta hay que REHACERLA** sin el datalogger/galgas como núcleo. Ver el reemplazo abajo del todo (sección "PROPUESTA CORREGIDA"). Lo de abajo (versión micro) queda solo como referencia de formato.
+
+---
+
 # Propuesta de Final por Proyecto — Sistemas de Control Industrial
 
 - **Para**: Ing. Alfredo Conde (prof. responsable) — según programa oficial 9-95-683 (plan 1995, programa 2022).
@@ -34,3 +40,13 @@
 - **Noviembre / llamados de diciembre (9-11 o 14-18)**: demo final + defensa.
 
 **¿Te sirve así o le falta algo?** Si querés que lo implemente además sobre una plataforma SCADA comercial específica para comparar, lo agrego al alcance.
+
+---
+
+# ✅ PROPUESTA CORREGIDA — Sistemas de Control Industrial — PLC + INSTRUMENTO + SCADA
+**Núcleo (sin micros):** lazo de CONTROL sobre PLC real con un instrumento industrial y supervisión SCADA/HMI.
+- **Instrumento:** un transmisor (nivel/temperatura/presión, 4-20 mA) del laboratorio → entrada analógica del **PLC**.
+- **Control:** lazo cerrado en el PLC (arranque desde ON-OFF con histéresis; si da el tiempo, PID), lógica en **ladder** (WPLSoft/Delta, S7-200, SLC500 o TSX según el kit del lab), con enclavamientos/alarmas.
+- **Supervisión:** **SCADA/HMI** (CODESYS o el del kit) mostrando la variable, setpoint, estado y alarmas — lo que ya venías armando en el TP Integrador.
+- **Entregables:** P&ID + lazo de control, programa del PLC, pantalla SCADA, y ensayo en el laboratorio (respuesta del lazo a un cambio de setpoint/perturbación).
+- **Convergencia real:** reusa TODO lo del TP Integrador de SCI (WPLSoft, LOGO!, S7-200, SCADA CODESYS) — el "proyecto de final" es una extensión natural del TP, con un instrumento físico y un lazo cerrado real. Cero micros.

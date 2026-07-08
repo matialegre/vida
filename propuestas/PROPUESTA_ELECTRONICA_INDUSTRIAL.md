@@ -1,3 +1,9 @@
+> # ⛔ CORRECCIÓN CRÍTICA (Matías, 2026-07-08)
+> **Conde NO va a aceptar un proyecto basado en microcontroladores (ESP32/Pico).** Para SCI y Electrónica Industrial quiere PLC + INSTRUMENTO INDUSTRIAL real, sí o sí.
+> **Esta propuesta hay que REHACERLA** sin el datalogger/galgas como núcleo. Ver el reemplazo abajo del todo (sección "PROPUESTA CORREGIDA"). Lo de abajo (versión micro) queda solo como referencia de formato.
+
+---
+
 # Propuesta de Final por Proyecto — Electrónica Industrial (Instrumentación Industrial)
 
 - **Para**: Ing. Alfredo Conde (prof. responsable) — según programa oficial 9-95-0646 (plan 1995, programa 2022).
@@ -32,3 +38,12 @@
 - **Noviembre / llamados de diciembre (9-11 o 14-18)**: carpeta completa + presentación final.
 
 **¿Te sirve así o le falta algo?** Si preferís que profundice alguna unidad (por ejemplo válvulas o áreas clasificadas) la sumo al coloquio.
+
+---
+
+# ✅ PROPUESTA CORREGIDA — Electrónica Industrial (Instrumentación) — PLC + INSTRUMENTO
+**Núcleo (sin micros):** lazo de instrumentación industrial REAL con un transmisor y un PLC.
+- **Instrumento:** transmisor de presión/nivel **Rosemount 3051** (tenés el manual en la carpeta de la materia) u otro del laboratorio → señal **4-20 mA** / protocolo **HART**, configurado con **PACTware**.
+- **Trabajo:** hoja de especificación ISA del instrumento, cálculo de rango (LRV/URV/Span por presión hidrostática), calibración **zero/span trim**, lazo 4-20 mA cableado a la entrada analógica de un **PLC del lab** (S7-200 / SLC500 / TSX), escalado en el PLC, y visualización/alarma.
+- **Entregables:** P&ID del lazo (norma ISA), data sheet, procedimiento de calibración con capturas de PACTware, programa del PLC (ladder), y demo funcionando en el laboratorio.
+- **Convergencia real (sutil, sin forzar):** la EXPERIENCIA de campo del REDLER de Dreyfus sirve como caso/contexto (instrumentación industrial real), pero el TRABAJO ENTREGADO es PLC+instrumento del lab, no el ESP32. Así respeta lo que Conde quiere.

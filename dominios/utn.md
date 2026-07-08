@@ -25,5 +25,13 @@ El riesgo de la convergencia: presentar un proyecto real y que el profesor diga 
 3. **Plan B por materia, sin drama.** Si un profesor dice "no" igual: (a) versión ajustada con lo que él pida, o (b) final tradicional rindiendo — Matías rinde bien, la convergencia AHORRA tiempo cuando encaja, no es religión. Nunca forzar un encaje que el profesor no compra: un final normal cuesta menos que pelear una propuesta rechazada.
 Ventajas a jugar SIEMPRE en la propuesta: cliente real (Dreyfus/GIMAP), aval de un grupo de investigación de la propia UTN, y el formato interactivo que ya gustó (P3). Eso convierte el "no" en "contame más".
 
+## ⛔ REGLA DURA de convergencia (Matías, 2026-07-08)
+**Las materias de Conde (Sistemas de Control Industrial + Electrónica Industrial/Instrumentación) exigen PLC + INSTRUMENTO INDUSTRIAL real. JAMÁS proponerle un proyecto basado en microcontroladores (ESP32/Pico/datalogger/galgas) — lo rechaza.**
+- **Electrónica Industrial** → lazo de instrumentación: transmisor real (Rosemount 3051, 4-20mA/HART, PACTware) + PLC del lab. Calibración zero/span, ISA, LRV/URV/Span.
+- **SCI** → lazo de control cerrado sobre PLC real (WPLSoft/S7-200/SLC500/TSX) + instrumento 4-20mA + SCADA/HMI. Extensión natural del TP Integrador.
+- El REDLER/Dreyfus sirve solo como CONTEXTO/experiencia de campo, no como el trabajo entregado.
+- El datalogger/galgas (micros) va SOLO a: TC2 (front-end analógico), Medidas 2 (metrología), Tecnología (PCB), Proyecto Final. NO a Conde.
+Las propuestas corregidas están al final de `propuestas/PROPUESTA_SCI.md` y `PROPUESTA_ELECTRONICA_INDUSTRIAL.md` (sección "PROPUESTA CORREGIDA").
+
 ## Bitácora
 - 2026-07-07 — Agente creado por Claude Fable con mapa completo. Próximo paso: (1) verificar TP SCI contra cuadernillo + pasar a plantilla docx; (2) Matías consigue consignas/reglamento de los 5 finales-por-proyecto.
