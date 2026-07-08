@@ -74,3 +74,11 @@ El 90% de los "me comió la batería" son eso: el sleep real no es µA. La regla
 (Están en el repo galgas y en la carpeta archivada; los MACs de emisores+receptor para LDC salen de ahí.)
 
 Dominios: @energia (presupuesto+medición), @hardware (LiSOCl2+supercap+LDO+HX711, NO boost), @firmware (ATmega bare-metal, sleep real), @esquematico (front-end galga+ADC de puente).
+
+## 🔧 CORRECCIÓN/REFINAMIENTO regulación (aporte de Matías 2026-07-08): PFM > PWM
+"Nunca buck/boost" fue demasiado tajante. La métrica real es **Iq con carga liviana**, no el tipo de regulador.
+- **PWM** (frecuencia fija) = Iq alta, malo para sleep. **PFM / burst / pulse-skipping** = saltea pulsos con carga chica → Iq en NANOamperes → excelente.
+- Hay **buck/boost nanopower con PFM automático que le GANAN al LDO**: **TPS62840** (buck, Iq ~60nA, 95% efic.), TPS62740 (~360nA), MAX17225 (boost ~300nA). El TPS62840 (60nA) < MCP1700 LDO (1.6µA).
+- ⚠️ PERO el buck inyecta **ruido de conmutación** → veneno para el ADC de 24-bit que mide µV de la galga. **Solución: riel dividido** → buck PFM para el digital (ATmega/LoRa) + **LDO para el riel analógico** (ADS1232+puente, limpio).
+- Caso LiSOCl2 3.6→3.3V: salto chico → LDO solo (MCP1700) alcanza y es lo más simple. **Con 2 celdas (7.2V) → buck PFM (TPS62840) para el digital + LDO para el analógico** (el LDO solo desperdiciaría >50%).
+Regla final: elegir por Iq real con carga liviana; PFM habilita switchers de nanoamperes; mantener el switching lejos del ADC (LDO en el riel de medición).
