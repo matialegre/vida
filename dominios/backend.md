@@ -4,3 +4,5 @@ Doc de dominio + bitacora. El agente lo lee al arrancar y lo actualiza al cerrar
 
 ## Bitacora
 - 2026-07-07 - Agente creado por Claude Fable con backlog real de los repos migrados (C:/Proyectos).
+
+- 2026-07-08 [BRIEFING GIMAP] — leer ../BRIEFING_EQUIPO_GIMAP.md y los 4 docs (PARTE_GIMAP, PRESUPUESTO_ENERGIA, PROTOCOLO_CALIBRACION, INGENIERIA_NODO_1ANO). Para vos: telemetría LIVIANA (0.33Hz+batería) LoRa→receptor→internet→cloud; poca data, muchos años; los 3 modos campo/lab/ráfaga definen qué llega.

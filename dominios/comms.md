@@ -37,3 +37,5 @@ Doc de dominio + bitácora. El agente lo lee al arrancar y lo actualiza al cerra
 
 ## Bitácora
 - 2026-07-07 — Agente creado por Claude Fable. Próximo paso sugerido: plan de prueba de robustez WiFi de galgas-supabase (cortes inducidos + reconexión) y prueba de alcance LoRa de RuView.
+
+- 2026-07-08 [BRIEFING GIMAP] — leer ../BRIEFING_EQUIPO_GIMAP.md y los 4 docs (PARTE_GIMAP, PRESUPUESTO_ENERGIA, PROTOCOLO_CALIBRACION, INGENIERIA_NODO_1ANO). Para vos: LoRa emisores, WiFi solo receptor (220V, internet LDC). 0.33Hz entra sobrado por LoRa. MACs en galgas/docs/MAIL_DREYFUS_IT.md.

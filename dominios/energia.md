@@ -15,3 +15,5 @@ Doc de dominio + bitácora. El agente lo lee al arrancar y lo actualiza al cerra
 
 ## Bitácora
 - 2026-07-07 — Agente creado por Claude Fable con herencia de los 4 proyectos. Próximo paso: definir instrumento de medición y presupuesto del ciclo completo de ESP-A en galgas-supabase.
+
+- 2026-07-08 [BRIEFING GIMAP] — leer ../BRIEFING_EQUIPO_GIMAP.md y los 4 docs (PARTE_GIMAP, PRESUPUESTO_ENERGIA, PROTOCOLO_CALIBRACION, INGENIERIA_NODO_1ANO). Para vos: 8800mAh murió en 1 día (ESP32+WiFi+boost=367mA). Medir sleep PRIMERO. LiSOCl2+supercap+LDO bajo Iq, NUNCA boost. Presupuesto en INGENIERIA_NODO_1ANO/PRESUPUESTO_ENERGIA.

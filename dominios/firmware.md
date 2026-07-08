@@ -17,3 +17,5 @@ Doc de dominio + bitácora. El agente lo lee al arrancar y lo actualiza al cerra
 
 ## Bitácora
 - 2026-07-07 — Agente creado por Claude Fable. Próximo paso sugerido: Task 08 del RX (es el bloqueante más grande para octubre).
+
+- 2026-07-08 [BRIEFING GIMAP] — leer ../BRIEFING_EQUIPO_GIMAP.md y los 4 docs (PARTE_GIMAP, PRESUPUESTO_ENERGIA, PROTOCOLO_CALIBRACION, INGENIERIA_NODO_1ANO). Para vos: emisores NO ESP32 (ATmega/STM32L bare-metal, sleep µA real); receptor SÍ ESP32; retomar TX = ventana RX Class A + reed/imán; VERIFICAR sleep con INA219.
