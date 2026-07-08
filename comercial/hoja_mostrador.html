@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+<html lang="es-AR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Monitoreo de Frío 24/7 — Hoja de mostrador</title>
+<style>
+  /* ============================================================
+     HOJA DE MOSTRADOR — Monitoreo de Frío 24/7 (Bahía Blanca)
+     A4 exacto (1 página) · imprimible B&N · sin recursos externos
+     Acento #0e4f66 (azul frío) degrada a gris oscuro en B&N;
+     la jerarquía la llevan los pesos y las reglas, no el color.
+     ============================================================ */
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  :root {
+    --ink: #111111;
+    --ink-soft: #444444;
+    --rule: #b7b7b7;
+    --accent: #0e4f66;
+    --paper: #ffffff;
+  }
+
+  @page { size: A4; margin: 0; }
+
+  html, body {
+    background: #e8e8e8;
+    font-family: "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+    color: var(--ink);
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  .sheet {
+    width: 210mm;
+    height: 296mm;           /* 1mm de guarda contra la 2ª página fantasma */
+    overflow: hidden;
+    margin: 0 auto;
+    background: var(--paper);
+    padding: 9mm 12mm 7mm;
+    display: flex;
+    flex-direction: column;
+  }
+  .sheet > * { flex-shrink: 0; }  /* nada se aplasta si el contenido roza el límite */
+
+  @media screen {
+    body { padding: 24px 0; }
+    .sheet { box-shadow: 0 4px 24px rgba(0,0,0,.25); }
+  }
+  @media print {
+    html, body { background: var(--paper); }
+    .sheet { box-shadow: none; margin: 0; }
+  }
+
+  /* ---------- Cabecera de marca ---------- */
+  .brand-band {
+    background: var(--ink);
+    color: #ffffff;
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    padding: 3.6mm 5mm;
+  }
+  .brand-name {
+    font-size: 8mm;
+    font-weight: 800;
+    letter-spacing: 0.4mm;
+    line-height: 1;
+  }
+  .brand-name sup { font-size: 3.2mm; font-weight: 600; }
+  .brand-desc {
+    font-family: Consolas, "Cascadia Mono", "Courier New", monospace;
+    font-size: 3.3mm;
+    letter-spacing: 0.5mm;
+    text-align: right;
+  }
+
+  /* ---------- Tira de registro (firma visual) ---------- */
+  .log-strip {
+    border: 0.5mm solid var(--ink);
+    border-top: none;
+    padding: 2.2mm 4mm;
+    font-family: Consolas, "Cascadia Mono", "Courier New", monospace;
+    font-size: 2.95mm;
+    line-height: 1.6;
+    white-space: nowrap;
+    overflow: hidden;
+  }
+  .log-strip .lbl { color: var(--ink-soft); }
+  .log-strip .alerta {
+    background: var(--ink);
+    color: #ffffff;
+    font-weight: 700;
+    padding: 0 1.2mm;
+  }
+
+  /* ---------- Título ---------- */
+  .headline {
+    margin-top: 5mm;
+    font-size: 9.6mm;
+    line-height: 1.12;
+    font-weight: 800;
+    letter-spacing: -0.15mm;
+  }
+  .headline em { font-style: normal; color: var(--accent); }
+  .subline {
+    margin-top: 2.4mm;
+    font-size: 4mm;
+    line-height: 1.38;
+    color: var(--ink-soft);
+    max-width: 172mm;
+  }
+
+  /* ---------- Beneficios ---------- */
+  .benefits {
+    margin-top: 5.5mm;
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 6mm;
+  }
+  .benefit { border-top: 1mm solid var(--ink); padding-top: 2.6mm; }
+  .benefit h3 {
+    font-size: 4.4mm;
+    line-height: 1.2;
+    font-weight: 800;
+    margin: 1.8mm 0 1.4mm;
+  }
+  .benefit p {
+    font-size: 3.4mm;
+    line-height: 1.38;
+    color: var(--ink-soft);
+  }
+  .benefit svg { display: block; }
+
+  /* ---------- Cómo funciona ---------- */
+  .how { margin-top: 6mm; }
+  .section-tag {
+    font-family: Consolas, "Cascadia Mono", "Courier New", monospace;
+    font-size: 3.2mm;
+    letter-spacing: 0.8mm;
+    color: var(--accent);
+    font-weight: 700;
+    border-bottom: 0.3mm solid var(--rule);
+    padding-bottom: 1.4mm;
+    margin-bottom: 3.4mm;
+  }
+  .steps {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 6mm;
+  }
+  .step { display: flex; gap: 3mm; align-items: flex-start; }
+  .step-num {
+    font-family: Consolas, "Cascadia Mono", "Courier New", monospace;
+    font-size: 6.6mm;
+    font-weight: 700;
+    color: var(--accent);
+    line-height: 1;
+    flex: none;
+  }
+  .step h4 { font-size: 3.8mm; font-weight: 700; margin-bottom: 1mm; line-height: 1.2; }
+  .step p { font-size: 3.3mm; line-height: 1.36; color: var(--ink-soft); }
+  .step svg { display: block; margin-bottom: 1.4mm; }
+
+  /* ---------- Precio ---------- */
+  .price {
+    margin-top: 6mm;
+    border: 0.6mm solid var(--ink);
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+  }
+  .price-cell { padding: 3.4mm 5mm 3mm; }
+  .price-cell + .price-cell { border-left: 0.3mm solid var(--rule); }
+  .price-label {
+    font-family: Consolas, "Cascadia Mono", "Courier New", monospace;
+    font-size: 3.1mm;
+    letter-spacing: 0.6mm;
+    color: var(--ink-soft);
+  }
+  .price-value {
+    font-size: 8.6mm;
+    font-weight: 800;
+    line-height: 1.05;
+    margin-top: 0.8mm;
+    letter-spacing: -0.2mm;
+  }
+  .price-value small { font-size: 3.8mm; font-weight: 600; color: var(--ink-soft); letter-spacing: 0; }
+  .price-note {
+    font-size: 3.2mm;
+    color: var(--ink-soft);
+    margin-top: 1.2mm;
+    line-height: 1.32;
+  }
+  .price-foot {
+    grid-column: 1 / -1;
+    border-top: 0.3mm solid var(--rule);
+    padding: 2.2mm 5mm;
+    font-size: 3.3mm;
+    line-height: 1.35;
+  }
+
+  /* ---------- Normativa ---------- */
+  .norm {
+    margin-top: 4mm;
+    border-left: 1.2mm solid var(--accent);
+    padding: 1.2mm 0 1.2mm 4mm;
+  }
+  .norm p { font-size: 3.3mm; line-height: 1.4; color: var(--ink-soft); }
+  .norm strong { color: var(--ink); }
+
+  /* ---------- Contacto ---------- */
+  .contact {
+    margin-top: auto;
+    background: var(--ink);
+    color: #ffffff;
+    padding: 3.8mm 5mm;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 6mm;
+  }
+  .contact-cta { font-size: 4.4mm; font-weight: 800; line-height: 1.25; max-width: 80mm; }
+  .contact-cta span { display: block; font-size: 3.2mm; font-weight: 400; opacity: .85; margin-top: 0.8mm; }
+  .contact-line {
+    flex: 1;
+    text-align: right;
+    font-family: Consolas, "Cascadia Mono", "Courier New", monospace;
+  }
+  .contact-line .fill {
+    font-size: 6mm;
+    font-weight: 700;
+    letter-spacing: 0.4mm;
+  }
+  .contact-line .fill-hint { font-size: 2.9mm; opacity: .75; display: block; margin-top: 0.8mm; letter-spacing: 0.4mm; }
+
+  .footnote {
+    margin-top: 2mm;
+    font-size: 2.9mm;
+    color: #777777;
+    display: flex;
+    justify-content: space-between;
+    gap: 4mm;
+  }
+</style>
+</head>
+<body>
+<div class="sheet">
+
+  <!-- Marca -->
+  <header class="brand-band">
+    <div class="brand-name">[NOMBRE]<sup>&nbsp;†</sup></div>
+    <div class="brand-desc">MONITOREO&nbsp;DE&nbsp;FRÍO&nbsp;24/7&nbsp;·&nbsp;BAHÍA&nbsp;BLANCA</div>
+  </header>
+
+  <!-- Firma visual: la tira de registro que cuenta el producto entero -->
+  <div class="log-strip" aria-label="Ejemplo de registro de temperatura con alerta">
+    <span class="lbl">CÁMARA&nbsp;1&nbsp;·&nbsp;-20/-16°C&nbsp;&nbsp;</span>
+    <span>SÁB&nbsp;20:00&nbsp;-18.2&nbsp;OK&nbsp;·&nbsp;23:00&nbsp;-18.4&nbsp;OK&nbsp;·&nbsp;</span>
+    <span class="alerta">DOM&nbsp;02:37&nbsp;-9.1&nbsp;⚠&nbsp;ALERTA&nbsp;ENVIADA</span>
+  </div>
+
+  <!-- Título -->
+  <h1 class="headline">Su cámara de frío, vigilada las&nbsp;24&nbsp;horas. <em>También el sábado a la&nbsp;noche.</em></h1>
+  <p class="subline">Un sensor instalado en su cámara, heladera o freezer mide la temperatura todo el tiempo y le avisa al celular en el momento en que algo anda mal — no el lunes, cuando ya perdió la mercadería.</p>
+
+  <!-- Beneficios -->
+  <section class="benefits">
+    <div class="benefit">
+      <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#111111" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <rect x="7" y="2.5" width="10" height="19" rx="2"/>
+        <line x1="10" y1="18.5" x2="14" y2="18.5"/>
+        <path d="M12 7v4"/>
+        <circle cx="12" cy="13.6" r="0.4" fill="#111111"/>
+        <path d="M19.5 3.5c1.2 1.2 1.2 3.3 0 4.5M21.5 1.8c2 2 2 5.9 0 7.9"/>
+      </svg>
+      <h3>Le avisa al celular antes de perder la mercadería</h3>
+      <p>Corte de luz, motor roto o puerta abierta: la alerta llega al minuto, también de noche y en feriados. No el lunes.</p>
+    </div>
+    <div class="benefit">
+      <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#111111" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M6 2.5h9l4 4v15H6z"/>
+        <path d="M15 2.5v4h4"/>
+        <line x1="8.5" y1="10" x2="15.5" y2="10"/>
+        <line x1="8.5" y1="13" x2="15.5" y2="13"/>
+        <path d="M8.5 16.8l1.6 1.6 3-3.2"/>
+      </svg>
+      <h3>La planilla de bromatología se hace sola</h3>
+      <p>El registro de temperatura que exige el Código Alimentario se genera automático, todos los días. Llega la inspección: la imprime y listo.</p>
+    </div>
+    <div class="benefit">
+      <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#111111" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M12 21.5s-7-6.2-7-11a7 7 0 0 1 14 0c0 4.8-7 11-7 11z"/>
+        <path d="M9.6 10.4l1.7 1.7 3.4-3.6"/>
+      </svg>
+      <h3>Instalado y atendido acá en Bahía</h3>
+      <p>Lo instalamos y respondemos nosotros, acá. Si algo falla, el equipo se repone sin cargo. No es un 0800 ni una app extranjera.</p>
+    </div>
+  </section>
+
+  <!-- Cómo funciona -->
+  <section class="how">
+    <div class="section-tag">CÓMO&nbsp;FUNCIONA&nbsp;—&nbsp;EN&nbsp;3&nbsp;PASOS</div>
+    <div class="steps">
+      <div class="step">
+        <div class="step-num">1</div>
+        <div>
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#0e4f66" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <rect x="3" y="6" width="13" height="14" rx="1.5"/>
+            <line x1="3" y1="10.5" x2="16" y2="10.5"/>
+            <circle cx="20" cy="4.5" r="1.6"/>
+            <path d="M20 6.1v4.4c0 1.5-1.2 2.5-2.6 2.5H16"/>
+          </svg>
+          <h4>Instalamos el sensor</h4>
+          <p>En su cámara, heladera o freezer. Medio día de trabajo, sin obra.</p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">2</div>
+        <div>
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#0e4f66" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <polyline points="3,20 3,4"/>
+            <polyline points="3,20 21,20"/>
+            <polyline points="5,15 9,11 12,13.5 16,8 19,9.5"/>
+          </svg>
+          <h4>Mide y registra sin parar</h4>
+          <p>Una medición por minuto, las 24 horas. Historial completo y planilla mensual.</p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">3</div>
+        <div>
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#0e4f66" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <rect x="7" y="2.5" width="10" height="19" rx="2"/>
+            <line x1="10" y1="18.5" x2="14" y2="18.5"/>
+            <path d="M12 7.5v4.5"/>
+            <circle cx="12" cy="14.8" r="0.4" fill="#0e4f66"/>
+          </svg>
+          <h4>Si algo anda mal, se entera</h4>
+          <p>Fuera de rango, sin luz o sin conexión: alerta directa a su celular, esté donde esté.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Precio -->
+  <section class="price">
+    <div class="price-cell">
+      <div class="price-label">INSTALACIÓN&nbsp;·&nbsp;POR&nbsp;ÚNICA&nbsp;VEZ</div>
+      <div class="price-value">$70.000</div>
+      <p class="price-note">Sensor, equipo y puesta en marcha. El equipo queda en comodato: usted no compra hardware.</p>
+    </div>
+    <div class="price-cell">
+      <div class="price-label">ABONO&nbsp;·&nbsp;POR&nbsp;HELADERA&nbsp;O&nbsp;CÁMARA</div>
+      <div class="price-value">$45.000<small>&nbsp;/mes</small></div>
+      <p class="price-note">= $1.500 por día. Punto de frío adicional en el mismo local: $25.000/mes.</p>
+    </div>
+    <div class="price-foot">
+      <strong>Incluye:</strong> alertas al celular · dashboard con historial · planilla mensual para bromatología · soporte local · reposición del equipo sin cargo.
+    </div>
+  </section>
+
+  <!-- Normativa -->
+  <aside class="norm">
+    <p><strong>El registro de temperatura no es opcional.</strong> Código Alimentario, art.&nbsp;178: <em>“Todas las cámaras frigoríficas deberán poseer instrumentos apropiados para el control y registro de temperatura…”</em> — pide registro, no alcanza el termómetro.</p>
+  </aside>
+
+  <!-- Contacto -->
+  <footer class="contact">
+    <div class="contact-cta">
+      Pida una demo: se lo mostramos andando en&nbsp;vivo, en su&nbsp;mostrador.
+      <span>Sin compromiso. La instalación se coordina en la semana.</span>
+    </div>
+    <div class="contact-line">
+      <div class="fill">[COMPLETAR&nbsp;TEL/WHATSAPP]</div>
+      <span class="fill-hint">WHATSAPP&nbsp;·&nbsp;LLAMADA&nbsp;·&nbsp;ATIENDE&nbsp;EN&nbsp;BAHÍA&nbsp;BLANCA</span>
+    </div>
+  </footer>
+
+  <div class="footnote">
+    <span>†&nbsp;Nombre comercial en definición — definir marca antes de imprimir.</span>
+    <span>Servicio técnico local · Bahía Blanca y zona</span>
+  </div>
+
+</div>
+</body>
+</html>
