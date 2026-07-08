@@ -1,0 +1,72 @@
+# ESTUDIO DE INGENIERÍA — sistema Dreyfus (galgas) para octubre 2026
+> Cómo lo haría el equipo, consolidado. Fuentes: PARTE_GIMAP, PRESUPUESTO_ENERGIA, PROTOCOLO_CALIBRACION, INGENIERIA_NODO_1ANO + análisis del CSV real de campo.
+
+## 1. El problema, en una frase
+Detectar la rotura de una cadena en un eje que gira a 20 RPM (golpeteo de eslabones ~0.39 Hz medido), comparando la deformación de 2 galgas (A y B), con nodos que deben durar **1 año** a batería, y que se pueda **calibrar y verificar in situ** en la planta.
+
+## 2. Arquitectura (3 unidades) — confirmada
+```
+[EMISOR A: galga+ADC+LoRa, batería 1año] --\
+                                            >--LoRa 433MHz--> [RECEPTOR: LoRa RX + ESP32 + Internet LDC, a 220V]
+[EMISOR B: galga+ADC+LoRa, batería 1año] --/                        |
+                                                                    +--> dashboard local (AP) + cloud
+```
+- **Emisores (2):** a batería, 1 año, SOLO LoRa. NO ESP32 (probado: mató 8800mAh en 1 día).
+- **Receptor (1):** a 220V, ESP32+LoRa+Internet (LDC ya autorizó). Acá el ESP32 SÍ va (enchufado).
+
+## 3. Lo que la DATA REAL de campo ya nos enseñó (CSV 133045)
+- Golpeteo **0.39 Hz** → 5 Hz de muestreo sobra. **El problema NO es velocidad.**
+- Ruido **1.1 mV** sobre eventos de 7-20 mV → **SNR ~4.7×, POBRE.** El evento grande se ve; un corte chico/lento NO.
+- **A-B mean=0 forzado** por offset simétrico → sin K_A/K_B reales el A-vs-B no es confiable.
+- **CONCLUSIÓN: los dos problemas de octubre son RESOLUCIÓN y CALIBRACIÓN, no tasa ni radio.**
+
+## 4. 🔬 EL ADC — el corazón del rediseño analógico
+La galga en puente de Wheatstone da microvolts. Hoy se amplifica con INA333 y se lee con el ADC de 12-bit del ESP32 (ruidoso, no lineal) → 1.1mV de ruido. La solución profesional: **ADC sigma-delta de 24-bit dedicado a puente (bridge/load-cell ADC)**, que además **excita el puente y amplifica** — reemplaza al INA333 Y al ADC, y se gatea para ahorrar.
+
+| ADC | Bits | Canales | PGA | Excitación puente | SPS | Consumo | $ | Para Dreyfus |
+|---|---|---|---|---|---|---|---|---|
+| ESP32 interno (actual) | 12 (ruidoso) | — | no | no | alto | — | — | ❌ 1.1mV ruido |
+| **HX711** | 24 σΔ | 2 (A g128/64, B g32) | 32/64/128 | **sí (E+/E-)** | 10/80 | ~1.5mA act / <1µA PD | ~$1-2 | ✅ prototipo YA (se consigue en todos lados, el de las balanzas) |
+| **ADS1232** | 24 σΔ | **2 diferenciales** | 1-128 | **sí** | 10/80 | ~3mW, power-down | ~$4-6 | ✅✅ **el elegido**: 2 canales MATCHED en 1 chip (ayuda al A=B), + sensor de temp, mejor ruido |
+| ADS1220 | 24 σΔ | 4 mux | 1-128 | IDAC | ≤2k | bajo | ~$5 | ✅ si se quiere flexibilidad/más sensores |
+
+**Recomendación:**
+- **Camino rápido (esta semana, para probar):** HX711 — lo conseguís hoy, lo enchufás al puente, y ya ves el salto de resolución. Un HX711 por galga (o los 2 canales del mismo con cuidado por la ganancia).
+- **Camino final (octubre):** ADS1232 — un chip, 2 canales igualitos (clave para que A y B arranquen parejos), sensor de temperatura integrado (para compensar deriva), y se pone en power-down entre muestras.
+- **Ganancia esperada:** de 12-bit ruidoso (1.1mV) a ~19-20 bits libres de ruido → **ruido ~0.1mV o menos → SNR de 40-50× → detectás cortes chicos y lentos, no solo el toque grande.**
+- **BONUS:** el bridge-ADC EXCITA el puente él mismo y se apaga → el "gateo del puente" (el que mata la batería si queda prendido) sale gratis: el ADC prende el puente solo cuando mide.
+
+## 5. El nodo emisor completo (BOM y por qué)
+| Bloque | Elección | Por qué |
+|---|---|---|
+| MCU | **ATmega328P @8MHz/3.3V** (o STM32L0) | sleep µA real; el ESP32 no llega a 1 año |
+| ADC/puente | **ADS1232** (o HX711 proto) | 24-bit, excita+amplifica+gatea, reemplaza INA333 |
+| Radio | **LoRa RA-02/SX1276** 433MHz | largo alcance, TX pulso corto, 0.39Hz+batería sobran |
+| Batería | **LiSOCl2 3.6V** (Saft LS14500 AA ×1-2) | autodescarga 1%/año (la LiPo pierde 5%/mes) |
+| Pulso TX | **supercap/HLC en paralelo** | la LiSOCl2 tiene alta impedancia; sin esto, brownout en cada TX |
+| Regulación | **LDO bajo Iq** (MCP1700) o directo | NADA de boost (su quiescente mató la batería vieja) |
+| Calibración | **shunt-cal**: R precisión + relay/MOSFET por canal | verificar A=B in situ sin instrumental |
+| Sensor extra | temp (del ADS1232 o dedicado) | compensar deriva de galga+ADC |
+| Wake sin tocar | **reed switch + imán** | retomar TX en lugar sellado pasando un imán |
+
+## 6. Presupuesto de energía (resumen, ver PRESUPUESTO_ENERGIA)
+Con puente gateado (lo hace el ADS1232) + reporte cada 3-5 min → **~0.12 mA promedio → 1 LiSOCl2 AA (2.6Ah) ≈ 2 años.** 1 año con margen holgado. **Pero se MIDE con el INA219 antes de creerlo** (el sleep tiene que dar µA; si da mA, algo quedó prendido).
+
+## 7. Calibración (resumen, ver PROTOCOLO_CALIBRACION)
+Shunt-cal: resistor de precisión en paralelo a un brazo → deformación simulada calculable → ajustar K de cada canal para que A y B lean lo mismo. En planta: disparás el shunt-cal, si A y B dan lo esperado → cadena sana y muestras confiables. Persistir K_A/K_B/offsets en EEPROM.
+
+## 8. Plan de construcción (orden)
+1. **Banco (esta semana/receso):** puente + HX711 + ATmega → medir el ruido real vs el ESP viejo (validar el salto de SNR). Con el INA219, medir sleep.
+2. **Front-end analógico** (@esquematico): shunt-cal + gateo + protecciones. Es "la peluda" pendiente.
+3. **Firmware ATmega bare-metal** (@firmware): sample→ADC→stats→LoRa→sleep, ventana RX Class A, persistencia de cal.
+4. **PCB** (@pcb): emisor bajo consumo (supercap cerca del LoRa) + receptor. Convergencia UTN.
+5. **Calibración de las 2 galgas** con shunt-cal + verificación A=B.
+6. **Prueba de autonomía** (descarga acelerada con pila chica) + **prueba de alcance** en planta.
+7. Receptor: el RX 3.7.0 (branch rx/task08-completo, ya compilado) + registro de MACs para red LDC (docs/MAIL_DREYFUS_IT.md).
+
+## 9. Riesgos / lo que NO hay que olvidar
+- Medir sleep con INA219 ANTES de confiar en cuentas (la lección del 8800mAh).
+- Supercap para el pulso de TX (o la LiSOCl2 da brownout).
+- Deriva térmica: registrar temp, compensar.
+- Verificar A=B con shunt-cal en planta antes de confiar en datos.
+- Alcance real emisor→receptor en el entorno metálico de la planta.
