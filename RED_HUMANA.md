@@ -29,3 +29,9 @@
 
 ## Bitácora
 - 2026-07-07 — Archivo creado por Fable a pedido de Matías ("¿cuándo va a hacer algo con la gente?"). Falta que Matías ponga nombres reales en el roster. La coordinación humana es DIURNA por diseño.
+
+## Suegro de Matías — operador potencial en Las Grutas (2026-07-09)
+- **Perfil:** CONTADOR con muchos años en **ALPAT** (Álcalis de la Patagonia, planta de carbonato de sodio en San Antonio Oeste — la industria grande de la zona). Vive en Las Grutas. **Quedó SIN TRABAJO.**
+- **Activos que aporta:** administración/impuestos/gestión de nivel profesional, red de contactos industrial-comercial en SAO/Las Grutas, confiabilidad, tiempo full-time.
+- **Implicancia para la inversión (Matías ~USD 15-25k):** un contador NO es el perfil ideal para atender un mostrador de VR/heladería 12h/día — es el perfil ideal para GESTIONAR, administrar, o un negocio B2B/servicios donde su oficio suma. Repensar las opciones con eso: negocios que aprovechen su cabeza contable y sus contactos (servicios a comercios/empresas de la zona, administración de propiedades/alquileres de temporada, gestoría, distribución/proveeduría) pueden rendir más y encajarle mejor que una atracción turística de mostrador.
+- Su experiencia en ALPAT + los contactos industriales incluso podrían cruzarse con los productos de Matías (monitoreo IoT industrial). Explorar.
