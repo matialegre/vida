@@ -3,3 +3,46 @@
 You've hit your session limit · resets 4:40am (America/Buenos_Aires)
 ===== FIN mi� 08/07/2026  2:00:09,89 ===== 
 ===== TURNO NOCHE mi� 08/07/2026 22:00:02,13 ===== 
+Estado limpio. Trabajo nocturno completo.
+
+## Resumen de la noche
+
+**Tarea elegida:** aplicar la deuda del `@verificador` **D1-D8** al ECO-LoRa del datalogger. El fix agent de la madrugada murió por límite de sesión y dejó esos 8 hallazgos **sin aplicar**, con **D1 🔴 marcado BLOQUEANTE para producción**. Es deuda documentada y pendiente (no una tarea ya hecha esperando merge), sobre el datalogger que es **prioridad #1 de banco**, y verificable sin hardware.
+
+**Qué hice** (branch nuevo `nocturno/local-2026-07-08-ecolora-fixes`, arranca del branch `...ina219-ecolora`):
+
+- **D1** (bloqueante): el gateway ahora responde a los frames `eco=1` con un ACK de vida + dispara los comandos pendientes en la ventana RX abierta → el nodo no cae al failsafe despierto y la entrega queda garantizada con cualquier ciclo (antes solo con perfil `banco`).
+- **D2** botón: blacklist de pines LoRa/SD/I2C/WiFi. **D3** gateway reconocido por `mesh_dst`. **D4** `for_lora()` en `poll()`. **D5** clamp cal INA219 a 16 bits. **D6** restaura perfil de CPU al salir. **D8** `sim_data` en el banco. **D7** CHANGELOG + sync del diseño §3.1.
+
+**Verificado sin hardware:**
+- `py_compile` OK en los 4 archivos Python
+- validador de gpio y matemática del clamp INA219 probados en CPython
+- **el gateway `.ino` compila** con `arduino-cli` + core esp32 3.3.8 → `1.164.127 bytes (6%)`
+
+**Pendiente de hardware:** el protocolo de banco §7 del diseño (D1 en vivo 5/5, failsafe que retoma solo, INA219 real). El branch **no se mergea a main hasta pasar banco**.
+
+**Pushes:** branch datalogger (2 commits) + informe en MATI-HQ (`diario/nocturno-local-2026-07-08.md`) + QUE_FALTA actualizado. Nota: tuve que setear la identidad git local en MATI-HQ (`Matias Alegre <alegrematiasdev1@gmail.com>`) porque no estaba resuelta en este shell.
+
+**No tocado (deliberado, UNA tarea por noche):** la deuda M1/M2/M3 del branch RX de galgas sigue esperando — anotada en el informe para el `@firmware`.
+===== FIN mi� 08/07/2026 22:15:57,71 ===== 
+===== TURNO NOCHE jue 09/07/2026  2:00:02,25 ===== 
+Trabajo nocturno completo. Resumen:
+
+## Qué hice esta noche
+
+**Tarea elegida:** pagar la **deuda del @verificador sobre el branch RX de galgas** (M1/M2/M3/B2/B3) — el "Retomar #2" que el worker del 8-jul dejó sin aplicar (esa noche eligió el ECO-LoRa del datalogger).
+
+**Por qué esa y no PLATA:** FrioSeguro (palanca de plata) tiene su branch nocturno **vacío** y sus tareas de software (#11 resumen mensual, #12 retención) son *para cuando ya haya abonos* — hoy hay cero, así que hacerlas ahora es prematuro. Sus bloqueantes reales son hardware/comercial. En cambio la **M1 del RX es un bug de seguridad presente en P0**: en un corte general el panel de alerta quedaba **mudo** ("sin datos") indefinidamente, justo cuando más importa para la parada de octubre.
+
+**Fixes aplicados** (FW `3.7.0` → `3.7.1`, branch `nocturno/local-2026-07-09-rx-deuda-verificador`):
+- **M1** 🟠 — `last_seen` de A/B se persiste en NVS `rx_seen` y se restaura en boot → un emisor visto alguna vez se recuerda cruzando el power-cycle y alarma tras la gracia de 180 s, aunque no vuelva internet. Los nunca-vistos (banco/B sin instalar) siguen sin alarmar. Auto-configurable, con anti-wear.
+- **M2** 🟠 — `esp_task_wdt_reset()` en cada handler bloqueante (heartbeat, comandos + acks, refresh cloud, OTA-check, reconexión WiFi) → el WDT de 120 s no se cruza con WAN flaky.
+- **M3** 🟠 — migración `set_config` renombrada `...000000` → `...200000` para ordenar después del branch `backend/ota-ab-bucket-firmado`.
+- **B2/B3** 🟡 — `set_config` rechaza valores no numéricos/negativos; "mute N min" pisa un `pause` infinito.
+
+**Verificación (sin hardware):** compila OK — **1.244.032 bytes (63%)**, globals 18%, arduino-cli 1.4.1 + core esp32 3.3.8. Delta +716 B.
+
+**Sin verificar (necesita el ESP32-RX):** M1 en vivo (corte total + reboot sin internet → debe alarmar), estabilidad del WDT 2+ h, acks de B2/B3, y `supabase db push` de la migración M3. Checklist exacto en `docs/RX_TASK08_NOTAS.md`.
+
+**Commits/push:** branch pusheado a galgas (sin mergear hasta banco); informe en `MATI-HQ/diario/nocturno-local-2026-07-09.md` + `QUE_FALTA.md` de galgas actualizado, ambos pusheados a main. No se tocó `field_captures`, `shared/`, mDNS ni migraciones aplicadas.
+===== FIN jue 09/07/2026  2:17:00,44 ===== 
