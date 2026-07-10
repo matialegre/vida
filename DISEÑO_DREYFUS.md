@@ -142,3 +142,9 @@ Correcto. La LiSOCl2 tiene curva de descarga MUY plana (~3.6V casi toda su vida)
 
 ## 💡 Consideración de diseño abierta (para @esquematico)
 El **ADS1220 salió MEJOR de lo esperado**: va directo de batería (sin LDO), gatea con su switch, duty-cycle 120µA, PGA 128, ref 5ppm/°C. El AD7124 tiene mejor ruido (24nV@g128) y 8 canales, pero exige LDO. **Evaluar seriamente si el ADS1220 (el del banco) no es TAMBIÉN la elección final** — power chain más simple = más confiable en planta. Decidir con las mediciones del banco.
+
+# 🔌 POWER CHAIN DEFINITIVA (2026-07-10, tras objeción de Matías al RA-02 directo)
+Matías objetó el SX1278 "directo de 3.6V" — CORRECTO: el chip Semtech opera 1.8-3.7V (verificado), pero el MÓDULO RA-02 (Ai-Thinker) se especifica a 3.3V típico, y el margen con pila fresca (3.67V vs 3.7V) es de solo 30mV = diseño al borde. DESCARTADO el directo.
+**DECISIÓN: UN LDO de salida 3.0V para TODO el nodo.** El truco: a 3.0V de salida hay 600mV de headroom desde la pila (vs 300mV a 3.3V) → regula limpio hasta pila muerta (~3.15V), y TODO funciona a 3.0V: SX1278 (min 1.8V, 17dBm OK), ATmega@8MHz (min ~2.5V), AD7124 (2.7-3.6V ✅✅), ADS1220 (min 2.3V). Galga excitada a 3.0V da 150µV/100µε — irrelevante por ser ratiométrico.
+**LDO elegido: MCP1700-3002E (salida 3.0V, NO el -3302)** — Iq 1.6µA, dropout max 178mV << 600mV headroom. Alternativas: HT7330 (local), TPS7A02-30 (import, Iq 25nA, premium). Supercap DESPUÉS del LDO, pegado al LoRa (el pulso TX lo sirve local sin estresar el regulador). Si el ruido del riel único molesta al ADC en el banco: ferrite/RC hacia el riel analógico o segundo LDO dedicado — lo decide la medición.
+Estructura final: LiSOCl2 3.6V → MCP1700-3.0V → riel único 3.0V (ATmega + SX1278 + ADC + puente gateado) con supercap en el riel junto al radio.
