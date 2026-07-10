@@ -46,3 +46,51 @@ Trabajo nocturno completo. Resumen:
 
 **Commits/push:** branch pusheado a galgas (sin mergear hasta banco); informe en `MATI-HQ/diario/nocturno-local-2026-07-09.md` + `QUE_FALTA.md` de galgas actualizado, ambos pusheados a main. No se tocó `field_captures`, `shared/`, mDNS ni migraciones aplicadas.
 ===== FIN jue 09/07/2026  2:17:00,44 ===== 
+===== TURNO NOCHE jue 09/07/2026 22:00:02,14 ===== 
+Listo. Trabajo nocturno completo — una tarea bien hecha.
+
+## Resumen de la noche (segunda corrida)
+
+**Tarea elegida:** datalogger **#5 — detector de gaps de integridad SD**. Es 🔴 bloqueante del DoD, software puro 100% verificable sin hardware, y no estaba en ningún branch nocturno. Descarté FrioSeguro (PLATA) porque sus ítems de software restantes eran prematuros (#11/#12, cero abonos) o bloqueados por la migración SQL pendiente (#10), y la UI mobile es especulativa/mejor con verificación visual — nada de eso es un win nocturno limpio hecho a ciegas.
+
+**Descubrimiento clave:** los `seq`/`t_ms` **ya se escribían** en el CSV (`nodo.py`); lo que faltaba de #5 no era instrumentar firmware sino el **analizador que prueba la prueba de N horas**.
+
+**Entregado** (branch `nocturno/local-2026-07-09-sd-integrity`, commit `b070fab`, sale de `main`):
+- `tools/sd_integrity.py` — analizador offline (stdlib) sobre `/sd/logs/*.csv`. Detecta gaps de tiempo (ambos modos de grabado), drops de seq (modo continuo), reboots, wrap de `ticks_ms` y filas corruptas. PASS/FAIL + exit 0/1 → usable como pass/fail del DoD.
+- `tests/test_sd_integrity.py` — 8 casos sintéticos, **corren sin hardware**.
+- `docs/sd-integrity.md` — protocolo de la prueba de N horas.
+
+**Verificado esta noche (sin hardware):** `py_compile` OK · self-test **OK: 8 tests** · flujo real demuestra detección de gap 9020 ms → `FAIL`/exit 1, carpeta limpia → `PASS`/exit 0. Python 3.14.3, sin compilación pesada (cero riesgo de timeout).
+
+**Pendiente por hardware:** correr la prueba de N horas real con SD y pasar los CSV por la herramienta (ajustar `--gap-factor` si el jitter real lo pide).
+
+Todo pusheado: branch a `matialegre/datalogger`, informe `diario/nocturno-local-2026-07-09-b.md` + `QUE_FALTA.md` actualizado a `matialegre/vida` (main). El branch **no se mergea** hasta pasar la prueba con hardware. Sin cambios de firmware, nada borrado, `field_captures`/mDNS/migraciones intactos. Paro acá.
+===== FIN jue 09/07/2026 22:09:00,20 ===== 
+===== TURNO NOCHE vie 10/07/2026  2:00:02,27 ===== 
+Listo. Noche cerrada con una tarea bien hecha.
+
+## Resumen
+
+**Tarea elegida:** datalogger #7 — **calibrador distancia↔RSSI** de la malla RV1 (la mitad de software).
+
+**Por qué esta** (jerarquía PLATA/UNI → octubre, verificado en código no de memoria):
+- **PLATA (FrioSeguro) no tenía tarea de software nocturna limpia hoy**: la migración #3 **ya está escrita** (`migration_resilience_v1.sql`, falta *aplicarla* en cloud), y el bloque resiliencia #10 **ya está renderizado** en el dashboard React (systemState/uptime/GSM/free heap/cooldown). El resto es hardware/UI visual de día.
+- **UNI** vive fuera de estos 4 repos.
+- **datalogger** (prioridad #1 de banco) tenía el #7 libre — 100% verificable sin hardware y **converge con Medidas Electrónicas 2**.
+
+**Qué entregué** (branch `nocturno/local-2026-07-10-rssi-calib`, sale de `main`, pusheado):
+- `tools/rssi_calibrate.py` — ajusta `RSSI(d)=A−10·n·log10(d)` por mínimos cuadrados (stdlib), devuelve RSSI@1m, n, R², RMSE, la inversa y `--predict`/`--invert`. Exit 0/1/2.
+- `tests/test_rssi_calibrate.py` — 11 tests sintéticos, sin hardware.
+- `docs/rssi-calibration.md` — protocolo de campo + interpretación + convergencia UTN.
+- `QUE_FALTA.md` #7 → "EN BRANCH … pendiente de merge".
+
+**Verificación (sin hardware):** `py_compile` OK; self-test **OK: 11 tests** (exit 0); smoke realista da n=2.645, R²=0.9989, RMSE=0.45 dB, veredicto OK. Python 3.14.3.
+
+**Pendiente por hardware:** tomar las muestras de campo (RSSI a distancias conocidas) y pasarlas por la herramienta. **No se mergea hasta eso.** NO toqué firmware.
+
+**Informe:** `MATI-HQ/diario/nocturno-local-2026-07-10.md` (pusheado a main).
+
+**Drift detectado para @cronista:** FrioSeguro `QUE_FALTA.md` #10 está desactualizado — el bloque resiliencia ya se renderiza; lo único vivo es la vista mobile.
+
+Paro acá.
+===== FIN vie 10/07/2026  2:08:34,67 ===== 

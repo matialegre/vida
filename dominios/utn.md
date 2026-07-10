@@ -48,3 +48,8 @@ Las propuestas corregidas están al final de `propuestas/PROPUESTA_SCI.md` y `PR
 4. **A.1 (P&ID):** Conde compartió links Emerson (caudal + dimensionamiento de placas orificio "como les mostré en clase"). El P&ID/datos de A.1 PUEDEN estar ya en material de clase — Matías revisa apuntes/aula virtual antes de pedirlo.
 5. Clases a veces por Zoom (utn.zoom.us). Instancias evaluatorias ya habilitadas desde 22-jun.
 CONSECUENCIA: baja la urgencia de deadline; SUBE la importancia de que Matías ESTUDIE el cuadernillo para defenderlo. El mensaje a Conde ahora es para: coordinar lab (HART) + pedir P&ID si no lo tiene + confirmar formato de entrega.
+
+## Avances 2026-07-10 (Matías)
+- ✅ Mensaje a Conde ENVIADO. **Reunión LUNES ~18:15 en la universidad CON Conde**: (1) terminar/entregar el cuadernillo (EI + lo que sea del lab), (2) **hablar del PROYECTO a hacer en el LABORATORIO** (la propuesta de armar/integrar el lab de PLCs). Ir con notebook + PactWare instalado por si se hace el HART.
+- ✅ Aclaración: NO hay que "estudiar" el cuadernillo — solo entregarlo (la defensa oral se verá, pero el TP se entrega). Menos carga de la pensada.
+- Próximo paso @utn: preparar para el lunes la propuesta del proyecto de laboratorio (1 página, ver PROPUESTA_SCI/EI corregidas) para presentarle a Conde en persona.

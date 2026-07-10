@@ -35,3 +35,6 @@
 - **Activos que aporta:** administración/impuestos/gestión de nivel profesional, red de contactos industrial-comercial en SAO/Las Grutas, confiabilidad, tiempo full-time.
 - **Implicancia para la inversión (Matías ~USD 15-25k):** un contador NO es el perfil ideal para atender un mostrador de VR/heladería 12h/día — es el perfil ideal para GESTIONAR, administrar, o un negocio B2B/servicios donde su oficio suma. Repensar las opciones con eso: negocios que aprovechen su cabeza contable y sus contactos (servicios a comercios/empresas de la zona, administración de propiedades/alquileres de temporada, gestoría, distribución/proveeduría) pueden rendir más y encajarle mejor que una atracción turística de mostrador.
 - Su experiencia en ALPAT + los contactos industriales incluso podrían cruzarse con los productos de Matías (monitoreo IoT industrial). Explorar.
+
+## Avance suegro (Federico) 2026-07-10
+- ✅ Matías le pasó el paquete completo (CV mejorado + informe de empleo + informe de inversión v2). Pendiente: feedback de Federico sobre qué camino quiere (empleo / renta-combo / importación / administradora de alquileres).
