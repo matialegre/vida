@@ -36,6 +36,7 @@ Corolario: datalogger = Pico (PIO+SD) + LoRa · nodos eternos = ATmega pelado + 
 | STM32 BluePill | 1 | casa | libre | 2026-07-07 |
 | Módulos 2 relés | ~10 | casa | upsell FrioSeguro | 2026-07-07 |
 | Analizador lógico | 1 | casa | debug | 2026-07-07 |
+| Supercapacitor 1F 5.5V | 1+ | casa | pulso TX LoRa emisor Dreyfus | 2026-07-10 |
 
 ## Compras en curso
 - 2026-07-08 — Matías compra 3 cajas estancas IP65 + prensacables (PG7 sonda / PG9 alimentación) + tapones ciegos para huecos sin usar. Es el enclosure v1 de FrioSeguro (decisión: estanca de ferretería, NO 3D custom — ver bitácora 2026-07-07). Destraba las primeras 3 instalaciones comerciales.
