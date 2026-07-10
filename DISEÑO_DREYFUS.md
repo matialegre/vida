@@ -92,3 +92,14 @@ Dato nuevo de Matías: está DE VACACIONES (hasta ~18-ago) y sumó un COMPAÑERO
 - Plan 6 semanas (de a 2): S1-2 validar bloques (ruido ADC con galga real, sleep µA, LoRa, pulso TX sobre LiSOCl2+supercap) · S3-4 integrar + shunt-cal + A=B · S5-6 endurecer + resistencia + descarga acelerada + checklist campo.
 - UTN: verificar si el Proyecto Final admite equipo de 2 (el compañero como co-autor lo fortalece).
 - PENDIENTE: nombre del compañero → RED_HUMANA.md (roster).
+
+# 🔬 RE-EVALUACIÓN del amplificador/ADC (pedida por Matías 2026-07-10: "la deformación es MUY chiquita")
+Números reales: galga 350Ω, GF=2, ¼ de puente, Vexc=3.3V → 100µε=165µV, 10µε=16.5µV, 1µε≈1.6µV. **Es medición de microvolts, cerca del ruido térmico (~7nV en BW de trabajo).** Con señal así, el enemigo NO es la resolución del ADC sino el **OFFSET, el DRIFT térmico y el RUIDO** del amplificador.
+
+**Corrección:** el HX711 baja de "opción final" a "solo prototipo barato". Ranking real para señal minúscula:
+- **HX711** → SOLO prototipar rápido esta semana (grado balanza, conocido, barato). No para el sistema final.
+- **ADS1232/ADS1220 (TI)** → muy buenos, baratos, ratiométricos.
+- **🏆 AD7124-8 / AD7190 (Analog Devices)** → EL mejor para galgas de precisión. Gana por: (1) PGA de ruido bajísimo integrado (gain ≤128), (2) **medición RATIOMÉTRICA** = excitar el puente con la misma tensión que la referencia del ADC → el drift de excitación se cancela solo (EL truco para señal DC chica que sobrevive cambios de temperatura en planta), (3) corrientes de excitación + buffers + filtros digitales integrados (menos puntos de drift), (4) chopping interno que cancela offset.
+
+**Decisión de dos etapas:** para exprimir aún más → INA333 (chopper, bajo drift, 1ª ganancia) + ADS1220/AD7124. Pero el AD7124 solo ya alcanza y simplifica.
+**Regla nueva:** con galga, medición RATIOMÉTRICA obligatoria (excitación = referencia del ADC) — resuelve el drift térmico que si no te obliga a recalibrar. Verificar disponibilidad AR: HX711 (fácil), ADS1220/ADS1232 (Mouser/DigiKey), AD7124 (importar). @esquematico + @hardware.
