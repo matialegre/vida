@@ -103,3 +103,8 @@ Números reales: galga 350Ω, GF=2, ¼ de puente, Vexc=3.3V → 100µε=165µV, 
 
 **Decisión de dos etapas:** para exprimir aún más → INA333 (chopper, bajo drift, 1ª ganancia) + ADS1220/AD7124. Pero el AD7124 solo ya alcanza y simplifica.
 **Regla nueva:** con galga, medición RATIOMÉTRICA obligatoria (excitación = referencia del ADC) — resuelve el drift térmico que si no te obliga a recalibrar. Verificar disponibilidad AR: HX711 (fácil), ADS1220/ADS1232 (Mouser/DigiKey), AD7124 (importar). @esquematico + @hardware.
+
+## ⭐ DECISIÓN FINAL del ADC (Matías 2026-07-10): la POSTA, sin prototipo barato
+Matías define: NADA de HX711 ni "prototipar barato" → se diseña DIRECTO con el ADC definitivo de precisión. Razón: es para Dreyfus + Proyecto Final + durar años en planta; arrancar con HX711 obliga a rediseñar la PCB entera al pasar al bueno. Se diseña UNA vez, con el componente final.
+**COMPONENTE ELEGIDO: AD7124-8** (Analog Devices) — o AD7190 / ADS1220 como equivalentes de respaldo si disponibilidad AR lo pide. 24-bit sigma-delta, PGA bajo ruido integrado (≤128), medición RATIOMÉTRICA (cancela drift térmico), corrientes de excitación + buffers + filtros digitales, chopping. Es EL estándar de instrumentación de galgas.
+Consecuencia: @esquematico diseña el front-end con AD7124 desde el arranque. @hardware confirma stock/importación del AD7124 (Mouser/DigiKey Argentina o import) + el INA333 solo si se hace pre-ganancia. El banco de esta semana con galga real ya se hace con el AD7124, no con HX711.
