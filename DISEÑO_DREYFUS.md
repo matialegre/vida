@@ -119,3 +119,26 @@ Regla: para nodo de años con LiSOCl2, JAMÁS un LDO de dropout alto (MCP1700) q
 
 ## Matiz del LDO (Matías 2026-07-10): "no es un problema del todo, pero sí"
 Correcto. La LiSOCl2 tiene curva de descarga MUY plana (~3.6V casi toda su vida) → el MCP1700 regula bien el ~90% de la batería; solo se pierde el ~10% final (unas semanas del año). NO es bloqueante. Matiz fino: ese 10% final es el margen que más servía, y cerca del dropout el riel 3.3V se vuelve ruidoso → puede degradar la medición µV del AD7124 al final de la vida. Veredicto pragmático: MCP1700 OK para el BANCO de esta semana (no frenar); para el NODO FINAL preferir directo-sin-LDO o ULDO (optimización de v-final, no del prototipo).
+
+# ✅ AUDITORÍA ADVERSARIAL COMPLETA (2026-07-10, @verificador contra datasheets oficiales descargados)
+**VEREDICTO: el diseño es estructuralmente SÓLIDO; la documentación tenía specs citadas de memoria que estaban MAL.** La física (todas las cuentas de µV verificadas correctas), la arquitectura, el shunt-cal (fórmulas estándar Micro-Measurements verificadas), batería+supercap y el "1 año con 1 AA" SOBREVIVEN. Correcciones obligatorias:
+
+## 🔴 CRÍTICAS (hacían comprar/diseñar mal)
+1. **AD7124-8: LDO OBLIGATORIO, no opcional.** AVDD operativo 2.7–3.6V (datasheet Rev.D) < 3.67V OCV de la LiSOCl2 fresca. Power chain correcta: **riel digital directo de 3.6V (SX1278+ATmega) + LDO limpio DEDICADO al AD7124/puente/REFIN.**
+2. **AD7190 ELIMINADO como respaldo** — es parte de 5V (AVDD 4.75–5.25V). Respaldos reales: **ADS1220** (2.3–5.5V, ¡va DIRECTO de la batería!, PGA 1-128, low-side switch para gatear, duty-cycle 120µA) o ADS1232+MOSFET externo.
+
+## 🟡 MEDIAS (números corregidos contra datasheet)
+3. Consumos AD7124 reales: low **255µA** (no 90), mid 355, full 930, **standby 15µA**, power-down 2µA (pero pierde TODOS los registros → reprogramar al despertar; decisión de firmware standby-vs-powerdown pendiente).
+4. Gateo del puente: NO es "gratis por las corrientes de excitación" (max 1mA, insuficientes para 350Ω). Es el **PSW (low-side power switch) controlado por FIRMWARE** (bit IO_CONTROL_1). Con ADS1232 sería MOSFET externo.
+5. Energía recalculada con galga REAL de 350Ω (no la de 1kΩ asumida): Escenario B (300s) promedio **0.19mA** → con capacidad útil derated ~2.1Ah = **~1.3 años. EL AÑO SE CUMPLE con margen 30% (no 100%).** Palanca de margen: puente de alta R o ventana más corta. Escenario A (60s): ~4 meses, descartado.
+6. **Depasivación LiSOCl2 al checklist de campo**: tras meses de estante la celda tiene retardo de tensión (datasheet EEMB lo exige) → cargarla ~10-50mA unos segundos/min al desplegar, verificando >3.0V. Sin esto: brownout en el PRIMER arranque en planta.
+
+## 🟢 MENORES
+7. TX 17dBm = **87mA** (no 120; 120 es a 20dBm — Semtech Tabla 6). SX1278 operativo 1.8–**3.7V** (3.9 es abs max); directo de LiSOCl2 = en spec, práctica comercial confirmada (Dragino LSN50).
+8. Paper a actualizar: decisión AD7124 (quedó en ADS1232), claims §5.3 de excitación/gateo/matched (los canales se muestrean SECUENCIALMENTE, no simultáneos — skew A-B a aclarar), unidades de ruidos esperados, unificar 0.33 (teórico 20RPM) vs 0.397Hz (medido).
+
+## 📏 REGLA NUEVA (permanente, para TODOS los agentes)
+**Ningún número de componente entra a un doc del proyecto sin la página del datasheet citada al lado.** Generator ≠ evaluator aplica también a las specs. (Origen: esta auditoría encontró 90µA, 1-2µA standby, 120mA@17dBm y AD7190 citados de memoria y MAL.)
+
+## 💡 Consideración de diseño abierta (para @esquematico)
+El **ADS1220 salió MEJOR de lo esperado**: va directo de batería (sin LDO), gatea con su switch, duty-cycle 120µA, PGA 128, ref 5ppm/°C. El AD7124 tiene mejor ruido (24nV@g128) y 8 canales, pero exige LDO. **Evaluar seriamente si el ADS1220 (el del banco) no es TAMBIÉN la elección final** — power chain más simple = más confiable en planta. Decidir con las mediciones del banco.
