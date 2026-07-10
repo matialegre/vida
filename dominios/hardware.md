@@ -55,3 +55,6 @@ Matías tiene 2 tomas (enchufes) para embeber en las cajas estancas de FrioSegur
 
 ## Avance datalogger 2026-07-10
 - Matías va a conseguir/arrancar con el **HX711** (ADC 24-bit de puente) para probar el salto de resolución vs el ADC actual (ver DISEÑO_DREYFUS §4). Primer paso concreto de la cadena analógica "peluda". @esquematico + @muestreador en cuanto tenga el módulo + una galga.
+
+## ⚠️ LECCIÓN 2026-07-10 (error señalado por Matías)
+La lista de compras v1 incluyó ítems YA en stock (LoRa, galgas, supercap) y un LDO que contradecía la decisión "directo sin LDO". **REGLA DURA para @hardware y todo agente que arme listas de compra: cruzar SIEMPRE contra (1) el inventario de este archivo y (2) las decisiones de diseño vigentes (DISEÑO_DREYFUS.md) antes de entregar.** Un BOM que ignora el stock propio y las decisiones tomadas es peor que no tener BOM.
