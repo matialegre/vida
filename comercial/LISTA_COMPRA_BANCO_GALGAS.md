@@ -1,15 +1,14 @@
-# Lista de compra banco galgas — CORREGIDA 2026-07-10 (v2, tras errores señalados por Matías)
+# Lista de compra banco galgas — VERIFICADA link por link por @tester 2026-07-10 (v3)
+Decisión: ADS1220 (Texas) como ADC definitivo — NADA de AD7124/importación. Todo comprable en ML Argentina.
 
-## ⚠️ ERRATA de la v1 (lección para todos los agentes)
-La v1 listó para comprar cosas que Matías YA TIENE (LoRa RA-02, galgas del GIMAP, supercap, Pro Mini) y un LDO (HT7333) que CONTRADECÍA la decisión ya tomada de ir DIRECTO sin LDO desde 3.6V. REGLA NUEVA: toda lista de compras se cruza contra el inventario (dominios/hardware.md) y contra las decisiones de diseño (DISEÑO_DREYFUS.md) ANTES de entregarse.
-Nota técnica LDO: el "4.3V" del datasheet HT7333 es condición de ensayo (VOUT+1V), no VIN mínimo (real: VOUT+dropout≈3.39V). Igual NO va LDO: decisión = directo de 3.6V (SX1278 tolera 3.9V).
-
-## LO ÚNICO A COMPRAR
-| Componente | Link | Precio | Nota |
+| Ítem | Link directo (producto verificado abierto) | Precio | Nota |
 |---|---|---|---|
-| ADS1220 (ADC 24-bit banco) | https://listado.mercadolibre.com.ar/ads1220 | ~$14.315 | verificado por @tester |
-| Batería ER14505 LiSOCl2 3.6V | https://listado.mercadolibre.com.ar/er14505 | ~$7.990 | salvo que GIMAP tenga |
-| AD7124-8 (precisión final) | DigiKey 5268092 / LCSC C578388 | USD 7-16 | IMPORTAR; QFN, necesita PCB |
-| INA219 | https://listado.mercadolibre.com.ar/ina219 | ~$6.700 | SOLO si no está el módulo físico (confirmar con Matías) |
+| ADS1220 CJMCU-1220 (ADC 24-bit) | https://www.mercadolibre.com.ar/ad-conversor-moducjmcu-1220-ads1220-adc-de-24-bits-i2c-l/p/MLA2062285574 | $14.315 | catálogo: confirmar buy box al comprar |
+| Batería ER14505 3.6V LiSOCl2 AA (Motoma 2600mAh) | https://www.mercadolibre.com.ar/pila-litio-motoma-er14505-tamano-aa-36v-14500-14505-2600mah/up/MLAU2896630932 | $7.990 | 15% OFF, Tienda oficial XELLEX, FULL |
+| LDO MCP1700-3002 = 3.0V (pack x5) | https://articulo.mercadolibre.com.ar/MLA-2081736906-pack-x5-circuito-integrado-mcp1700t-mcp-1700t-1700-elegir-_JM | $3.990 | ⚠️ SELECCIONAR variante "3002 cr 3.0v" (abre en 1.2v por defecto) |
+| — backup LDO 3.0V (TO-92) HT7130A | https://www.mercadolibre.com.ar/integrado--ht7130a---7130a--regulador-de-voltaje--to92--x2un/up/MLAU911891800 | $6.708 (x2) | HT7130=3.0V (HT7133=3.3V) |
+| INA219 (sensor corriente, mide consumo banco) | https://www.mercadolibre.com.ar/sensor-de-energia-corriente-ina219-26v-32a-para-arduino/p/MLA2039724772 | $6.699 | catálogo: hay desde $5.141 |
 
-## YA EN STOCK (no comprar): LoRa RA-02, galgas (GIMAP), supercap 1F, Arduino Pro Mini, analizador lógico. SIN LDO (directo 3.6V).
+Total ≈ $33.000. YA EN STOCK (no comprar): LoRa RA-02, galgas GIMAP, supercap 1F, Arduino Pro Mini, Pico, analizador lógico.
+Screenshots de cada producto: BACKUP MATI ERP\tests\screenshots\compra_*.png
+Verificado: @tester abrió cada página de producto, confirmó botón de compra + precio con capturas (corrigió 2 lecturas erróneas del scraper: ADS1220 catálogo, precio tachado ER14505).
