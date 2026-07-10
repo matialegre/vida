@@ -38,3 +38,6 @@
 
 ## Avance suegro (Federico) 2026-07-10
 - ✅ Matías le pasó el paquete completo (CV mejorado + informe de empleo + informe de inversión v2). Pendiente: feedback de Federico sobre qué camino quiere (empleo / renta-combo / importación / administradora de alquileres).
+
+## Federico — CERRADO (2026-07-10)
+Tema del suegro CERRADO por Matías. Se le entregó el paquete completo (CV + empleo + inversión); de acá en más lo maneja él directamente. NO es más un pendiente del portfolio de Matías. Los informes quedan de referencia por si los pide.
