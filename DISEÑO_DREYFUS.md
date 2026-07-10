@@ -111,3 +111,8 @@ Consecuencia: @esquematico diseña el front-end con AD7124 desde el arranque. @h
 
 ## Consumo del AD7124-8 (aclaración 2026-07-10)
 El AD7124-8 es SOLO el ADC (no un micro; el MCU es aparte). Consumo: full-power ~930µA, mid ~255µA, **low-power ~90µA (usar este)**, standby ~1-2µA, power-down ~1µA. Como el nodo mide en ráfagas cortas (3s cada 3-5min) y duerme el resto, el ADC aporta **µA promedio, insignificante para el año de batería.** El consumo REAL a vigilar es el PUENTE DE WHEATSTONE excitado (350Ω@3.3V=9.4mA; 1kΩ=3.3mA; 3.3kΩ=1mA) → el AD7124 tiene corrientes de excitación integradas que se apagan solas entre medidas = gatea el puente automáticamente (prende solo en la ráfaga). Esto es CLAVE: sin gatear el puente, muere la batería (fue asesino del 8800mAh). Preferir galga/puente de alta resistencia (1k-3.3kΩ) para bajar aún más el consumo de excitación.
+
+## ⚠️ CORRECCIÓN LDO (Matías 2026-07-10: "cuál es el voltaje mínimo que le entra?")
+El MCP1700 tiene dropout ~178mV → necesita entrada ≥3.478V para dar 3.3V. PROBLEMA: la LiSOCl2 (3.6V nom) cae a ~3.3-3.4V al descargarse → el MCP1700 deja de regular ANTES de agotar la pila = desperdicia batería. MALO para nodo de 1 año.
+SOLUCIÓN: (a) **directo sin LDO desde 3.6V** — el SX1278 aguanta 3.9V y el ATmega@8MHz anda con 3.6V → cero pérdida, cero Iq, lo más simple y mejor para batería; o (b) **LDO ultra-low-dropout**: TPS7A02 (dropout ~40mV, Iq ~25nA, el ideal) o XC6206/HT7333 (dropout ~100-250mV, fáciles en ML). El AD7124 sí puede tener su LDO chico dedicado para alimentación estable de precisión.
+Regla: para nodo de años con LiSOCl2, JAMÁS un LDO de dropout alto (MCP1700) que corta antes de agotar la pila. Directo o ULDO.
