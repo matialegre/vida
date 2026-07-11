@@ -95,3 +95,56 @@ Listo. Noche cerrada con una tarea bien hecha.
 Paro acá.
 ===== FIN vie 10/07/2026  2:08:34,67 ===== 
 ===== TURNO NOCHE vie 10/07/2026 22:00:02,14 ===== 
+Noche cerrada. Ambos repos limpios y pusheados.
+
+## Resumen de la noche (segunda corrida — "-b")
+
+**Tarea elegida:** barrida de secretos hardcodeados de **FrioSeguro** — la mitad de software del QUE_FALTA #4 + el **hueco #6 del PORTFOLIO** ("barrida de higiene antes del primer cliente pago"). Es **PLATA**, tope de la jerarquía, y era la única tarea de software limpia que **ningún** worker previo había tocado (los wins de datalogger/galgas ya están en branches, y son octubre = 2º).
+
+**Hallazgo real (con evidencia, no supuesto):** el scanner sobre el repo da **exit 1 con 14 secretos a rotar**, todos pusheados a GitHub:
+- 🔴 **10 × Management API token de Supabase** (`sbp_…`) en `tests/*.js` → controla la **cuenta entera** (la exposición más grave del portfolio de electrónica).
+- 🔴 **1 × JWT `service_role`** en `recreate_clean.js:4` → bypass total de RLS.
+- 🟠 **3 × token de bot de Telegram** (`config.h`, `config_SANTA_CRUZ.h`, `DISPOSITIVOS.md`) + `OTA_PASSWORD ""`.
+- 🟢 20 × anon key → correctamente clasificadas **INFO** (públicas por diseño, protegidas por RLS) — no falsa-alarma.
+
+**Qué entregué (software aditivo, 0 riesgo, verificado sin hardware):**
+- `tools/scan_secrets.py` — barredor stdlib que decodifica el payload del JWT para **distinguir anon (ok) de service_role/`sbp_` (crítico)**. Exit 0/1/2, `--json`, `--fail-on`, allow-marker.
+- `tools/test_scan_secrets.py` — **13 checks OK** con fixtures fake (ningún secreto real en el fuente).
+- `SECURITY_AUDIT.md` — hallazgos **enmascarados** + **runbook de rotación** ordenado.
+- `.gitignore` endurecido (bloquea futuros `secrets.h`, `*.pem`, `*.key`, etc.).
+
+**Verificación:** `py_compile` OK · self-test 13/13 OK · scan real exit 1 (34 total / 14 failing) · sin self-trip. Comandos exactos en el informe.
+
+**Lo que NO hice (fuera de alcance nocturno → día/Matías):** rotar las 3 familias de claves, setear `OTA_PASSWORD`, verificar RLS. El worker **no toca la cuenta cloud ni reflashea** — solo detecta/previene. Todo en el runbook.
+
+- Branch: `nocturno/local-2026-07-10-b-secret-scan` (frioseguro, pusheado).
+- Informe: `diario/nocturno-local-2026-07-10-b.md` + QUE_FALTA #4 anotado. MATI-HQ pusheado.
+
+Paro acá.
+===== FIN vie 10/07/2026 22:09:53,92 ===== 
+===== TURNO NOCHE s�b 11/07/2026  2:00:02,27 ===== 
+Listo. Noche cerrada con una tarea bien hecha.
+
+## Resumen
+
+**Tarea elegida:** galgas #2 — revalidar el umbral `v_pp > 40 mV` de auto-disparo del emisor contra la **señal real de campo** (mitad de software). Es P0 de octubre y **converge con Medidas Electrónicas 2** (crédito doble).
+
+**Por qué esa y no otra:** verifiqué en código que FrioSeguro (PLATA) no tiene tarea de software nocturna limpia hoy — incluido el próximo paso que dejó el 07-10-b ("correr el secret-scanner en galgas/datalogger"), que **descarté con evidencia**: galgas tiene 0 secretos críticos (solo 1 anon JWT = INFO), datalogger 0. El hueco #6 del PORTFOLIO sobreestima esos repos. UNI vive fuera de los 4 repos. galgas #2 tenía una mitad 100% verificable sin hardware porque las `field_captures` **son** la señal real.
+
+**Qué hice** (branch `nocturno/local-2026-07-11-vpp-threshold-audit`, desde `main`, pusheado):
+- `tools/vpp_threshold_audit.py` — analizador stdlib **READ-ONLY** que reconstruye el mismo `v_pp = max−min` del firmware desde los buffers crudos y caracteriza su distribución + barrido de umbral.
+- `tools/test_vpp_threshold_audit.py` — 29 checks sintéticos, sin tocar las capturas reales.
+- `docs/vpp-threshold-audit.md` + anotación en `QUE_FALTA.md` #2.
+
+**Hallazgos reales (12 capturas del REDLER):**
+- En **reposo, 40 mV → 0.00% de auto-disparos** en ambos canales (p99 ≤ 12.6 mV, margen >3×).
+- Los **eventos de rotura llegan a 1555 mV** → detecta con margen 38×.
+- 🔎 **Para @muestreador:** con motor ON, el **canal B se auto-dispararía ~2% por vibración** (max 49.4 mV) mientras A queda en 0.00% → decidir en banco subir B a ~50 mV o revisar su front-end.
+- 🔎 Anomalía en `132330.csv` (pico 1557 mV rotulado "motor estable").
+
+**Verificado sin hardware:** `py_compile` OK, self-test **29 checks OK**, auditoría real exit 0. `data/field_captures/` **intacto** (0 cambios en git).
+
+**Sin verificar (hardware — @muestreador):** revalidar con galga física + INA333 y fijar umbral final (40 vs 50 mV); resolver la anomalía de 132330.
+
+MATI-HQ y el branch de galgas commiteados y pusheados. Paro acá.
+===== FIN s�b 11/07/2026  2:13:09,20 ===== 

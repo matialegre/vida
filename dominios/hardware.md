@@ -58,3 +58,6 @@ Matías tiene 2 tomas (enchufes) para embeber en las cajas estancas de FrioSegur
 
 ## ⚠️ LECCIÓN 2026-07-10 (error señalado por Matías)
 La lista de compras v1 incluyó ítems YA en stock (LoRa, galgas, supercap) y un LDO que contradecía la decisión "directo sin LDO". **REGLA DURA para @hardware y todo agente que arme listas de compra: cruzar SIEMPRE contra (1) el inventario de este archivo y (2) las decisiones de diseño vigentes (DISEÑO_DREYFUS.md) antes de entregar.** Un BOM que ignora el stock propio y las decisiones tomadas es peor que no tener BOM.
+
+## ⛔ DECISIÓN 2026-07-11 (Matías): SIM800 DESCARTADO de FrioSeguro
+FrioSeguro va SOLO WiFi. Motivos: (1) técnico — el SIM800 no engancha bien la red (conexión inestable = equipo que a veces no reporta = cliente pierde confianza); (2) negocio — el SIM obliga a administrar chips/saldo/servicio como costo recurrente y responsabilidad mensual propia. Con WiFi la conexión la pone el cliente; el margen del abono queda limpio, sin la telefónica de intermediario. Las 2 PCBs con SIM800 quedan como stock a poblar en variante WiFi (o SIM800 sin soldar). La placa que Matías está terminando ahora = FrioSeguro-WiFi. NO poblar el SIM800.
