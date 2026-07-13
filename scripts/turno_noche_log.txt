@@ -149,3 +149,48 @@ Listo. Noche cerrada con una tarea bien hecha.
 MATI-HQ y el branch de galgas commiteados y pusheados. Paro acá.
 ===== FIN s�b 11/07/2026  2:13:09,20 ===== 
 ===== TURNO NOCHE s�b 11/07/2026 22:00:02,44 ===== 
+Solo entraron `diario/nocturno-local-2026-07-11-b.md` y la línea del log — `hardware.md` no tuvo cambios reales (era solo el aviso de CRLF). Todo limpio.
+
+Noche cerrada. Resumen:
+
+## Tarea: FrioSeguro #11 — Resumen mensual automático por cliente (PLATA)
+Segunda pasada de la noche (la primera fue la rutina cloud de galgas v_pp). Elegí la tarea de **software de mayor prioridad de portfolio no tocada**: el resumen mensual que **retiene abonos** ("este mes: 2 alertas, 0 pérdidas"). No estaba en ningún branch; galgas y datalogger ya tienen deuda de merge; cosechador es P2.
+
+**Qué hice** (branch `nocturno/local-2026-07-11-b-resumen-mensual`, sale de `main`):
+- `_shared/monthly_summary.ts` — **lógica pura sin imports** (corre igual en Deno producción y en Node): agrega `readings/alerts/door_events/power_events` del mes → objeto JSON + texto castellano para WhatsApp/dashboard, con veredicto "0 pérdidas" y cobertura horaria. Columnas tomadas del schema real, no de memoria.
+- `_shared/monthly_summary.test.ts` — **13 checks**.
+- `cron-monthly-summary/index.ts` — edge function glue que **importa** la lógica (no la duplica), patrón idéntico a las cron functions existentes.
+- `migration_monthly_summaries.sql` + job en `SETUP_CRON_JOBS.sql` (aditivos) + `docs/monthly-summary.md`.
+
+**Verificado sin hardware** (Node v24.14.0): `node --test` → **13/13 pass**; `node --check` en los 3 `.ts` → OK; salida de texto real generada y verificada visualmente.
+
+**Pendiente por nube** (día, @backend): aplicar la migración, `functions deploy`, re-correr cron, probar con datos reales. La lógica pura + tests son mergeables ya; el wiring cloud solo tiene verificación de sintaxis.
+
+**Nota al @director**: FrioSeguro acumula **deuda de deploy, no de código** (#4 secret-scan del 07-10-b + #11 de hoy) → conviene un bloque backend Supabase de ~1h con Matías para bajar los dos juntos.
+
+Branch pusheado, MATI-HQ commiteado y pusheado (`71d297a`). Paro acá.
+===== FIN s�b 11/07/2026 22:09:58,08 ===== 
+===== TURNO NOCHE dom 12/07/2026  2:00:02,38 ===== 
+Noche cerrada. Resumen:
+
+## Tarea de esta noche — FrioSeguro #4 (PLATA)
+**Linter de config de provisioning de dispositivo** — `tools/lint_device_config.py`.
+
+**Por qué:** recorrí los 4 QUE_FALTA + 8 nocturnos + todos los branches. Con la jerarquía PLATA primero, FrioSeguro es el tope; sus wins de software ya tocados están en branches (secret-scan #6, resumen-mensual #11), y verifiqué en código que #12 (retención) ya está escrito (falta deployar, no escribir). El **#4 ("sacar defaults + credencial única por cliente")** estaba sin tocar como software y es 100% offline.
+
+**El hallazgo que lo motivó:** un error de config no rompe la compilación — rompe en el comercio del cliente. El linter caza 4 modos anclados a código real:
+- Orden `temp_min<temp_max<temp_critical` roto → alertas nunca/siempre disparan (`alerts.h:137` + `monthly_summary.ts`).
+- `alert_delay_sec=0` → tormenta de falsas alarmas = churn.
+- `OTA_PASSWORD ""` → reflasheo abierto en la LAN.
+- Bot Telegram compartido entre clientes.
+
+**Verificado sin hardware/nube** (Python 3.14.3): `py_compile` OK · self-test **35/35** · lint real del `config.h` → 1 error (OTA) + 1 warn (Telegram) + 2 info = una placa flasheada tal cual **no es client-ready**. Umbrales por defecto sí están bien.
+
+**Branch:** `nocturno/local-2026-07-12-lint-device-config` (pusheado, no mergeado hasta que lo revise @verificador). No es scanner de secretos — complementa `scan_secrets.py`, no lo duplica.
+
+**Dejé documentado (no toqué, es firmware/schema de día):** el firmware solo alerta sobre `temp_critical` (no `temp_max`); y las alertas de puerta no persisten en `door_events`, la tabla que el resumen mensual lee → sección de puertas vacía en producción.
+
+**Para el @director:** FrioSeguro tiene 3 branches de PLATA listos esperando UNA sesión de Supabase/decisión (#6, #11, #4) — sigue en pie agrupar un bloque backend de ~1h.
+
+MATI-HQ y el branch quedaron pusheados; frioseguro en `main` limpio. Paro acá.
+===== FIN dom 12/07/2026  2:10:54,62 ===== 
