@@ -195,3 +195,54 @@ Noche cerrada. Resumen:
 MATI-HQ y el branch quedaron pusheados; frioseguro en `main` limpio. Paro acá.
 ===== FIN dom 12/07/2026  2:10:54,62 ===== 
 ===== TURNO NOCHE lun 13/07/2026 22:00:01,80 ===== 
+Noche cerrada. Resumen de lo hecho:
+
+## Tarea elegida
+**FrioSeguro #11 — aplicar los fixes del @verificador al resumen mensual** para desbloquear su merge. Es **PLATA** (tope de la jerarquía) y la tarea de mayor valor marginal: convierte un feature ya construido de *rechazado* → *mergeable*, en lugar de arrancar algo nuevo. Al revisar el estado real descubrí que secret-scan (#6) y lint (#4) **ya estaban mergeados**; el único branch de PLATA trabado era resumen-mensual, que el @verificador dejó en **MERGE-CON-FIXES**.
+
+## Qué hice — branch `nocturno/local-2026-07-13-resumen-mensual-fixes`
+(sale del branch `-11-b-resumen-mensual`, no de main, para apilar sobre el código revisado)
+- **FIX 1 (RLS, bloqueante)**: la migración ahora hace `ENABLE ROW LEVEL SECURITY` + policy anon-SELECT idéntica a readings/alerts. Cierra la fuga cross-tenant (sin RLS, la anon key embebida dejaba leer/escribir/borrar los resúmenes de todos los clientes). Sin policy de escritura para anon; el cron escribe con service_role.
+- **FIX 2 (confianza)**: veredicto de 3 estados — ya no afirma *"protegida todo el mes"* con 0 % cobertura; dice *"datos insuficientes"*.
+- **DEUDA 3**: `temp_over_critical` respalda el veredicto sin la fila de alerta.
+- **DEUDA 4**: severidad `emergency` cuenta como crítica.
+- Tests **13 → 16** (`node --test` OK), `node --check` 3/3 OK, doc actualizada.
+
+## Verificado (offline, esta noche, Node 24.14.0)
+`node --test` → 16/16 pass · `node --check` → 3/3 OK. Los tests asertan las cadenas exactas renderizadas.
+
+## Sin verificar (necesita Supabase, día)
+Ejecutar la migración (RLS solo se prueba contra la nube) + deploy de la edge function cambiando el `--project-ref` viejo + re-correr cron jobs.
+
+## Extra
+- **Drift corregido en frioseguro main** (commit `31aafb1`): #4 listaba secret-scan/lint como "pendiente de merge" pero ya están mergeados → los pasé a "✅ MERGEADO"; #11 actualizado con ambos branches.
+- **Persistí trabajo diurno de @utn sin commitear** (avances TP SCI + Elec. Industrial del 13-jul que estaban solo en el working tree) — UNI es prioridad #1 y backup es el hueco #1 del PORTFOLIO. Commit aparte y marcado como no-nocturno.
+
+**Estado**: ambos repos limpios, todo pusheado. Informe en `diario/nocturno-local-2026-07-13.md`. Paro acá.
+===== FIN lun 13/07/2026 22:10:25,24 ===== 
+===== TURNO NOCHE mar 14/07/2026  2:00:01,77 ===== 
+Listo. Noche cerrada. Resumen:
+
+## Tarea de la noche
+**FrioSeguro #10 (PLATA) — vista "Estabilidad del equipo" para el comercio.** Rompí a propósito el monocultivo: las últimas ~5 noches fueron todas CLIs de backend y ya había **4 branches de FrioSeguro sin mergear**. Elegí el ítem de PLATA más subatendido y no tocado como software: la resiliencia que el firmware ya emite se veía **solo en el panel admin**, no en la cara que ve el comerciante.
+
+## Qué hice
+- **Hallazgo clave:** el query del cliente trae la fila completa de `readings` (sin `select=`), así que los campos de resiliencia **ya llegaban** — solo faltaba mapearlos y mostrarlos. Por eso el cambio es **sin tocar el query → cero riesgo** de romper el dashboard.
+- `supabaseClient.js`: mapeé al reading del cliente `connection_mode`, `wifi_rssi`, `gsm_signal`, `watchdog/reboot/sensor_fault_count` (mismos nombres que admin). **Dejé `wifi_password` fuera a propósito** (no exponer secretos).
+- `App.jsx`: helpers puros `describeConnection`/`describeSignal` + tarjeta "🛡️ Estabilidad del equipo" de un vistazo (CONEXIÓN / SEÑAL / REINICIOS).
+- `App.css`: reusa `.status-grid`/`.status-card` → mobile-responsive sin CSS de layout nuevo.
+
+## Verificación (offline, esta noche)
+- `npm ci` OK (17s) · `npm run build` **OK** (vite, `built in 1.53s`) · eslint del código nuevo **limpio** (los 8 hallazgos son pre-existentes, ninguno en lo agregado).
+
+## Sin verificar (necesita ojos/hardware, de día)
+Render real con un device reportando (**@tester** en navegador), ajuste de copy/umbrales (**@diseno**), y confirmar la semántica de `gsm_signal`/`connection_mode` con **@firmware** cuando haya una placa SIM800 reportando.
+
+## Branch + docs
+- Branch: `nocturno/local-2026-07-14-vista-estabilidad-comercio` (pusheado, +84 líneas / 3 archivos, aditivo).
+- `QUE_FALTA.md` #10 actualizado en `main` de frioseguro (`4dc1487`).
+- Diario `diario/nocturno-local-2026-07-14.md` commiteado y pusheado a MATI-HQ (`948da85`).
+
+Dejé `scripts/turno_noche_log.txt` (ya venía modificado al arrancar) sin tocar — no es trabajo mío. Paro acá.
+===== FIN mar 14/07/2026  2:07:43,91 ===== 
+===== TURNO NOCHE mar 14/07/2026 22:00:01,92 ===== 

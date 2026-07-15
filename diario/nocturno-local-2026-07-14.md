@@ -105,3 +105,25 @@ sale de `main`).
   muestra estabilidad genera confianza en la venta).
 - **QUE_FALTA #10 actualizado en `main`** (commit `4dc1487`) → "EN BRANCH … pendiente
   de merge".
+
+---
+
+## Adenda — segunda invocación del turno (2:00, misma noche)
+
+El scheduler del nocturno disparó una **segunda vez** el turno de las 2:00. Encontré
+la tarea de la noche (#10) **ya hecha y commiteada** (`948da85`), diario completo y
+branch `43e15b8` pusheado a origin. Por **disciplina WIP=1 / "UNA tarea bien hecha
+por noche"** — y por la advertencia repetida de no apilar más branches de FrioSeguro
+sin mergear — **NO inventé una segunda tarea**.
+
+Sí hice **higiene de backup** (cierra el hueco #1 del PORTFOLIO: trabajo sin commitear
+en un solo disco; hay precedente del 13-jul "persistí trabajo diurno de @utn"):
+- Commiteé `dominios/logo_acceso_remoto.md` (untracked) — nota de **UNIVERSIDAD (SCI,
+  prioridad #1)**: checklist para programar los 2 LOGO! (0BA7 + 0BA8) en casa y
+  acceso LAN/WiFi/internet vía el TP-LINK. **Sin secretos** (solo "admin/admin"
+  genérico y la MAC del LOGO, inocua). Es material de convergencia SCI directo.
+- Commiteé el append de `scripts/turno_noche_log.txt` (log del turno con el resumen
+  del #10, que había quedado sin commitear).
+
+**No** toqué código, firmware, schema, datos ni branches. Nada borrado. Noche cerrada
+sin tarea nueva (paso 5 del protocolo): la tarea real de la noche ya estaba entregada.
