@@ -97,3 +97,72 @@ sale de `main`).
 - **Encadenamiento**: este branch queda "esperando datos" del INA219 del
   datalogger (#4) — cuando @energia arme ese driver, el mismo CSV/medición
   alimenta las dos cosas. Un solo esfuerzo de banco cierra dos pendientes.
+
+---
+
+## Adenda — turno de las 22:00 (misma fecha, nuevo turno del nocturno)
+
+El scheduler disparó el turno de las **22:00 del 15-jul** (~20 h después de la
+corrida de las 2:00 que hizo el energy-budget). Verifiqué primero que la tarea de
+las 2:00 estuviera **entregada de verdad**: branch `nocturno/local-2026-07-15-energy-budget`
+commit `e82f29b` en origin, diario completo, MATI-HQ `9921a84` — todo OK. Es un
+turno nuevo, no una re-disparada duplicada, así que hice **UNA tarea nueva** (no
+FrioSeguro: ya son 6 noches avisando que ahí la deuda es de *deploy*, no de código).
+
+### Tarea elegida — datalogger #5 (mitad de software): auditor de integridad SD
+`nocturno/local-2026-07-15-sd-integrity` (sale de `main`, aditivo, READ-ONLY).
+
+**Por qué:** el #5 es un **RED bloqueante del DoD** del datalogger ("integridad SD:
+detección de gaps + prueba de N horas a la fs objetivo") que nadie había tocado
+como software. A propósito elegí un **validador** (como `scan_secrets`/`lint_device_config`),
+no otro *modelo* de señal — rompe el "monocultivo" de herramientas de análisis que
+el propio worker venía marcando (rssi 07-10, vpp 07-11, energy 07-15, todas modelos).
+Datalogger tiene **solo 1 branch pendiente** (rssi), así que no apila deuda de merge.
+Converge con **Medidas Electrónicas 2** (fs real / trazabilidad del temporizado).
+
+**Hallazgo que hizo la tarea segura (leyendo el firmware real):** el formato de la
+SD **no lo inventé** — es exactamente el de `firmwares/pico2w-node/eco.py:205,248`:
+`# eco rafaga hz_obj=N ...` + `t_us,ax,ay,az,gx,gy,gz`, con `t_us` en µs desde el
+arranque de la ráfaga. No hay seq explícito, pero el `t_us` alcanza: un salto
+`Δt > 1.5·periodo` = muestras perdidas por un stall del **SPI compartido SD↔LoRa**
+(`lora_sx127x.py:5`) cuando el firmware flushea cada 64 muestras (`eco.py:250`).
+
+| Archivo | Qué |
+|---|---|
+| `tools/sd_integrity.py` | Audita una ráfaga o una carpeta `e*.csv` (= la prueba de N horas). Reporta fs real vs objetivo, #gaps + muestras perdidas estimadas por gap (`round(Δt/periodo)-1`), `drop_ppm`, cobertura, jitter (% del periodo), **no-monótonas** (timestamp hacia atrás/wrap) y **corruptas** (línea truncada). `--hz`/`--gap-factor`/`--max-drop-ppm`/`--min-coverage`/`--json`, stdin, agregado multi-archivo con "peor archivo". Exit 0/1/2 como **gate de CI** del DoD "sin gaps". Stdlib puro. |
+| `tests/test_sd_integrity.py` | **29 tests** unittest sobre ráfagas sintéticas: perfecta, gaps de 1 y N muestras, varios gaps ordenados, no-monótonas, corruptas, hz inferida vs override, cobertura, jitter, agregado, exit codes, stdin, JSON. |
+| `docs/sd-integrity.md` | Por qué (bus compartido + flush cada 64), cómo detecta sin seq, uso, exit codes, qué falta (hardware), convergencia UTN. |
+| `QUE_FALTA.md` (datalogger) | #5 → "EN BRANCH … pendiente de merge" con el resumen. |
+
+### Cómo verificarlo (offline, sin hardware)
+```bash
+cd C:\Proyectos\datalogger
+git checkout nocturno/local-2026-07-15-sd-integrity
+python -m unittest tests.test_sd_integrity -v      # -> Ran 29 tests ... OK
+python tools/sd_integrity.py --help
+# demo con gap (5 ms a 1 kHz -> 4 muestras perdidas, exit 1):
+printf '# eco rafaga hz_obj=1000\nt_us,ax,ay,az,gx,gy,gz\n0,1,2,3,4,5,6\n1000,1,2,3,4,5,6\n2000,1,2,3,4,5,6\n7000,1,2,3,4,5,6\n' | python tools/sd_integrity.py -
+```
+**Resultado obtenido esta noche** (Python 3.14.3): `unittest` → **29/29 OK** (0.08 s).
+CLI coherente y verificable a mano (gap de 5000 µs / periodo 1000 µs → 4 perdidas).
+
+### Qué quedó SIN verificar (necesita hardware — @muestreador)
+- **Correr la captura real de N horas** en el nodo y pasarla por la herramienta:
+  esto es el marco de auditoría, no la medición. Cierra el #5 de verdad cuando haya
+  ráfagas reales de banco.
+- **Calibrar el umbral aceptable** (`--gap-factor`, `--max-drop-ppm`) con datos
+  reales: cuánta pérdida tolera el análisis de vibración buscado.
+- Comportamiento con el **otro path de SD** (streaming no-eco de `main.py`, si
+  existiera un formato distinto): hoy la herramienta cubre el formato `eco.py`, que
+  es el único con cabecera de columnas definida encontrado en el firmware.
+
+### Reglas respetadas
+Nada borrado. No toqué firmware, ni datos, ni la SD, ni mDNS (jamás en datalogger),
+ni el path archivado `_ARCHIVO_RASPBERRY_copias_viejas`. No stageé `__pycache__/`.
+Verificación instantánea (Python puro, 0.08 s) — sin compilación pesada ni timeouts.
+El branch **no se mergea** hasta @verificador; es aditivo y los 29 tests pasan.
+Branch `nocturno/local-2026-07-15-sd-integrity` (origin, commit `391f4ce`).
+
+**Disciplina:** dos turnos hoy (2:00 energy-budget octubre-galgas / 22:00 sd-integrity
+octubre-datalogger), UNA tarea cada uno, ambos octubre, ambos "mitad de software"
+de un bloqueante duro, ambos convergentes con la uni. Sin apilar FrioSeguro.

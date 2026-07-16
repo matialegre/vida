@@ -246,3 +246,42 @@ Render real con un device reportando (**@tester** en navegador), ajuste de copy/
 Dejé `scripts/turno_noche_log.txt` (ya venía modificado al arrancar) sin tocar — no es trabajo mío. Paro acá.
 ===== FIN mar 14/07/2026  2:07:43,91 ===== 
 ===== TURNO NOCHE mar 14/07/2026 22:00:01,92 ===== 
+Listo. Working tree limpio, todo pusheado. Cierro.
+
+## Resumen de la noche (2026-07-14)
+
+**Situación:** el turno de las 2:00 se disparó una segunda vez. La tarea real de la noche ya estaba entregada por la corrida anterior:
+- **FrioSeguro #10 (PLATA)** — vista "Estabilidad del equipo" para el comercio. Branch `nocturno/local-2026-07-14-vista-estabilidad-comercio` (`43e15b8`) pusheado, diario completo, QUE_FALTA actualizado, commit `948da85`. ✅ Sólido y verificado offline (build + eslint limpios en el código nuevo).
+
+**Decisión disciplinada:** NO inventé una segunda tarea. La doctrina es UNA tarea bien hecha por noche (WIP=1), y el propio worker viene advirtiendo 5 noches de no apilar más branches de FrioSeguro sin mergear. Arrancar otro feature habría sido "cantidad, no calidad".
+
+**Lo único que hice — higiene de backup (riesgo cero, cierra el hueco #1 del PORTFOLIO):**
+- Persistí `dominios/logo_acceso_remoto.md` que estaba **sin commitear** — nota de UNIVERSIDAD (SCI, prioridad #1): checklist para programar los 2 LOGO! (0BA7 + 0BA8) en casa y acceso LAN/WiFi/internet. Sin secretos. Hay precedente exacto (13-jul se persistió trabajo de @utn).
+- Commiteé el append pendiente del log del turno.
+- Adenda honesta al diario `nocturno-local-2026-07-14.md`.
+
+Commit `af33c0e` pusheado a `main`. No toqué código, firmware, schema, datos ni branches. Nada borrado.
+
+**Para el @director cuando despierte:** sigue pendiente lo repetido — agrupar un bloque de ~1h de día para **bajar la pila de branches de FrioSeguro** (resumen-mensual + fixes + vista #10 esperan merge/deploy). Y la nota LOGO! es un gancho de convergencia SCI que conviene que @utn levante.
+===== FIN mar 14/07/2026 22:03:29,54 ===== 
+===== TURNO NOCHE mi� 15/07/2026  2:00:01,84 ===== 
+Noche cerrada. Resumen:
+
+## Tarea de la noche — galgas #3 (mitad de software), branch pendiente de merge
+
+**Qué elegí y por qué:** el presupuesto de energía del emisor de galgas — bloqueante duro del DoD de octubre que nadie había tocado como software. Deliberadamente **octubre** (prioridad #2) y **no FrioSeguro**: ya hay **5 branches de FrioSeguro sin mergear** (es deuda de *deploy*, no de código, avisado 6 noches seguidas). Encaja en el patrón que ya funcionó dos veces (`rssi_calibrate` 07-10, `vpp_threshold_audit` 07-11) y **converge con Medidas Electrónicas 2** (uni, prioridad #1).
+
+**Qué hice** (`nocturno/local-2026-07-15-energy-budget`, sale de `main`, aditivo, READ-ONLY):
+- `tools/energy_budget.py` — modela el ciclo deep-sleep del firmware v3 y calcula autonomía en días. Periodos **exactos** de `protocol.h`; corrientes por defecto **estimadas** (datasheet/PLAN_CONSUMO), reemplazables por medición INA219 con `--model`. CLI con `--profile/--mode/--period/--mix/--min-days/--json`. Stdlib puro.
+- `tools/test_energy_budget.py` — **28 tests, OK**.
+- `docs/energy-budget.md` + `QUE_FALTA.md` #3 → "EN BRANCH".
+
+**Verificación (offline, hecha):** `python -m unittest test_energy_budget -v` → **28/28 OK** en 0.03 s. Un test replica el cálculo a mano. Sin compilación pesada, sin timeouts.
+
+**Hallazgo del modelo (para @energia):** a 600 s el **wake se lleva el 99.2 % de la energía** → la palanca es acortar/espaciar el wake (candidato: ESP-NOW en vez de asociación WiFi), no optimizar el deep sleep. Un 1 % de duty en ALERTA baja la autonomía de ~57 a ~36 días.
+
+**Sin verificar (hardware — @energia con INA219):** corrientes reales por fase, duración real del connect WiFi en planta, capacidad/derate reales de la LiPo. El branch queda "esperando datos" del INA219 del datalogger (#4) — un solo banco cierra los dos.
+
+**Commits:** galgas `e82f29b` (branch pusheado) · MATI-HQ `9921a84` (diario, pusheado). No toqué firmware, schema, datos ni `field_captures/`. Nada borrado. Dejé `scripts/turno_noche_log.txt` (del wrapper) sin tocar. Paro acá.
+===== FIN mi� 15/07/2026  2:07:43,66 ===== 
+===== TURNO NOCHE mi� 15/07/2026 22:00:02,16 ===== 
