@@ -335,3 +335,29 @@ Todo entregado. Turno cerrado.
 Paro acá.
 ===== FIN jue 16/07/2026  2:12:43,19 ===== 
 ===== TURNO NOCHE jue 16/07/2026 22:00:01,81 ===== 
+Listo. Turno cerrado.
+
+## Qué hice
+
+**Tarea: galgas #14 — que los docs de entrada digan la verdad.** Era el único ítem listado en los 4 `QUE_FALTA` sin branch. Todos los bloqueantes duros ya están en branch (galgas RX/SCADA/OTA, datalogger ×4, FrioSeguro ×5), y las 4 noches anteriores fueron herramientas stdlib seguidas — otra habría sido cantidad, no calidad.
+
+**Resultó no ser cosmético.** `CLAUDE.md:22` manda leer el README **primero**, y el README decía *"Estado: 🟡 Scaffolding creado, esperando contexto de uso real — completar CONTEXTO_USO_REAL.md antes de empezar"*, más `CLAUDE.md:24` *"si está incompleto, detenerse y preguntar"*. Cualquier cold-start en el proyecto **P0 de octubre se frenaba solo**. Las dos premisas eran falsas: el sistema está validado E2E y `CONTEXTO_USO_REAL.md` tiene 203/295 líneas completas. Eso es harness, no prosa.
+
+Drift verificado con file:línea: ref a `docs/PLAN_v2_DEFINITIVO.md` (no existe), `backend/config.toml` (real: `backend/supabase/`), workspace viejo, "8 carpetas" (son 24), y `docs/INDEX.md` listaba 8 docs de 14 y 2 ADRs de 5 — **le faltaba el plan vigente** (`PLAN_v5_GATEWAY.md`).
+
+**Verificación:** 21/21 links markdown resuelven. Números contados contra `git ls-files`. Mi primer chequeador dio 23 falsos positivos y lo rehíce; y en el borrador **yo mismo escribí "7 migraciones"** cuando son **15** — lo cacé verificando, antes de commitear. No commiteé mi propia versión del pecado que vine a arreglar.
+
+## Dos cosas que necesito de vos
+
+1. 🔴 **Contradicción de versión de firmware:** el repo dice `FW_VERSION "0.8.1-A-otatest"` (`config.h:18`) con bins 0.8.0/0.8.1; PORTFOLIO y `QUE_FALTA` #4 dicen OTA `0.1.2→0.1.3`. No se resuelve sin mirar el device o `firmware_versions` — y **bloquea reflashear B**. Lo documenté sin elegir ganador.
+2. 🟡 La estructura real viola el **ADR-0001** (24 entradas; `ejemplo supabase/` con espacio). **No moví ni borré nada** — reordenar carpetas es decisión tuya. ¿Se reordena o se actualiza el ADR?
+
+**Aviso de merge:** los dos branches de hoy tocan `QUE_FALTA.md` (ítems distintos) → conflicto trivial, se aceptan los dos. Mergear primero el alert-hold.
+
+Branch: `nocturno/local-2026-07-16-b-docs-entrada` (`9b7e002`) · MATI-HQ: `d6079db` · Informe: `diario/nocturno-local-2026-07-16-b.md`
+
+Sin verificar: el estado de banco que el README **relaya** de `act.md` (abril) — está explícitamente separado de la tabla de evidencia. Y `act.md` sigue siendo de abril: actualizarlo es tarea de @cronista **con vos**, porque inventar qué pasó en el banco desde mayo sería peor que el drift que arreglé.
+
+Novena noche avisando: la pila de **FrioSeguro (5 branches)** es ~1 h de día. Es deploy, no código.
+===== FIN jue 16/07/2026 22:08:03,33 ===== 
+===== TURNO NOCHE vie 17/07/2026  2:00:01,89 ===== 
