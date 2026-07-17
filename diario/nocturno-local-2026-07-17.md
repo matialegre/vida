@@ -141,7 +141,13 @@ verificación pesada (compilación) fue **con toolchain ya instalado** y con tim
 **no se mergea** hasta @verificador.
 
 ## Branch
-`nocturno/local-2026-07-17-linaje-firmware` (pusheado a origin; sale de `main`).
+`nocturno/local-2026-07-17-linaje-firmware` (pusheado a origin, commit `6539864`; sale de `main`).
+
+> **Nota menor:** no pude anexar el resumen a `scripts/turno_noche_log.txt` — el `.bat` del
+> turno lo tiene abierto y bloqueado (`Device or resource busy`) hasta que escribe su
+> `===== FIN`. Lo intenté con bash y con PowerShell. No lo forcé: este informe es el
+> entregable, el log es un eco. Si molesta, el fix es que el `.bat` cierre el handle entre
+> escrituras.
 
 ⚠️ **Aviso de merge:** este branch y `nocturno/local-2026-07-16-b-docs-entrada` tocan los dos
 `QUE_FALTA.md` saliendo de `main` ⇒ **conflicto probable**. Trivial: son notas en ítems
