@@ -285,3 +285,53 @@ Noche cerrada. Resumen:
 **Commits:** galgas `e82f29b` (branch pusheado) · MATI-HQ `9921a84` (diario, pusheado). No toqué firmware, schema, datos ni `field_captures/`. Nada borrado. Dejé `scripts/turno_noche_log.txt` (del wrapper) sin tocar. Paro acá.
 ===== FIN mi� 15/07/2026  2:07:43,66 ===== 
 ===== TURNO NOCHE mi� 15/07/2026 22:00:02,16 ===== 
+Both working trees clean, both branches/commits pushed. Noche cerrada.
+
+## Resumen del turno (22:00 del 2026-07-15)
+
+**Contexto:** el turno de las 2:00 de hoy ya había entregado su tarea (galgas #3 energy-budget, `e82f29b` + MATI-HQ `9921a84`). Lo verifiqué en origin antes de decidir. Este fue el turno de las **22:00** (~20 h después) → turno nuevo, no re-disparada → **una tarea nueva**.
+
+**Tarea:** datalogger **#5** (RED bloqueante del DoD, "integridad SD / detección de gaps"), la mitad de software.
+- **Por qué:** bloqueante duro no tocado como software; elegí un **validador** (no otro modelo de señal) para romper el monocultivo rssi/vpp/energy que el propio worker venía marcando; datalogger solo tiene 1 branch pendiente (no apila deuda de merge); converge con **Medidas Electrónicas 2**. A propósito **no** FrioSeguro (6 noches avisando que ahí la deuda es de *deploy*, no de código).
+- **Anclado al firmware real:** el formato de la SD lo saqué de `firmwares/pico2w-node/eco.py` (`# ...hz_obj=N` + `t_us,ax..gz`), no lo inventé. Sin seq explícito, uso el `t_us`: `Δt > 1.5·periodo` = muestras perdidas por stall del **SPI compartido SD↔LoRa**.
+
+**Entregado** (`nocturno/local-2026-07-15-sd-integrity`, commit `391f4ce`, aditivo/READ-ONLY):
+- `tools/sd_integrity.py` — fs real vs objetivo, gaps + perdidas estimadas, `drop_ppm`, cobertura, jitter, no-monótonas/corruptas; carpeta `e*.csv` → agrega la prueba de N horas; exit 0/1/2 como gate de CI.
+- `tests/test_sd_integrity.py` — **29 tests, OK** (0.08 s, Python 3.14.3).
+- `docs/sd-integrity.md` + `QUE_FALTA.md` #5 → "EN BRANCH".
+
+**Verificación** (offline, hecha): `python -m unittest tests.test_sd_integrity` → **29/29 OK**; demo con gap de 5 ms a 1 kHz → 4 perdidas, exit 1.
+
+**Sin verificar (hardware, @muestreador):** correr la captura real de N horas y calibrar el umbral aceptable con datos de banco.
+
+**MATI-HQ (main):** adenda al `diario/nocturno-local-2026-07-15.md` + persistí `scripts/turno_noche_log.txt` (higiene de backup), commit `73e1e99` pusheado.
+
+Nada borrado. No toqué firmware, datos, SD, ni mDNS. Branch **no** mergeado — espera @verificador. Paro acá.
+===== FIN mi� 15/07/2026 22:10:44,31 ===== 
+===== TURNO NOCHE jue 16/07/2026  2:00:02,20 ===== 
+Todo entregado. Turno cerrado.
+
+## Resumen del turno nocturno — 2026-07-16
+
+**Tarea elegida:** galgas #2/#3 — *replay del hold/debounce de la alerta del emisor contra la señal real de campo*, que además **destapó un bug latente de correctness** relevante para octubre.
+
+**Por qué esta y no otra:** recorrí los 4 `QUE_FALTA` + los nocturnos 07-10→07-15 + **todas** las branches. Todos los bloqueantes "obvios" ya tienen branch en los 4 repos (galgas RX/SCADA/OTA/energy/vpp, datalogger ina219/ecolora/sd-integrity/rssi, FrioSeguro 5 branches de deploy, cosechador P2 gated por compra). No había fruta baja sin tocar → había que encontrar algo genuinamente nuevo. Leyendo el firmware real lo encontré.
+
+**El hallazgo (con evidencia file:línea):** el emisor v3 **carga** `th_v/th_r/hold_sec` de NVS y los deja setear por comando cloud (`CMD_SET_THRESHOLDS`), pero la alerta decide con la constante de compilación `SELF_TRIGGER_VPP_V` (`esp_a_emisor.ino:259`) e **ignora `th` entero + no aplica ningún hold** → `set_thresholds` desde la nube es un **no-op** y `hold_sec` (recomendado 2-3 s por el informe §9.2) no existe.
+
+**Qué construí** (branch `nocturno/local-2026-07-16-alert-hold-replay`, commit `2ee6552`, en origin):
+- `tools/alert_hold_replay.py` — stdlib, READ-ONLY sobre las capturas sagradas; agrega la **dimensión temporal** que le faltaba al vpp-audit del 07-11 (reusa sus 2 helpers probados).
+- `tools/test_alert_hold_replay.py` — **30 tests unittest, OK** (0.04 s).
+- `docs/alert-hold-replay.md` + nota en `QUE_FALTA.md`.
+
+**Hallazgos sobre las 12 capturas reales del REDLER:** reposo puro = 0 espurias sin hold (40 mV es seguro en reposo); el falso positivo de motor del canal B es **sostenido** (racha 30 bursts) → el hold 2-3 s del §9.2 es **necesario pero NO suficiente** para B (hace falta el fix de umbral/front-end de B ya identificado el 07-11); un hold=3 casi no toca la rotura real (`reposo_1`: 93/97 alertas, +2 bursts de latencia).
+
+**Verificación:** `python -m unittest tools.test_alert_hold_replay` → 30/30 OK. Sin hardware, Python puro, sin timeouts.
+
+**Sin verificar (hardware):** cablear `th_v`+`hold_sec` en `:259` y re-verificar en banco (@firmware); cadencia real de wake de v3; galga física nueva.
+
+**Reglas:** nada borrado, `data/field_captures/` intacto (solo lectura), sin secretos, branch **no** mergeado (espera @verificador). MATI-HQ: diario `5833fd9` pusheado. El `turno_noche_log.txt` quedó bloqueado por el proceso del launcher — lo dejé para que lo persista él (el diario es el registro autoritativo).
+
+Paro acá.
+===== FIN jue 16/07/2026  2:12:43,19 ===== 
+===== TURNO NOCHE jue 16/07/2026 22:00:01,81 ===== 
