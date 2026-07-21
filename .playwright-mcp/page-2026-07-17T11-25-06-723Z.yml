@@ -1,7 +1,0 @@
-- generic [active] [ref=e1]:
-  - heading "⚓ LA BATALLA FINAL" [level=1] [ref=e2]
-  - generic [ref=e3]:
-    - generic [ref=e4]: 🚢
-    - paragraph [ref=e5]: "En el celu: abrí el juego y tocá CREAR PARTIDA.Después apretá acá:"
-    - button "🔍 ¡BUSCAR LA PARTIDA!" [ref=e6] [cursor=pointer]
-    - button "⌨️ Unirse por IP" [ref=e7] [cursor=pointer]

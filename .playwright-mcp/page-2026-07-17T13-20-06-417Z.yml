@@ -1,6 +1,0 @@
-- generic [active] [ref=e1]:
-  - button "← Menú" [ref=e2]
-  - heading "✏️ TUTTI FRUTTI" [level=1] [ref=e3]
-  - generic [ref=e4]:
-    - generic [ref=e5]: 🍓
-    - generic [ref=e6]: Conectando…

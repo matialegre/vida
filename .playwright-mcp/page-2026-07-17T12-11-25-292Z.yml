@@ -1,7 +1,0 @@
-- generic [active] [ref=e1]:
-  - button "← Menú" [ref=e2]
-  - generic [ref=e3]:
-    - generic [ref=e4]: 🕵️
-    - heading "¿QUIÉN SOY?" [level=1] [ref=e5]
-    - paragraph [ref=e6]: "El juego para cuando papá maneja 🚗 1. El copiloto sostiene la tablet y ve la carta secreta. 2. El que maneja hace preguntas de SÍ o NO: \"¿Es un animal?\" \"¿Es grande?\" \"¿Vuela?\" 3. ¡Cuando la adivina, apretá el botón verde!"
-    - button "▶️ ¡EMPEZAR!" [ref=e7]

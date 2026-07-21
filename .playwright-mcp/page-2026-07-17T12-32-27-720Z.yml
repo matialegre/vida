@@ -1,4 +1,0 @@
-- generic [active] [ref=e1]:
-  - button "← Menú" [ref=e2]
-  - generic: 🧱 ¡Subí saltando hasta la ⭐!Palanca para moverte, ⬆️ para saltar
-  - button "⬆️" [ref=e5]

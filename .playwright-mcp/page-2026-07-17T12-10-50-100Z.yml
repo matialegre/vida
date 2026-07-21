@@ -1,8 +1,0 @@
-- generic [active] [ref=f6e1]:
-  - button "← Menú" [ref=f6e2]
-  - heading "🙈 EL AHORCADO" [level=1] [ref=f6e3]
-  - generic [ref=f6e4]:
-    - generic [ref=f6e5]: 🐒
-    - paragraph [ref=f6e6]: ¡Adiviná la palabra antes de queel monito quede colgado!
-    - button "🎲 JUGAR SOLA" [ref=f6e7]
-    - button "👨‍👧 DE A DOS (uno escribe la palabra)" [ref=f6e8]

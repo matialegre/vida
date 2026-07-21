@@ -1,9 +1,0 @@
-- generic [active] [ref=f1e1]:
-  - button "← Menú" [ref=f1e2]
-  - generic [ref=f1e3]:
-    - generic [ref=f1e4]: 🏝️
-    - generic [ref=f1e5]: LOS COLONOS
-    - generic [ref=f1e6]: Poblados, caminos y el ladrón 🦹Primero en llegar a 8 ⭐ gana
-    - button "🤖 Contra la compu (1J)" [ref=f1e7]
-    - button "📱 En este aparato (2-4)" [ref=f1e8]
-    - button "🌐 Entre aparatos (2-4)" [ref=f1e9]
