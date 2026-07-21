@@ -1,0 +1,8 @@
+- generic [active] [ref=f4e1]:
+  - button "← Menú" [ref=f4e2]
+  - generic [ref=f4e4]:
+    - button "⬆️" [ref=f4e6]
+    - button "⬅️" [ref=f4e8]
+    - button "➡️" [ref=f4e10]
+    - button "⬇️" [ref=f4e12]
+  - button "💣" [ref=f4e14]

@@ -1,0 +1,7 @@
+- generic [active] [ref=f2e1]:
+  - button "← Menú" [ref=f2e2]
+  - generic [ref=f2e3]:
+    - generic [ref=f2e4]: 🧠
+    - heading "TRIVIA FAMILIAR" [level=1] [ref=f2e5]
+    - paragraph [ref=f2e6]: "El juego para cuando papá maneja 🚗 La copiloto lee la pregunta en voz alta 📢 El que le toca responde sin mirar Después tocás \"ver respuesta\" y marcás si acertó. Turnos alternados: preguntas fáciles para 👧,más difíciles para 🧔. ¡8 y 8, gana el que más sume!"
+    - button "▶️ ¡EMPEZAR!" [ref=f2e7]

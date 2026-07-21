@@ -361,3 +361,215 @@ Sin verificar: el estado de banco que el README **relaya** de `act.md` (abril) �
 Novena noche avisando: la pila de **FrioSeguro (5 branches)** es ~1 h de día. Es deploy, no código.
 ===== FIN jue 16/07/2026 22:08:03,33 ===== 
 ===== TURNO NOCHE vie 17/07/2026  2:00:01,89 ===== 
+Todo pusheado y ambos repos limpios en `main`. Termino acá.
+
+## Lo que encontré esta noche
+
+**El repo de galgas tiene dos linajes de firmware de emisor, y el cuartel documenta el retirado.** El emisor de producción es `firmware/ota_wm_pp/ota_wm_pp.ino` (3.6.5), no `firmware/esp_a_emisor/` (0.8.1, retirado el 27-abr cuando nació el PLAN v5).
+
+Arranqué por el hallazgo que el turno del 16-b dejó abierto como "decisión que sólo Matías puede tomar": *0.8.1 vs 0.1.3, no se sabe sin mirar el device*. Resultó resoluble sin hardware — y la pregunta estaba mal planteada: **las dos versiones son viejas**. La prueba que cierra el caso es el propio plan vigente: `PLAN_v5_GATEWAY.md` §5 se titula *"Emisores (A y B) — ya implementado en 3.5.0"* y apunta a `ota_wm_pp`; a `esp_a_emisor` no lo nombra ni una vez.
+
+La causa raíz es que `act.md` se declara fuente de verdad pero **termina en la sesión 8 (26-abr)** y nunca registró el corte de linaje. `QUE_FALTA.md` y `PORTFOLIO.md` copiaron sus números de buena fe hace ~3 meses.
+
+**Tres consecuencias que mueven octubre:**
+
+1. 🔴 **El sistema no entra en alerta solo.** En el firmware vigente `in_alert` no se calcula de la señal: es el perfil de compilación (`ota_wm_pp.ino:1411`). Cero umbral, cero hold; el RX sólo muestra el flag que le llega. El lazo señal→alerta no está cerrado, y no figuraba en ningún `QUE_FALTA`.
+2. 🔴 **`QUE_FALTA` #4 era una instrucción dañina**: reflashear B "a 0.1.3" lo downgradea al linaje retirado, sacándole los perfiles de energía y el gateway del v5.
+3. 🟢 **El bloqueante #1 está mejor de lo documentado**: la Task 08 del RX está terminada en `rx/task08-completo` (3.7.0/3.7.1). Falta banco, no código.
+
+**Corregí mis propios turnos previos:** el 07-15 y el 07-16 leyeron el sketch muerto. El "bug latente set_thresholds no-op" que reporté el 16 queda anulado — es real en ese archivo, pero ese archivo no es producción. El análisis de datos de esas noches se salva: no depende del sketch, y ahora tiene el destinatario correcto.
+
+**Entregado:** branch `nocturno/local-2026-07-17-linaje-firmware` (`6539864`) — 3 archivos, sólo docs, cero código, nada borrado ni movido. Verificado offline con greps más la compilación del sketch vigente (1.226.600 bytes, 62%, exit 0, toolchain ya instalado, sin descargas).
+
+**Sin verificar, necesita device o cloud:** qué bin corre hoy en A/B/RX — conviene chequearlo **antes** de flashear B. Y las sesiones 9+ de `act.md` las tenés que escribir vos: no sé qué pasó en el banco desde abril y no lo iba a inventar.
+
+Dos cosas para vos: **no toqué el `PORTFOLIO.md`** (la línea 32 tiene el 0.1.3 viejo) — es del @director y prefiero que mires la corrección. Y para el @verificador dejé escrito cuál es la afirmación a romper primero: si `esp_a_emisor/` resultara ser el sucesor y no el retirado, se cae el informe entero.
+
+Detalle menor: no pude anexar el resumen a `scripts/turno_noche_log.txt` — el `.bat` del turno lo tiene bloqueado hasta que escribe su `FIN`. Lo intenté con bash y PowerShell; no lo forcé, está anotado en el informe.
+===== FIN vie 17/07/2026  2:11:38,62 ===== 
+===== TURNO NOCHE vie 17/07/2026 22:00:01,77 ===== 
+Listo. Turno nocturno completo. Resumen:
+
+**Tarea elegida:** item #8 del datalogger — el drift de casing del SSID del GIMAP (`"GIMAP"` vs `"Gimap"`), un footgun latente que muerde justo al desplegar en la PC del GIMAP (los SSID WiFi son case-sensitive en el aire). Era el único hueco de software real sin branch en los 4 repos: casi todos los bloqueantes ya están en branches esperando merge, cosechador está gateado por compra, y frioseguro es pura deuda de deploy.
+
+**Qué hice** (branch `nocturno/local-2026-07-17-b-ssid-casing` en datalogger, pusheado, pendiente de merge):
+- Centralicé la lista de redes en `firmwares/pico2w-node/wifi_nets.py` (mata la triplicación que era la raíz del drift) con **ambos casings** del GIMAP. El nodo conecta emita el AP `GIMAP` o `Gimap`, sin depender de averiguar cuál usa la red real.
+- `eco.py`/`ota.py`/`wifi_push.py` ahora importan `NETS` del módulo compartido.
+- Test de invariantes `tests/test_wifi_nets.py`.
+
+**Por qué así:** no adiviné el casing (eso sería especulativo) — eliminé la necesidad de saberlo. Elegí lista-de-dos-entradas (data) por sobre un matcher case-insensitive porque este último cambia el flujo de conexión en firmware que no puedo correr sin hardware, con riesgo de romper el camino que hoy anda.
+
+**Verificado sin hardware:** `python -m py_compile *.py` (el mismo gate que corre el flasher) exit 0 + los 3 tests pasan. Sin descargas pesadas, cero riesgo de timeout.
+
+**Pendiente con hardware:** confirmar el SSID real en banco y, si el gateway físico COM13 (que usa `"Gimap"`) va al GIMAP, aplicarle el mismo criterio. Anotado en `QUE_FALTA.md #8`.
+
+**Estado limpio:** datalogger en `main`, MATI-HQ pusheado (informe en `diario/nocturno-local-2026-07-17-b.md`). No toqué legacy, snapshots por-COM, ni `field_captures`. El branch no se mergea hasta @verificador.
+
+Nota: este fue el turno B del 17 — el turno A ya había trabajado galgas (linaje de firmware), así que no se pisaron.
+===== FIN vie 17/07/2026 22:12:14,15 ===== 
+===== TURNO NOCHE s�b 18/07/2026  2:00:01,90 ===== 
+Noche cerrada. Resumen de lo que hice mientras dormías:
+
+## Tarea de la noche
+**Modelo de referencia + suite de tests offline de la decisión de alerta de FrioSeguro** — la lógica que decide si el cliente se entera de que se le rompe el freezer. Es literalmente *lo que se cobra* ("el servicio avisa"), y no tenía ningún test: el único simulador la **fingía** (`alert_active = temp_avg > -10`).
+
+**Por qué esta:** FrioSeguro es la palanca de PLATA (prioridad #1). Todo lo bloqueante de galgas/datalogger ya está en branch o es hardware; cosechador está gateado por compra. El único hueco de **software nuevo, prioritario y 100% verificable offline** era el core del producto de la plata.
+
+## Qué quedó
+Branch `nocturno/local-2026-07-18-alert-model` (frioseguro), pendiente de merge:
+- `tools/alert_model.py` — espejo fiel de `firmware_modular/alerts.h::checkAlerts` en Python stdlib (oráculo, no versión "limpia").
+- `tools/test_alert_model.py` — **12 tests, todos OK**.
+- `docs/alert-model.md` — el porqué, la correspondencia 1:1 y el hallazgo.
+- Nota #18 en `QUE_FALTA.md` (commiteada en `main`, según convención del repo).
+
+## Hallazgo (con test que lo demuestra, **no** corregido)
+En `checkAlerts`, las ramas de **defrost/cooldown** hacen `return` sin reiniciar `highTempSec`/`lastAlertCheck` → la primera lectura crítica **post-descongelamiento** dispara la alerta al instante, salteándose `alert_delay_sec`. Dirección falso-positivo → riesgo de falsa alarma que molesta al cliente. Fix candidato de 2 líneas documentado. No lo toqué: firmware de producción sin banco = prohibido por doctrina. Queda para @firmware.
+
+## Verificación
+```bash
+cd C:\Proyectos\frioseguro
+git checkout nocturno/local-2026-07-18-alert-model
+python -m unittest tools.test_alert_model   # -> OK (12 tests, <1s)
+```
+Sin toolchains pesados, sin riesgo de timeout. Nada de firmware/schema/nube/secretos tocado.
+
+**Pendiente de banco:** confirmar el bug en un ciclo de defrost real y aplicar el fix. **Aviso de 10 noches sigue en pie:** la pila de FrioSeguro (ahora 6 branches) necesita ~1 h de día con @verificador — esta es chica y no depende de las otras 5.
+===== FIN s�b 18/07/2026  2:12:38,98 ===== 
+===== TURNO NOCHE s�b 18/07/2026 22:00:01,78 ===== 
+Listo. Noche cerrada. Resumen:
+
+## Turno B del 2026-07-18 — completado
+
+**Tarea elegida:** modelo de energía offline del **cosechador** (área fresca — cero branches nocturnos previos). El turno A de hoy ya había trabajado FrioSeguro, así que fui a otro repo sin pisarme.
+
+**Por qué:** el cosechador tenía el paper analizado y las decisiones de componentes tomadas, pero **ningún número de diseño calculado** (todo "No medido" en PROGRESS.md). El pedazo que no necesita hardware — reproducir el paper y derivar los números — es exactamente la convergencia académica a **TC2 + Medidas Electrónicas 2**, que es **UNIVERSIDAD, prioridad #1** del portfolio. Es la jugada de la CONVERGENCIA ejecutada offline, sin gastar un peso.
+
+**Qué hice** (branch `nocturno/local-2026-07-18-modelo-energia`, cosechador):
+- `analisis/harvester_model.py` — modelo stdlib del flujo piezo→LTC3588→supercap→ATmega+NRF24.
+- `analisis/test_harvester_model.py` — **18 tests** que anclan contra las Tablas 5 y 6 del paper.
+- `docs/energia-modelo.md` — fundamento, correspondencia 1:1, hallazgos, límites, mapeo a los finales.
+- `.gitignore` + notas en PROGRESS/QUE_FALTA.
+
+**Resultados:** reproduce el paper (8.70 h ≈ 8.69 h publicado ✓) y deriva lo que faltaba: energía útil **15.25 J**, autonomía solo-sleep **77 días**, **~18.900 TX** por carga, y el hallazgo clave: **el cuello de botella es el arranque en frío (8.1 h), no el consumo en régimen**. De paso destapó 2 números mal en `DECISIONS.md` (D9 "27 J" → debería ser 54.45 J para 10 F; D5 "~µW" → es ~mW en vibración).
+
+**Verificación:** `py_compile` exit 0 + **18/18 tests OK** + CLI reproduce el paper, todo en <0.01 s. Sin descargas ni riesgo de timeout.
+
+**Sin verificar (necesita banco, fase 2):** rendimiento real del piezo, dinámica fina del LTC3588, duty cycle real de vibración.
+
+**Pusheado:** branch en cosechador + informe `diario/nocturno-local-2026-07-18-b.md` en MATI-HQ (main). No mergeé nada — espera a @verificador.
+
+Nota menor: el repo cosechador no tenía identidad git seteada (migrado hace poco); la configuré local = vos para poder commitear.
+===== FIN s�b 18/07/2026 22:09:55,02 ===== 
+===== TURNO NOCHE dom 19/07/2026  2:00:01,90 ===== 
+Noche cerrada. Resumen de lo hecho:
+
+## Tarea elegida
+**galgas #2 (octubre) — modelo/replay offline de la alerta DIFERENCIAL del RX contra los datos reales de campo.** 100% software, READ-ONLY sobre datos sagrados, cero hardware.
+
+**Por qué:** FrioSeguro (P1) ya se trabajó el 18 y su pila es deuda de deploy; datalogger y cosechador tienen su análisis de esta semana ya en branch. En galgas encontré un hueco real que los tools previos dejaron abierto: `vpp_threshold_audit` (07-11) y `alert_hold_replay` (07-16) modelaron el auto-disparo del **emisor** (v_pp local) — el vpp-audit dejó **explícitamente afuera** la alerta del RX. Pero la alerta del RX (`dv=|vA-vB|≥TH_V` o `ratio≤TH_R`, con hold y clasificación de cadena rota) **es la alerta que ve Dreyfus** (LED/relé/SCADA) y nunca se había modelado ni cruzado contra el ground-truth.
+
+## Qué entregué (branch `nocturno/local-2026-07-19-rx-detection-replay`)
+- `tools/rx_detection_replay.py` — espejo 1:1 de `esp_rx_receptor.ino::updateAlert` caso 3, con replay fila-a-fila contra la columna `in_alert` de las 12 capturas.
+- `tools/test_rx_detection_replay.py` — **17 tests, todos OK**.
+- `docs/rx-detection-replay.md` + nota en `QUE_FALTA.md`.
+
+## Resultados verificados
+- **Sensibilidad ~100%**, clasificación de causa **99.9-100%**, **0 falsas alarmas en reposo**.
+- **Hallazgo cuantificado para @muestreador:** el RX de producción actual es **~1-4% más "trigger-happy"** que el algoritmo de campo legacy de feb-2026 sobre la misma señal (+118 alertas en el ensayo principal) → **drift medible** entre el firmware de octubre y lo que vio la planta. No es bug; no toqué firmware.
+
+## Verificación (instantánea, sin timeout)
+`py_compile` exit 0 + `python -m unittest tools.test_rx_detection_replay` → **17/17 OK** + el replay reproduce el ground-truth. `git status data/` limpio (capturas intactas).
+
+## Sin verificar (necesita banco)
+Causa fina del drift (comparar los dos firmwares), las ramas emisor-off/batería (estado runtime ausente en el CSV), y el umbral definitivo con galga física.
+
+Branches pusheados: galgas (branch de trabajo) y MATI-HQ/main (informe). Todo pendiente de @verificador antes de merge.
+===== FIN dom 19/07/2026  2:10:24,11 ===== 
+===== TURNO NOCHE dom 19/07/2026 22:00:01,79 ===== 
+Listo. Noche cerrada con una tarea bien hecha.
+
+## Resumen del turno (nocturno local 2026-07-19-b)
+
+**Tarea elegida:** modelo/validador offline del protocolo de malla **RV1** del datalogger (P0 octubre — "terminarlo primero"). El ruteo mesh (parse/dedupe/TTL/relay) vivía solo en firmware y **no tenía ni un test offline**; los branches previos de `sd-integrity` cubrieron la SD, nunca la malla.
+
+**Qué hice** (branch `nocturno/local-2026-07-19-b-rv1-mesh-model`, datalogger, pusheado — 4 archivos, 732 inserciones, cero borrados):
+- `tools/rv1_mesh_model.py` — espejo 1:1 de `nodo.py::LoRaTx.poll/.service` (stdlib, no toca hardware/SD/nube) + auditoría de los frames que emite el codebase + sim de flood.
+- `tools/test_rv1_mesh_model.py` — **32 tests, OK**.
+- `docs/rv1-mesh-model.md` + nota en `QUE_FALTA.md` #6.
+
+**Hallazgo 🔴 (verificable, NO corregido — es de @firmware):** el gateway arma el frame de comando con **7 campos sin `via`** (`esp32_dashboard.ino:391` → `RV1|GW|P2|42|3|C|reset`), pero el nodo hace `split('|',7)` y exige 8 → **descarta todo comando downlink**. Fix candidato de **1 carácter**: `|3|C||`. Más un drift de docs (comentarios describen el formato viejo). Falta confirmarlo en banco con gateway + 2 nodos + ACK.
+
+**Verificación hecha esta noche:** `py_compile` exit 0 · 32/32 tests OK en <0.01s · `--audit-builders` marca el frame del gateway (exit 1) · flood: no entrega con TTL=2, sí con TTL≥3. Sin descargas pesadas → cero riesgo de timeout.
+
+**Reglas respetadas:** solo software, firmware/SD/nube/otros repos intactos, `data` no tocado, branch sin mergear (espera @verificador). Informe en `MATI-HQ/diario/nocturno-local-2026-07-19-b.md`, pusheado a main.
+
+Paro acá.
+===== FIN dom 19/07/2026 22:09:17,98 ===== 
+===== TURNO NOCHE lun 20/07/2026  2:00:01,88 ===== 
+Listo. Noche cerrada.
+
+## Resumen del turno nocturno — 2026-07-20
+
+**Tarea elegida:** FrioSeguro #18 (PLATA = prioridad top). Modelo/oráculo offline de la alerta de **puerta abierta** (`door_sensors.h::doorSensorsCheck`), la 2ª causa de pérdida de un comercio y parte del core "el servicio avisa" que se cobra. El alert-model del 07-18 cubrió la rama de **temperatura**; la de **puerta** es un módulo aparte y no tenía ningún test offline. Elegida sin apilar: galgas y datalogger cerraron branch hace 1 día, cosechador solo tiene compras pendientes.
+
+**Qué hice** (branch `nocturno/local-2026-07-20-door-alert-model`, frioseguro, pusheado; 4 archivos, 541 inserciones, cero borrados, firmware intacto):
+- `tools/door_alert_model.py` — espejo 1:1 de `doorSensorsCheck`.
+- `tools/test_door_alert_model.py` — **16 tests, todos OK**.
+- `docs/door-alert-model.md` + nota en `QUE_FALTA.md`.
+
+**3 hallazgos reales (NO corregidos — son de @firmware/@backend, en banco):**
+- 🔴 **#1** El firmware alerta con `#define DOOR_OPEN_ALERT_SEC 120` hardcodeado y **no** con `config.doorOpenMaxSec` — que sí carga de Preferences, sincroniza desde Supabase y expone en la web. **El umbral de puerta que el cliente configura desde el dashboard no tiene ningún efecto.** Con test de regresión que lo demuestra.
+- 🟠 **#2** La alerta de puerta va solo a Telegram, nunca a `sendAlertToSupabase` → invisible en el dashboard y ausente del resumen mensual.
+- 🟡 **#3** El header del módulo dice "no integrado aún" pero sí está wired (`ino:191/557`).
+
+**Verificado offline:** `py_compile` exit 0 · 16/16 tests OK · `--demo-hallazgo` marca la divergencia (exit 1) · `--open 200` alerta a los 120 s. Sin toolchains pesados, cero riesgo de timeout.
+
+**Sin verificar (necesita banco):** que los 3 fixes anden en hardware con un reed real, el rebote del reed, y el gating por internet/buffering.
+
+**MATI-HQ:** informe en `diario/nocturno-local-2026-07-20.md`, `QUE_FALTA.md` de FrioSeguro actualizado, ambos commiteados y pusheados a `main`.
+===== FIN lun 20/07/2026  2:08:24,61 ===== 
+===== TURNO NOCHE lun 20/07/2026 22:00:01,84 ===== 
+Listo. Noche cerrada. Resumen:
+
+## Turno B — 2026-07-20 completado
+
+**Contexto:** el turno A de hoy ya había hecho FrioSeguro (door-alert-model). Para no apilar en el mismo repo y respetar la jerarquía, elegí **galgas (P0 octubre)**.
+
+**Tarea:** primer **modelo/oráculo offline de la decisión de OTA** de galgas — espejo 1:1 de `supabase_client.cpp::supabaseFirmwareCheckForDevice`+`parseFirmwareRow`, que no tenía ningún test offline. Es crítico para octubre (los 3 ESP32 se actualizan solos, por aire, en planta).
+
+**Hallazgo principal 🔴 (latente y peligroso):** la compuerta que decide "¿es más nueva?" usa **`strcmp` (lexicográfico), no semver**. Hoy no molesta (firmware en `0.1.x`), pero **en el primer bump a dos dígitos se rompe**:
+- `0.9.0 → 0.10.0` → **no actualiza** (equipo clavado para siempre)
+- `0.10.0` con `0.9.0` publicado → **downgradea** + posible loop de reboot
+
+Hallazgo secundario 🟠: `unique(device_type, version)` no incluye `device_id` → bloquea versiones per-device. Y aclaré el estado del ítem #5: el mecanismo A/B ya está wired en el firmware, faltaba el test (ahora está).
+
+**Entregado (branch `nocturno/local-2026-07-20-b-ota-decision-model`, galgas, pusheado, pendiente de merge):**
+- `tools/ota_decision_model.py` (stdlib) + `tools/test_ota_decision_model.py` (**23 tests OK**) + `docs/ota-decision-model.md`
+- Verificación offline: `py_compile` exit 0 · 23/23 OK en <0.01 s · `--demo-hallazgo` exit 1. Cero riesgo de timeout.
+
+**Sin verificar (necesita banco):** que el fix semver funcione en hardware con dos versiones que crucen el dígito; la resolución per-device E2E contra Supabase real.
+
+**No corregí firmware** (es de @firmware/@backend). Informe en `diario/nocturno-local-2026-07-20-b.md`, QUE_FALTA #5 anotado, galgas de vuelta en main limpio. Todo commiteado y pusheado (MATI-HQ + galgas).
+===== FIN lun 20/07/2026 22:07:48,30 ===== 
+===== TURNO NOCHE mar 21/07/2026  2:00:01,90 ===== 
+Noche cerrada. Resumen de lo hecho:
+
+## Tarea: modelo offline del duty-cycle del nodo ECO (datalogger, P0 octubre)
+
+**Por qué esta:** los dos turnos de anoche tocaron FrioSeguro y galgas — no apilo en repos recién tocados. El datalogger (P0 "terminarlo primero") cerró el mesh-model hace 2 noches, pero ese modeló el **ruteo LoRa** (`nodo.py`); el **planificador de duty-cycle del nodo ECO** (`eco.py`, por WiFi) es un subsistema distinto, **sin ningún test offline**, y es justo el que la advertencia del QUE_FALTA #3 *"si mandás `eco on` quedan inalcanzables"* pone en el centro. Toca de lleno el objetivo de energía.
+
+**Qué entregué** (branch `nocturno/local-2026-07-21-eco-schedule-model`, 492 inserciones, 4 archivos, cero borrados):
+- `tools/eco_schedule_model.py` — espejo 1:1 de `eco.py::run()` (`sleep_ms`, `next` reportado, modo `awake`) + derivación de presupuesto de sueño y alcanzabilidad.
+- `tools/test_eco_schedule_model.py` — **23 tests OK**.
+- `docs/eco-schedule-model.md` + nota en `QUE_FALTA.md`.
+
+**3 hallazgos (NO corregidos — @firmware/@energia, en banco):**
+- 🟠 **A** — el perfil `frecuente` (ciclo 20 s) tiene margen de sueño tan fino que una reconexión lenta/primera-vez satura `sleep_ms` en 0 → **el nodo no duerme y el perfil de ahorro se degrada en silencio**.
+- 🟡 **B** — nodo dormido = sordo → latencia peor-caso de un comando del dashboard = **un ciclo entero** (~10 min en perfil `max`): el "quedan inalcanzables" cuantificado.
+- 🟡 **C** — el `next` reportado (`cycle-burst`) ignora el overhead de wifi (hoy sin impacto porque Vercel usa el push del ESP).
+
+**Verificado offline:** `py_compile` exit 0 · 23/23 OK · `--demo-hallazgo` exit 1. Sin toolchains pesados, cero riesgo de timeout.
+**Sin verificar (hardware):** consumo real en mA del ciclo degradado (INA219), overhead de wifi real de planta, y el fix del perfil.
+
+Todo pusheado: branch en datalogger + informe `diario/nocturno-local-2026-07-21.md` en MATI-HQ. Solo software, no toqué firmware ni otros repos. Paro acá.
+===== FIN mar 21/07/2026  2:08:00,15 ===== 

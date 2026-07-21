@@ -1,0 +1,7 @@
+- generic [active] [ref=e1]:
+  - button "← Menú" [ref=e2]
+  - generic [ref=e3]:
+    - generic [ref=e4]: 🧠
+    - heading "TRIVIA FAMILIAR" [level=1] [ref=e5]
+    - paragraph [ref=e6]: 👧 Ainho · 🧔 Mati · 👩 Aldi El que tiene el aparato lee la pregunta en voz alta 📢 y el que le toca responde (el que maneja, ¡sin mirar!). Después "ver respuesta" y marcás si acertó. Fáciles para Ainho · generales + ⚡ELECTRÓNICA⚡para los ingenieros 😏 · 6 c/u, gana el que más sume
+    - button "▶️ ¡EMPEZAR!" [ref=e7]

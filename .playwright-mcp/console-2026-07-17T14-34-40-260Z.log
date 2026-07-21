@@ -1,0 +1,5 @@
+[      22ms] Invalid or unexpected token
+[   13061ms] ReferenceError: fase is not defined
+    at eval (eval at <anonymous> (eval at evaluate (:303:30)), <anonymous>:1:43)
+[   38564ms] ReferenceError: fase is not defined
+    at eval (eval at <anonymous> (eval at evaluate (:303:30)), <anonymous>:1:50)

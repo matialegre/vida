@@ -1,0 +1,10 @@
+[     381ms] [ERROR] Failed to load resource: the server responded with a status of 404 (Not Found) @ http://localhost:8080/favicon.ico:0
+[   19988ms] [ERROR] Failed to load resource: the server responded with a status of 404 (Not Found) @ http://localhost:8080/favicon.ico:0
+[   20434ms] ReferenceError: norm is not defined
+    at http://localhost:8080/tutti.html:179:28
+    at Array.map (<anonymous>)
+    at http://localhost:8080/tutti.html:179:20
+    at Array.forEach (<anonymous>)
+    at mostrarResultados (http://localhost:8080/tutti.html:177:14)
+    at chequearResultados (http://localhost:8080/tutti.html:168:47)
+    at ws.onmessage (http://localhost:8080/tutti.html:103:103)

@@ -1,0 +1,29 @@
+- generic [active] [ref=f5e1]:
+  - heading "🎮 JUEGOS DEL VIAJE" [level=1] [ref=f5e2]
+  - generic [ref=f5e3]:
+    - link "⚓ Batalla Naval Celu vs tablet vs PC por WiFi 🚢" [ref=f5e4] [cursor=pointer]:
+      - /url: batalla.html
+      - generic [ref=f5e5]: ⚓
+      - text: Batalla Naval
+      - generic [ref=f5e6]: Celu vs tablet vs PC por WiFi 🚢
+    - link "🏎️ Súper Carrera Esquivá autos, juntá ⭐, hacé combos" [ref=f5e7] [cursor=pointer]:
+      - /url: carrera.html
+      - generic [ref=f5e8]: 🏎️
+      - text: Súper Carrera
+      - generic [ref=f5e9]: Esquivá autos, juntá ⭐, hacé combos
+    - link "💣 Bombardera Bombas, bichos y power-ups 👾" [ref=f5e10] [cursor=pointer]:
+      - /url: bomber.html
+      - generic [ref=f5e11]: 💣
+      - text: Bombardera
+      - generic [ref=f5e12]: Bombas, bichos y power-ups 👾
+    - 'link "🙈 El Ahorcado Sola o de a dos: ¡salvá al monito! 🐒" [ref=f5e13] [cursor=pointer]':
+      - /url: ahorcado.html
+      - generic [ref=f5e14]: 🙈
+      - text: El Ahorcado
+      - generic [ref=f5e15]: "Sola o de a dos: ¡salvá al monito! 🐒"
+    - link "🕵️ ¿Quién Soy? Para jugar con el que maneja 🚗" [ref=f5e16] [cursor=pointer]:
+      - /url: quiensoy.html
+      - generic [ref=f5e17]: 🕵️
+      - text: ¿Quién Soy?
+      - generic [ref=f5e18]: Para jugar con el que maneja 🚗
+  - button "🌐 Compartir juegos con otro aparato" [ref=f5e19]

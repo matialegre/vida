@@ -1,0 +1,7 @@
+- generic [active] [ref=e1]:
+  - button "← Menú" [ref=e2]
+  - heading "⚓ LA BATALLA FINAL" [level=1] [ref=e3]
+  - generic [ref=e4]:
+    - generic [ref=e5]: 🚢
+    - paragraph [ref=e6]: Abrí la Batalla Naval en los DOS aparatosy se emparejan solos ⚓
+    - generic [ref=e7]: 📡

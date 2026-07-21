@@ -1,0 +1,19 @@
+- generic [active] [ref=e1]:
+  - button "← Menú" [ref=e2]
+  - generic [ref=e3]: Vos sos 😺🪙 0/21 · 🎈 0
+  - generic: "🧱 Explorá: monedas 🪙, globos 🎈, la casita 🏠,los animalitos por el puente 🐑 ¡y la ⭐ con tobogán!"
+  - button "⬆️" [ref=e6]
+  - generic [ref=e7]:
+    - button "❤️" [ref=e8]
+    - button "😄" [ref=e9]
+    - button "👋" [ref=e10]
+    - button "🎨" [ref=e11]
+  - generic [ref=e12]:
+    - heading "¿Quién querés ser?" [level=2] [ref=e13]
+    - generic [ref=e14]:
+      - button "😺" [ref=e15]
+      - button "🦊" [ref=e16]
+      - button "🐰" [ref=e17]
+      - button "🦄" [ref=e18]
+      - button "👸" [ref=e19]
+      - button "🐸" [ref=e20]

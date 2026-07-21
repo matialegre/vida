@@ -25,3 +25,13 @@ Doc de dominio + bitácora. El agente lo lee al arrancar y lo actualiza al cerra
 - **Frecuencia del golpeteo confirmada: ~0.39 Hz** (Matías estimó 0.33) → filtro fc=0.3Hz orden 2 correcto. 5Hz de muestreo sobra (Nyquist).
 - El evento "toque" (amarilla arriba, azul=cadena cortada) SE VE: A-B std crece 4× (1.6→6.6mV) durante el evento. Pero A-B mean=0 forzado por offset simétrico → NO hay valores calibrados.
 - CONCLUSIÓN: para octubre hace falta (1) ADC de puente 24-bit (HX711/ADS1232) → bajar ruido ~10× → SNR 40-50× → detectar cortes chicos/lentos, no solo el toque grande; (2) shunt-cal obligatorio (sin K_A/K_B reales el A-vs-B no es confiable). 5Hz alcanza; el problema es RESOLUCIÓN + CALIBRACIÓN, no tasa.
+
+## 2026-07-21 — LOS 4 DATALOGGERS DE LA TAXONOMÍA, CODIFICADOS (sesión Director)
+Un firmware, 4 misiones (`firmwares/pico2w-node/misiones/` en repo datalogger, commit da574c3 en main):
+- **lab** (1 kHz): FIFO del MPU + WiFi UDP broadcast :50506, sin SD. Receptor PC `tools/lab_rx.py` (CSV + gaps por seq).
+- **baja** (≤200 Hz, DLPF 94): SD con seq/gaps; fase RT LoRa 60-120 s (`mision_rt_min`) → después solo SD.
+- **media** (333 Hz real): SD + **partes de la SD por LoRa** (SDLS/SDGET→SDCHK b64) + RT WiFi decimado 50 Hz :50507.
+- **dreyfus** (5 Hz ADC): golpeteo REDLER — detector por histéresis (validado: 24 golpes/min y 0.390 Hz con señal sintética de 0.39 Hz), resumen RV1 c/60 s → cloud vía receptor. NO reemplaza al repo galgas (producción).
+Se elige con `cfg mision <nombre>` + reset; `mision=off` = nodo clásico intacto (hook try/except en main.py).
+**Evidencia**: `tools/test_misiones.py` (stubs de machine/network) — **9/9 OK**. Doc: `docs/MODOS_MISION.md`.
+**Pendiente de banco**: fs efectiva real de cada misión en hardware, N horas de SD (QUE_FALTA #5), consumo INA219.

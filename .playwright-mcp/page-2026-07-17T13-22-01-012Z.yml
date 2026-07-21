@@ -1,0 +1,10 @@
+- generic [active] [ref=f2e1]:
+  - button "← Menú" [ref=f2e2]
+  - heading "🦁 MEMORIA DE ANIMALES" [level=1] [ref=f2e3]
+  - generic [ref=f2e4]:
+    - generic [ref=f2e5]: 🐘🦒🦁
+    - paragraph [ref=f2e6]: ¡Encontrá las parejas de animales!
+    - button "🧒 SOLA — fácil (4×4)" [ref=f2e7]
+    - button "🧒 SOLA — difícil (6×4)" [ref=f2e8]
+    - button "👧👦 DE A DOS — fácil" [ref=f2e9]
+    - button "👧👦 DE A DOS — difícil" [ref=f2e10]

@@ -1,0 +1,64 @@
+- generic [active] [ref=f3e1]:
+  - heading "🎮 JUEGOS DEL VIAJE" [level=1] [ref=f3e2]
+  - generic [ref=f3e3]:
+    - link "⚓ Batalla Naval Celu vs tablet vs PC por WiFi 🚢" [ref=f3e4] [cursor=pointer]:
+      - /url: batalla.html
+      - generic [ref=f3e5]: ⚓
+      - text: Batalla Naval
+      - generic [ref=f3e6]: Celu vs tablet vs PC por WiFi 🚢
+    - link "🏎️ Súper Carrera Esquivá autos, juntá ⭐, hacé combos" [ref=f3e7] [cursor=pointer]:
+      - /url: carrera.html
+      - generic [ref=f3e8]: 🏎️
+      - text: Súper Carrera
+      - generic [ref=f3e9]: Esquivá autos, juntá ⭐, hacé combos
+    - link "💣 Bombardera Bombas, bichos y power-ups 👾" [ref=f3e10] [cursor=pointer]:
+      - /url: bomber.html
+      - generic [ref=f3e11]: 💣
+      - text: Bombardera
+      - generic [ref=f3e12]: Bombas, bichos y power-ups 👾
+    - 'link "🙈 El Ahorcado Sola o de a dos: ¡salvá al monito! 🐒" [ref=f3e13] [cursor=pointer]':
+      - /url: ahorcado.html
+      - generic [ref=f3e14]: 🙈
+      - text: El Ahorcado
+      - generic [ref=f3e15]: "Sola o de a dos: ¡salvá al monito! 🐒"
+    - link "🕵️ ¿Quién Soy? Para jugar con el que maneja 🚗" [ref=f3e16] [cursor=pointer]:
+      - /url: quiensoy.html
+      - generic [ref=f3e17]: 🕵️
+      - text: ¿Quién Soy?
+      - generic [ref=f3e18]: Para jugar con el que maneja 🚗
+    - 'link "🧱 Mundo Bloques Mundo 3D: monedas, perrito y la ⭐ 🐶" [ref=f3e19] [cursor=pointer]':
+      - /url: mundo.html
+      - generic [ref=f3e20]: 🧱
+      - text: Mundo Bloques
+      - generic [ref=f3e21]: "Mundo 3D: monedas, perrito y la ⭐ 🐶"
+    - link "✏️ Tutti Frutti Letra al azar y… ¡BASTA! (2-3 aparatos)" [ref=f3e22] [cursor=pointer]:
+      - /url: tutti.html
+      - generic [ref=f3e23]: ✏️
+      - text: Tutti Frutti
+      - generic [ref=f3e24]: Letra al azar y… ¡BASTA! (2-3 aparatos)
+    - 'link "🦁 Memoria Parejas de animales: sola o de a dos 🐾" [ref=f3e25] [cursor=pointer]':
+      - /url: memoria.html
+      - generic [ref=f3e26]: 🦁
+      - text: Memoria
+      - generic [ref=f3e27]: "Parejas de animales: sola o de a dos 🐾"
+    - link "🍔 La Cocinita Armá los pedidos antes de que se enojen 😋" [ref=f3e28] [cursor=pointer]:
+      - /url: cocina.html
+      - generic [ref=f3e29]: 🍔
+      - text: La Cocinita
+      - generic [ref=f3e30]: Armá los pedidos antes de que se enojen 😋
+    - link "🧠 Trivia Familiar Leé en voz alta — juega el que maneja 🚗" [ref=f3e31] [cursor=pointer]:
+      - /url: trivia.html
+      - generic [ref=f3e32]: 🧠
+      - text: Trivia Familiar
+      - generic [ref=f3e33]: Leé en voz alta — juega el que maneja 🚗
+    - 'link "🏝️ Los Colonos El Catan: poblados, dados y el ladrón 🦹 (1-4)" [ref=f3e34] [cursor=pointer]':
+      - /url: catan.html
+      - generic [ref=f3e35]: 🏝️
+      - text: Los Colonos
+      - generic [ref=f3e36]: "El Catan: poblados, dados y el ladrón 🦹 (1-4)"
+    - 'link "🏦 El Banquero El Monopoly criollo: comprá Bahía Blanca 🏠 (1-4)" [ref=f3e37] [cursor=pointer]':
+      - /url: monopoly.html
+      - generic [ref=f3e38]: 🏦
+      - text: El Banquero
+      - generic [ref=f3e39]: "El Monopoly criollo: comprá Bahía Blanca 🏠 (1-4)"
+  - button "🌐 Compartir juegos con otro aparato" [ref=f3e40]
