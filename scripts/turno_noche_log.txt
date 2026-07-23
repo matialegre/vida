@@ -576,3 +576,18 @@ Todo pusheado: branch en datalogger + informe `diario/nocturno-local-2026-07-21.
 ===== TURNO NOCHE mar 21/07/2026 22:00:01,84 ===== 
 ===== FIN mar 21/07/2026 22:03:07,23 ===== 
 ===== TURNO NOCHE mi� 22/07/2026 22:00:01,37 ===== 
+Noche cerrada. Estado limpio en ambos repos. Resumen:
+
+**Lo que encontré:** el turno de anoche a las 22:00 (21/07) crasheó a los 3 minutos y dejó galgas con un branch huérfano sin commits (`nocturno/local-2026-07-21-b-readme-drift`) y medio README editado sin commitear — sin diario, sin push.
+
+**Lo que hice:** rescaté y terminé ese trabajo (QUE_FALTA galgas #14 — "el README miente sobre el estado"):
+- Auditué la mitad heredada del turno muerto contra `act.md` (Supabase ref, Netlify URL, OTA 0.1.2→0.1.3, RLS) antes de aceptarla.
+- Completé la mitad que faltaba: árbol de estructura real (PLAN_v3 vigente, `backend/supabase/`, `redler/`, `bins_ota_*`), quick start actual, y la sección de workspace que aún apuntaba a `Documents\GALGAS CON SUPABASE\` (el repo vive en `C:\Proyectos\galgas` desde el 07-07).
+
+**Branch:** `nocturno/local-2026-07-22-readme-drift` (galgas, pusheado, commit `cfec290`) — pendiente de merge vía @verificador.
+
+**Informe:** `diario/nocturno-local-2026-07-22.md` commiteado y pusheado a MATI-HQ, con nota EN BRANCH en el QUE_FALTA de galgas. Quedó anotado para el día: el branch huérfano vacío a borrar, el drift restante en `CLAUDE.md` §9, y que vale mirar por qué el scheduler de las 22:00 crasheó.
+
+Paro acá.
+===== FIN mi� 22/07/2026 22:04:05,60 ===== 
+===== TURNO NOCHE jue 23/07/2026  2:00:01,77 ===== 
