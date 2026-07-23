@@ -573,3 +573,6 @@ Noche cerrada. Resumen de lo hecho:
 
 Todo pusheado: branch en datalogger + informe `diario/nocturno-local-2026-07-21.md` en MATI-HQ. Solo software, no toqué firmware ni otros repos. Paro acá.
 ===== FIN mar 21/07/2026  2:08:00,15 ===== 
+===== TURNO NOCHE mar 21/07/2026 22:00:01,84 ===== 
+===== FIN mar 21/07/2026 22:03:07,23 ===== 
+===== TURNO NOCHE mi� 22/07/2026 22:00:01,37 ===== 
