@@ -591,3 +591,16 @@ Noche cerrada. Estado limpio en ambos repos. Resumen:
 Paro acá.
 ===== FIN mi� 22/07/2026 22:04:05,60 ===== 
 ===== TURNO NOCHE jue 23/07/2026  2:00:01,77 ===== 
+Turno cerrado. Resumen:
+
+**Tarea de la noche (galgas, P0 octubre + hueco de seguridad #6 del PORTFOLIO):** el bucket `firmware` es público y la policy le da a `anon` **ALL** — cualquiera con la anon key puede reemplazar los binarios que la flota instala por OTA. Construí la salida que Task 09 dejó planificada y nunca se escribió: la **Edge Function `firmware-check`**.
+
+- **Branch:** `nocturno/local-2026-07-23-firmware-check-edge` (galgas, commit `9ce7bfb`, pusheado) — pendiente de merge vía @verificador.
+- **Qué hay adentro:** `logic.ts` (decisión pura: whitelist anti-inyección PostgREST, gate **semver** que arregla server-side el hallazgo strcmp 0.9→0.10 del 07-20-b, selección per-device>global que cubre también #5) + `index.ts` (Deno.serve: query con service_role + **URL firmada TTL 600 s**) + **20 tests offline, 20/20 OK con `node --test`** + runbook `docs/ota-firmware-check.md` con el orden obligatorio del lockdown (deploy → migrar firmware A/B → recién ahí cerrar el bucket; el SQL del lockdown va en el doc y no como migración, para no dejar una migración-mina).
+- **Sin verificar (día, nube):** el deploy real + smoke curl, la migración del cliente C++ y el lockdown — todo documentado con comandos.
+- **Informe:** `diario/nocturno-local-2026-07-23.md` + nota EN BRANCH en QUE_FALTA #6, MATI-HQ commiteado y pusheado (`5542ba9`). Repos dejados limpios en `main`.
+- **Observación para el día:** ahora corren DOS turnos por noche (22:00 y 02:00) — ¿intencional? Y galgas acumula 10 branches nocturnos: la sesión de merge con @verificador ya es urgente.
+
+Paro acá.
+===== FIN jue 23/07/2026  2:08:18,11 ===== 
+===== TURNO NOCHE jue 23/07/2026 22:00:01,40 ===== 
