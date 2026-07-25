@@ -22,9 +22,9 @@
    re-correr tests por branch antes de tocar main.**
 3. **2 pares redundantes ya detectados** (no drenar los dos):
    - frioseguro `07-11-b` está **subsumido** en `07-13` (es su ancestro) → mergear **solo 07-13**.
-   - datalogger `07-09-sd-integrity` y `07-15-sd-integrity` son **dos versiones competidoras**
-     del mismo trabajo (mismos 4 archivos, ramas independientes) → elegir **una** (07-15 es
-     más completa), descartar la otra.
+   - datalogger `07-09-sd-integrity` y `07-15-sd-integrity`: **✅ RESUELTO 07-25 — ninguna se
+     mergea** (ambas borran todo `misiones/`, que main construyó después). El entregable se
+     extrajo limpio en `nocturno/local-2026-07-25-sd-integrity-rebase`. Drenar ese; descartar las dos.
 4. **1 branch arrastra basura**: galgas `07-09` trae **6 binarios de build** (`.bin/.elf/.map`,
    ~144k líneas). Sacarlos del árbol antes de mergear (o cherry-pick solo del source).
 
@@ -80,15 +80,27 @@ que main ya cambió, revisar a mano.
 | `nocturno/local-2026-07-21-eco-schedule-model` | Modelo duty-cycle nodo ECO + 23 tests | 6 | el más nuevo; rebase probablemente barato |
 | `nocturno/local-2026-07-19-b-rv1-mesh-model` | Modelo ruteo mesh RV1 + tests | 6 | — |
 | `nocturno/local-2026-07-17-b-ssid-casing` | Casing SSID `Gimap`/`GIMAP` + wifi_nets | 6 | — |
-| `nocturno/local-2026-07-15-sd-integrity` | Integridad SD (seq/gaps) + tests | 6 | ⚠️ **duplica** al 07-09 (ver abajo) — **preferir éste** (+785 vs +464) |
+| ~~`nocturno/local-2026-07-15-sd-integrity`~~ | Integridad SD (seq/gaps) + tests | 6 | 🛑 **NO MERGEAR** — borra todo `misiones/` (ver ✅ RESUELTO abajo). Reemplazado por `07-25-sd-integrity-rebase` |
 | `nocturno/local-2026-07-10-rssi-calib` | Calibración RSSI↔distancia + tests | 6 | — |
-| `nocturno/local-2026-07-09-sd-integrity` | Integridad SD (versión previa) | 6 | ⚠️ **redundante** con 07-15 → **descartar** salvo que tenga algo único |
+| ~~`nocturno/local-2026-07-09-sd-integrity`~~ | Integridad SD (versión previa) | 6 | 🛑 **NO MERGEAR** — ídem 07-15. Reemplazado por `07-25-sd-integrity-rebase` |
 | `nocturno/local-2026-07-08-ecolora-fixes` | Fixes eco-LoRa (grande) | 8 | 56 archivos, +986-4266; rebase pesado |
 | `nocturno/local-2026-07-07-ina219-ecolora` | Driver INA219 + eco-LoRa (base) | 8 | 54 archivos; el más viejo y stale |
 
-**Decisión pendiente (día):** los `07-09` vs `07-15` sd-integrity son ramas independientes que
-tocan los mismos 4 archivos → son dos intentos del mismo entregable. Diffearlas y quedarse con
-una sola. Igual con `07-07`/`07-08` (eco-LoRa base + fixes): probablemente el 08 subsume al 07.
+**✅ RESUELTO (nocturno 2026-07-25) — sd-integrity 07-09/07-15:** se diffearon con git real.
+Hallazgo grave: **ninguna de las dos es mergeable.** Además del entregable, cada una **borra el
+subsistema `misiones/` entero** (~1591 líneas: selector, mision_baja/media/dreyfus/lab, registro,
+test_misiones, lab_rx) porque se cortaron de un main viejo — y **main tiene esas 6 commits
+justamente construyendo ese subsistema** (taxonomía 4-dataloggers, selector sin cable, WiFi
+manager, fix de flash de misiones, desacople SD en core 1). `merge-tree` las daba "LIMPIO" pero
+mergear cualquiera **intentaría nukear el núcleo del firmware actual** — el peligro STALE exacto
+que este doc advertía. **Acción tomada:** el entregable real (`tools/sd_integrity.py` +
+`tests/test_sd_integrity.py`, stdlib puro, no existían en main, 100% aditivo) se extrajo de la
+versión más completa (07-15) sobre el main de HOY en el branch limpio
+**`nocturno/local-2026-07-25-sd-integrity-rebase`** (29 tests OK offline). → **Drenar ese branch;
+NO drenar 07-09 ni 07-15** (borrar sus ramas al confirmar). Neto: 2 branches tóxicos → 1 limpio.
+
+**Decisión pendiente (día):** `07-07`/`07-08` (eco-LoRa base + fixes): probablemente el 08 subsume
+al 07 — mismo patrón, verificar si también arrastran borrados de estado viejo antes de mergear.
 
 ---
 
@@ -121,8 +133,9 @@ pre-reconstrucción del 13/07, están 10 atrás y conflictúan en `QUE_FALTA.md`
 2. 🟡 **`QUE_FALTA.md` es un imán de conflictos** en los 4 repos (casi todos lo tocan). Tras el
    primer merge de cada repo, el resto conflictúa ahí. Trivial de resolver (unión de ítems),
    pero hay que esperarlo. Alternativa de fondo: dejar de tocar QUE_FALTA en los branches.
-3. 🟡 **2 pares redundantes**: frioseguro 07-11-b⊂07-13 (subsumido) y datalogger
-   07-09≈07-15 sd-integrity (competidores). Drenar el par completo duplicaría/pisaría trabajo.
+3. 🟡 **Pares redundantes**: frioseguro 07-11-b⊂07-13 (subsumido). datalogger 07-09/07-15
+   sd-integrity → **✅ RESUELTO 07-25**: ninguna se mergea (borran `misiones/`); reemplazadas por
+   `nocturno/local-2026-07-25-sd-integrity-rebase`. Ojo con 07-07/07-08 eco-LoRa (mismo patrón STALE).
 4. 🟢 **Binarios de build en galgas 07-09** (`build/esp_rx_371/*.bin/.elf/.map`, ~144k líneas).
    No deben entrar a main. Sacarlos del árbol o cherry-pick solo del source; sumar `build/` al
    `.gitignore` de galgas si no está.

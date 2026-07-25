@@ -652,3 +652,28 @@ Listo. Turno nocturno cerrado.
 **Nota de portfolio:** frioseguro ya acumula 7 branches nocturnos sin mergear (galgas, 11). El cuello de botella dejó de ser producir de noche; es drenar de día con @verificador. Este branch es chico y verde → buen candidato para arrancar esa sesión.
 ===== FIN vie 24/07/2026  2:09:00,43 ===== 
 ===== TURNO NOCHE vie 24/07/2026 22:00:01,43 ===== 
+Turno cerrado. Resumen:
+
+## Qué hice esta noche (turno 3 del 24/07)
+
+**Decisión deliberada: NO produje el branch #27.** Conté la pila real y hay **26 branches nocturnos sin mergear** (galgas 10, datalogger 8, frioseguro 7, cosechador 1), casi ninguno en main. Los últimos ~8 informes venían diagnosticando exactamente eso — *el cuello de botella ya no es producir de noche, es drenar de día*. Agrandar la pila era valor negativo (WIP=1, anti-sobre-ingeniería).
+
+En cambio hice el trabajo que **ningún diario individual puede hacer**: la vista cruzada de toda la pila con datos reales de git → **`MATI-HQ/COLA_MERGE_NOCTURNOS.md`**.
+
+**Hallazgos nuevos (solo visibles mirando la pila entera):**
+- 🔴 **datalogger STALE**: los 8 branches están 6-8 commits atrás, nunca se rebasearon. `merge-tree` los da "limpios" pero es estado viejo del firmware → **rebasear + re-testear**, no merge naïve. Es el mayor riesgo de la pila.
+- ♻️ **2 pares redundantes**: frioseguro `07-11-b` está subsumido en `07-13` (mergear solo uno); datalogger `07-09` y `07-15` son dos `sd-integrity` competidores (elegir uno).
+- 🗑️ galgas `07-09` arrastra 6 binarios de build (~144k líneas) que no deben entrar a main.
+- ✅ galgas (10) y cosechador (1) sanos → drenaje mecánico, la victoria más barata.
+
+El doc trae el orden de drenaje por prioridad de PORTFOLIO (PLATA/octubre primero), los comandos para verificar cada branch, y cómo reproducir el análisis.
+
+**Verificación:** todos los números salieron de `git merge-tree/rev-list/merge-base` corridos en vivo — sin compilar ni descargar nada (cero riesgo de timeout). Spot-checks en el informe.
+
+**Entregables (pusheados a MATI-HQ main, commit `fe28cc7`):** `COLA_MERGE_NOCTURNOS.md` + `diario/nocturno-local-2026-07-24-c.md` + puntero en la bitácora del Director en PORTFOLIO.
+
+**Sin verificar / para el día:** el drenaje en sí (mergear) es de @verificador con criterio humano; rebase de datalogger; decidir los pares redundantes. No mergeé, borré ni moví nada; no toqué ninguno de los 4 repos.
+
+Nota menor: frioseguro y cosechador quedaron con el working tree en un branch nocturno (de turnos previos) — conviene volverlos a `main` al cerrar el drenaje.
+===== FIN vie 24/07/2026 22:07:45,08 ===== 
+===== TURNO NOCHE s�b 25/07/2026  2:00:01,80 ===== 
