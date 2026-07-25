@@ -604,3 +604,51 @@ Turno cerrado. Resumen:
 Paro acá.
 ===== FIN jue 23/07/2026  2:08:18,11 ===== 
 ===== TURNO NOCHE jue 23/07/2026 22:00:01,40 ===== 
+Turno cerrado. Resumen:
+
+## Tarea: FrioSeguro #12 — retención de datos (pg_cron)
+Elegida porque es **PLATA** (categoría 1), frioseguro venía sin turno desde el 20/07, era el único ítem del repo sin branch previo que fuera software puro, y es **la única pieza del sistema que borra datos del cliente**.
+
+**No "faltaba": estaba hecha, rota y sin que nadie se enterara.**
+
+| | Hallazgo | Estado |
+|---|---|---|
+| 🔴 H1 | `.not("id","in",array)` serializa `not.in.1,2,3` y PostgREST exige `not.in.(1,2,3)` → 400 → **la limpieza semanal borraba 0 filas todos los lunes** (el comentario del código afirmaba lo contrario) | **corregido** |
+| 🟠 H2 | Si fallaba la RPC de protegidos, el fallback borraba **todo** lo >90 días, incluido el último reading de cada device — lo contrario de lo que promete el header | **corregido** (aborta sin borrar) |
+| 🟠 H3 | `app.settings.supabase_url` apunta al Supabase que borraste el 13/07 → `net.http_post(url := NULL)` → **los 3 crons probablemente nunca dispararon** en el proyecto nuevo | documentado, no corregido (necesita la service_role) |
+| 🟡 H4 | `--project-ref` de deploy al proyecto muerto | corregido en las 2 funciones tocadas |
+
+**Entregado:** `_shared/retention.ts` (lógica pura + oráculo de la RPC) · `retention.test.ts` **25 tests, `node --test` OK** · `docs/retention.md` (runbook con SQL/curl exactos) · QUE_FALTA #12 actualizado.
+
+**Branch:** `nocturno/local-2026-07-23-b-retencion-datos` (frioseguro, pusheado, sale de `main`). Informe: `diario/nocturno-local-2026-07-23-b.md`, MATI-HQ pusheado.
+
+**Lo primero del día (3 SELECT, 10 s):** el paso 1 del runbook confirma o descarta H3 — si se confirma, `cron-subscription-expiry` tampoco corrió y hay suscripciones vencidas que siguen activas.
+
+**Bonus verificado de paso:** `tools/scan_secrets.py` no tiene patrón para `sb_secret_` (el formato de key que Supabase usa ahora) — hay uno hardcodeado en `SETUP_COMPLETO.sql` que el scanner no ve. Anotado, no mezclado con este branch.
+===== FIN jue 23/07/2026 22:09:26,13 ===== 
+===== TURNO NOCHE vie 24/07/2026  2:00:01,78 ===== 
+Listo. Turno nocturno cerrado.
+
+## Resumen del turno — 2026-07-24
+
+**Tarea elegida:** ampliar el scanner de secretos de FrioSeguro (`tools/scan_secrets.py`) al esquema **nuevo** de keys de Supabase.
+
+**Por qué:** es PLATA (categoría 1) — hueco #6 del PORTFOLIO, "seguridad antes de vender". El turno anterior (23/07-b) detectó el punto ciego y lo dejó teed-up sin branch. Software 100% puro, cero riesgo de timeout.
+
+**El hallazgo real:** el scanner solo cazaba el esquema viejo (JWT `anon`/`service_role`, `sbp_`) e ignoraba por completo el par nuevo `sb_secret_`/`sb_publishable_` — el que quedó horneado al bootstrapear el proyecto nuevo el 13/07. Resultado: **3 claves `sb_secret_` (equivalentes a service_role, bypass total de RLS) estaban commiteadas y el scanner las daba por limpias.**
+
+**Qué hice** (3 archivos, +89/-3):
+- +2 patrones: `sb_secret_`→CRITICAL, `sb_publishable_`→INFO (mismo trato que anon: la protege RLS).
+- Regex sin `\b` inicial a propósito → caza también la copia corrupta `'Tsb_secret_…'` de `SETUP_COMPLETO.sql:933`.
+- +6 tests sintéticos (**13 → 19 checks, OK**), incluido el negativo de que menciones en comentarios no matchean.
+- Addendum fechado + paso 2b de rotación en `SECURITY_AUDIT.md`.
+
+**Verificación (offline, sin hardware):** `python tools/test_scan_secrets.py` → 19/19 OK; el scanner real ahora caza 3 críticas (`SETUP_COMPLETO.sql:901,:933`, `tests/create_clients_sql.js:16`) + 7 publishable que en `main` pasaban desapercibidas.
+
+**Sin verificar (día, Matías — cloud + decisión):** confirmar si las 3 `sb_secret_` son del proyecto vivo (`cjdluhemschrynijzvap`) → rotar; o del muerto → borrar del working tree. Y verificar RLS activo. **No roté ni borré ninguna clave.**
+
+**Branch:** `nocturno/local-2026-07-24-scan-secrets-sbkeys` (frioseguro, pusheado, pendiente de merge por @verificador).
+
+**Nota de portfolio:** frioseguro ya acumula 7 branches nocturnos sin mergear (galgas, 11). El cuello de botella dejó de ser producir de noche; es drenar de día con @verificador. Este branch es chico y verde → buen candidato para arrancar esa sesión.
+===== FIN vie 24/07/2026  2:09:00,43 ===== 
+===== TURNO NOCHE vie 24/07/2026 22:00:01,43 ===== 
