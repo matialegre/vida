@@ -16,10 +16,12 @@
    commits atrás, mergean limpio. Drenaje mecánico — el único cuidado es `QUE_FALTA.md`
    (lo tocan casi todos → conflicto **garantizado** después del primer merge de cada repo:
    resolver a mano, no es un error). **Empezá por acá: es la victoria más barata.**
-2. **datalogger (8 branches)** 🔴 **están STALE**: main avanzó **6-8 commits** (trabajo de
-   día) y **ninguno de los 8 branches se rebaseó nunca**. `merge-tree` los da "limpios" pero
-   eso es engañoso: son estado viejo del firmware. **NO mergear naïve — `git rebase main` +
-   re-correr tests por branch antes de tocar main.**
+2. **datalogger (8 branches)** ✅ **TRIADO (07-25/-25-b/-26)**: eran STALE (6-8 commits atrás,
+   nunca rebaseados) y **los 8 borrarían `misiones/`** — `merge-tree` "limpio" era engañoso.
+   Ya ninguno se mergea: los deliverables útiles se extrajeron limpios sobre main vivo en
+   **3 branches aditivos** (`07-25-sd-integrity-rebase`, `07-25-b-ina219-extract`,
+   `07-26-stale-cluster-extract`; ssid-casing a rehacer sobre main). **Acción restante = HUMANA:
+   mergear esos 3 + borrar los 8 viejos. No queda triaje nocturno pendiente en datalogger.**
 3. **2 pares redundantes ya detectados** (no drenar los dos):
    - frioseguro `07-11-b` está **subsumido** en `07-13` (es su ancestro) → mergear **solo 07-13**.
    - datalogger `07-09-sd-integrity` y `07-15-sd-integrity`: **✅ RESUELTO 07-25 — ninguna se
@@ -77,11 +79,11 @@ que main ya cambió, revisar a mano.
 
 | Branch | Qué | Atrás | Nota |
 |---|---|---|---|
-| `nocturno/local-2026-07-21-eco-schedule-model` | Modelo duty-cycle nodo ECO + 23 tests | 6 | el más nuevo; rebase probablemente barato |
-| `nocturno/local-2026-07-19-b-rv1-mesh-model` | Modelo ruteo mesh RV1 + tests | 6 | — |
-| `nocturno/local-2026-07-17-b-ssid-casing` | Casing SSID `Gimap`/`GIMAP` + wifi_nets | 6 | — |
+| ~~`nocturno/local-2026-07-21-eco-schedule-model`~~ | Modelo duty-cycle nodo ECO + 23 tests | 6 | 🛑 **NO MERGEAR** — borra todo `misiones/` (ver ✅ RESUELTO 07-26). Extraído limpio en `07-26-stale-cluster-extract` |
+| ~~`nocturno/local-2026-07-19-b-rv1-mesh-model`~~ | Modelo ruteo mesh RV1 + tests | 6 | 🛑 **NO MERGEAR** — ídem. Extraído en `07-26-stale-cluster-extract` |
+| `nocturno/local-2026-07-17-b-ssid-casing` | Casing SSID `Gimap`/`GIMAP` + wifi_nets | 6 | 🟡 **NO extraído** — `wifi_nets.py` es firmware; main ya tiene WiFi manager (513c79b). Rehacer con integración, no mergear (ver ✅ RESUELTO 07-26) |
 | ~~`nocturno/local-2026-07-15-sd-integrity`~~ | Integridad SD (seq/gaps) + tests | 6 | 🛑 **NO MERGEAR** — borra todo `misiones/` (ver ✅ RESUELTO abajo). Reemplazado por `07-25-sd-integrity-rebase` |
-| `nocturno/local-2026-07-10-rssi-calib` | Calibración RSSI↔distancia + tests | 6 | — |
+| ~~`nocturno/local-2026-07-10-rssi-calib`~~ | Calibración RSSI↔distancia + tests | 6 | 🛑 **NO MERGEAR** — ídem. Extraído en `07-26-stale-cluster-extract` |
 | ~~`nocturno/local-2026-07-09-sd-integrity`~~ | Integridad SD (versión previa) | 6 | 🛑 **NO MERGEAR** — ídem 07-15. Reemplazado por `07-25-sd-integrity-rebase` |
 | ~~`nocturno/local-2026-07-08-ecolora-fixes`~~ | Fixes eco-LoRa (grande) | 8 | 🛑 **NO MERGEAR** — borra todo `misiones/` (−4266). Driver INA219 extraído en `07-25-b-ina219-extract` (ver ✅ RESUELTO). |
 | ~~`nocturno/local-2026-07-07-ina219-ecolora`~~ | Driver INA219 + eco-LoRa (base) | 8 | 🛑 **NO MERGEAR** — subsumido en 07-08 (es su ancestro). Reemplazado por `07-25-b-ina219-extract`. |
@@ -107,8 +109,23 @@ INA219 del DoD #4, dep solo `machine`, 100% aditivo, no existía en main): extra
 el main de HOY + test offline nuevo (13 tests OK) en **`nocturno/local-2026-07-25-b-ina219-extract`**.
 `eco.py`/`power_monitor.py`/ventana-RX (item #3) quedan SIN extraer — entrelazados con firmware que
 main cambió; **rehacer sobre main, no mergear los viejos.** → **Drenar ese branch; NO drenar 07-07 ni
-07-08** (borrar sus ramas al confirmar). Neto: 2 branches tóxicos → 1 limpio. Con esto **los 2 pares
-STALE peligrosos de datalogger quedan triados** (sd-integrity + eco-LoRa).
+07-08** (borrar sus ramas al confirmar). Neto: 2 branches tóxicos → 1 limpio.
+
+**✅ RESUELTO (nocturno 2026-07-26) — los 4 branches STALE restantes:** diffeados con git real.
+**Mismo patrón tóxico en los 4**: `07-21-eco-schedule`, `07-19-b-rv1-mesh`, `07-17-b-ssid-casing`
+y `07-10-rssi-calib` salen de `8784075` (main viejo) y **los 4 borrarían todo `misiones/`**.
+3 de ellos son **modelos+tests offline aditivos** (solo stdlib, no existen en main): extraídos
+byte-fiel sobre el main de HOY en **`nocturno/local-2026-07-26-stale-cluster-extract`** —
+`eco_schedule_model` (23 tests, DoD #3), `rv1_mesh_model` (32, DoD #6), `rssi_calibrate` (27,
+DoD #7) + sus 3 docs. **82 tests OK offline.** El 4º, `ssid-casing/wifi_nets.py`, es un **módulo
+de firmware** que main ya cubre con el WiFi manager (513c79b) → **NO extraído** (sería código
+muerto; rehacer con integración sobre main, no mergear el viejo). → **Drenar el branch limpio;
+NO drenar 07-21/07-19-b/07-10; cerrar 07-17-b.** Neto: 4 branches tóxicos → 1 limpio.
+
+**🎯 Con esto el cluster STALE de datalogger (8 branches) queda 100% TRIADO** — los 8 borraban
+`misiones/`; 7 reemplazados por branches aditivos limpios (`07-25-sd-integrity-rebase`,
+`07-25-b-ina219-extract`, `07-26-stale-cluster-extract`), 1 (ssid-casing) documentado como
+"rehacer sobre main". Ningún branch STALE de datalogger es ya una trampa oculta.
 
 ---
 
@@ -136,8 +153,11 @@ pre-reconstrucción del 13/07, están 10 atrás y conflictúan en `QUE_FALTA.md`
 ---
 
 ## Los 4 peligros transversales (lo que un merge apurado rompería)
-1. 🔴 **datalogger stale (6-8 commits atrás × 8 branches).** `merge-tree` "limpio" ≠ seguro:
-   son estado viejo del firmware. Rebasear + re-testear cada uno. Es el mayor riesgo de la pila.
+1. ✅ **datalogger stale (6-8 commits atrás × 8 branches) — TRIADO (07-25 / -25-b / -26).**
+   Los 8 borraban `misiones/` (`merge-tree` "limpio" ≠ seguro). Ya NO se mergea ninguno: 7
+   reemplazados por 3 branches aditivos limpios (`07-25-sd-integrity-rebase`,
+   `07-25-b-ina219-extract`, `07-26-stale-cluster-extract`), 1 (ssid-casing) a rehacer sobre main.
+   **Lo que queda es acción humana: mergear esos 3 branches limpios + borrar los 8 viejos.**
 2. 🟡 **`QUE_FALTA.md` es un imán de conflictos** en los 4 repos (casi todos lo tocan). Tras el
    primer merge de cada repo, el resto conflictúa ahí. Trivial de resolver (unión de ítems),
    pero hay que esperarlo. Alternativa de fondo: dejar de tocar QUE_FALTA en los branches.
