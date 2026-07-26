@@ -83,8 +83,8 @@ que main ya cambió, revisar a mano.
 | ~~`nocturno/local-2026-07-15-sd-integrity`~~ | Integridad SD (seq/gaps) + tests | 6 | 🛑 **NO MERGEAR** — borra todo `misiones/` (ver ✅ RESUELTO abajo). Reemplazado por `07-25-sd-integrity-rebase` |
 | `nocturno/local-2026-07-10-rssi-calib` | Calibración RSSI↔distancia + tests | 6 | — |
 | ~~`nocturno/local-2026-07-09-sd-integrity`~~ | Integridad SD (versión previa) | 6 | 🛑 **NO MERGEAR** — ídem 07-15. Reemplazado por `07-25-sd-integrity-rebase` |
-| `nocturno/local-2026-07-08-ecolora-fixes` | Fixes eco-LoRa (grande) | 8 | 56 archivos, +986-4266; rebase pesado |
-| `nocturno/local-2026-07-07-ina219-ecolora` | Driver INA219 + eco-LoRa (base) | 8 | 54 archivos; el más viejo y stale |
+| ~~`nocturno/local-2026-07-08-ecolora-fixes`~~ | Fixes eco-LoRa (grande) | 8 | 🛑 **NO MERGEAR** — borra todo `misiones/` (−4266). Driver INA219 extraído en `07-25-b-ina219-extract` (ver ✅ RESUELTO). |
+| ~~`nocturno/local-2026-07-07-ina219-ecolora`~~ | Driver INA219 + eco-LoRa (base) | 8 | 🛑 **NO MERGEAR** — subsumido en 07-08 (es su ancestro). Reemplazado por `07-25-b-ina219-extract`. |
 
 **✅ RESUELTO (nocturno 2026-07-25) — sd-integrity 07-09/07-15:** se diffearon con git real.
 Hallazgo grave: **ninguna de las dos es mergeable.** Además del entregable, cada una **borra el
@@ -99,8 +99,16 @@ versión más completa (07-15) sobre el main de HOY en el branch limpio
 **`nocturno/local-2026-07-25-sd-integrity-rebase`** (29 tests OK offline). → **Drenar ese branch;
 NO drenar 07-09 ni 07-15** (borrar sus ramas al confirmar). Neto: 2 branches tóxicos → 1 limpio.
 
-**Decisión pendiente (día):** `07-07`/`07-08` (eco-LoRa base + fixes): probablemente el 08 subsume
-al 07 — mismo patrón, verificar si también arrastran borrados de estado viejo antes de mergear.
+**✅ RESUELTO (nocturno 2026-07-25-b) — eco-LoRa 07-07/07-08:** diffeados con git real. **Confirmado
+el mismo patrón tóxico:** `07-07` es **ancestro de** `07-08` (subsumido) y `07-08` **borra 41
+archivos, entre ellos todo `misiones/` (−4266)** porque salió de `75bd118` (main viejo) → mergear
+cualquiera **nukearía el firmware vivo**. La única joya cleanly-extractable era `ina219.py` (driver
+INA219 del DoD #4, dep solo `machine`, 100% aditivo, no existía en main): extraído byte-fiel sobre
+el main de HOY + test offline nuevo (13 tests OK) en **`nocturno/local-2026-07-25-b-ina219-extract`**.
+`eco.py`/`power_monitor.py`/ventana-RX (item #3) quedan SIN extraer — entrelazados con firmware que
+main cambió; **rehacer sobre main, no mergear los viejos.** → **Drenar ese branch; NO drenar 07-07 ni
+07-08** (borrar sus ramas al confirmar). Neto: 2 branches tóxicos → 1 limpio. Con esto **los 2 pares
+STALE peligrosos de datalogger quedan triados** (sd-integrity + eco-LoRa).
 
 ---
 
@@ -134,8 +142,10 @@ pre-reconstrucción del 13/07, están 10 atrás y conflictúan en `QUE_FALTA.md`
    primer merge de cada repo, el resto conflictúa ahí. Trivial de resolver (unión de ítems),
    pero hay que esperarlo. Alternativa de fondo: dejar de tocar QUE_FALTA en los branches.
 3. 🟡 **Pares redundantes**: frioseguro 07-11-b⊂07-13 (subsumido). datalogger 07-09/07-15
-   sd-integrity → **✅ RESUELTO 07-25**: ninguna se mergea (borran `misiones/`); reemplazadas por
-   `nocturno/local-2026-07-25-sd-integrity-rebase`. Ojo con 07-07/07-08 eco-LoRa (mismo patrón STALE).
+   sd-integrity → **✅ RESUELTO 07-25** (reemplazadas por `nocturno/local-2026-07-25-sd-integrity-rebase`).
+   datalogger 07-07/07-08 eco-LoRa → **✅ RESUELTO 07-25-b** (07-07⊂07-08, ambas borran `misiones/`;
+   driver INA219 extraído en `nocturno/local-2026-07-25-b-ina219-extract`). **Ambos pares STALE
+   peligrosos de datalogger quedan triados.**
 4. 🟢 **Binarios de build en galgas 07-09** (`build/esp_rx_371/*.bin/.elf/.map`, ~144k líneas).
    No deben entrar a main. Sacarlos del árbol o cherry-pick solo del source; sumar `build/` al
    `.gitignore` de galgas si no está.
