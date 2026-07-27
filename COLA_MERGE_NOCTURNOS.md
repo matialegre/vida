@@ -38,7 +38,7 @@
 |---|---|---|---|---|
 | **galgas** | 10 | 2 | ✅ sano (todos base 07-07, 0 atrás, merge limpio) | drenar en orden; resolver `QUE_FALTA.md` a mano |
 | **datalogger** | 8 | 10 | 🔴 STALE (6-8 commits atrás) | **rebasear c/u** antes de mergear |
-| **frioseguro** | 7 (6 útiles) | 13 | 🟡 mixto (2 viejos conflictúan, 1 subsumido) | drenar los nuevos; decidir los 2 viejos |
+| **frioseguro** | 8 (7 útiles) | 13 | 🟡 mixto (2 viejos conflictúan, 1 subsumido) | drenar los nuevos; decidir los 2 viejos |
 | **cosechador** | 1 | 2 | ✅ sano | drenar directo |
 
 Convención de la columna **merge**: `LIMPIO` = `merge-tree` sin conflictos contra el main de
@@ -135,6 +135,7 @@ pre-reconstrucción del 13/07, están 10 atrás y conflictúan en `QUE_FALTA.md`
 
 | Branch | Qué | Atrás | Merge | Acción |
 |---|---|---|---|---|
+| `nocturno/local-2026-07-26-b-provision-device` | Generador de config por cliente (`provision_device.py`) — la otra mitad del pipeline; se niega a emitir si no pasa el linter | 0 | LIMPIO | drenar (aditivo: 2 tools + doc + gitignore; 36 tests OK) |
 | `nocturno/local-2026-07-24-scan-secrets-sbkeys` | Scanner secrets esquema `sb_secret_/sb_publishable_` | 0 | LIMPIO | drenar (chico, tests verdes) |
 | `nocturno/local-2026-07-23-b-retencion-datos` | Retención datos cron + oráculo + 25 tests | 0 | LIMPIO | drenar |
 | `nocturno/local-2026-07-20-door-alert-model` | Modelo alerta de puerta + tests | 0 | LIMPIO | drenar |
