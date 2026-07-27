@@ -63,6 +63,7 @@ primero (bajan ruido), luego los modelos+tests, RX al final (el más pesado).
 | 8 | `nocturno/local-2026-07-20-b-ota-decision-model` | Modelo decisión OTA A/B | 4 / +554 | test: `tools/test_ota_decision_model.py` |
 | 9 | `nocturno/local-2026-07-23-firmware-check-edge` | Edge Function firmware-check + tests | 5 / +553 | test: `logic.test.ts` (Deno/node) |
 | 10 | `nocturno/local-2026-07-09-rx-deuda-verificador` | RX receptor (Task 08) firmware + migración set_config | 12 / +144775-90 | ⚠️ **incluye 6 binarios de build** en `build/esp_rx_371/` — sacarlos antes de mergear |
+| 11 | `nocturno/local-2026-07-27-readme-drift` | Fix README raíz que mentía (scaffolding/ruta vieja/pointer roto) vs estado E2E real | 2 / +59-75 | LIMPIO · solo docs, sin tests; el más barato de drenar (07-27) |
 
 **Cuidado transversal galgas:** los 10 tocan `QUE_FALTA.md`. Tras el primer merge, los otros 9
 conflictúan ahí → resolución trivial a mano (quedarse con la unión de los ítems marcados
