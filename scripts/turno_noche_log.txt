@@ -677,3 +677,128 @@ El doc trae el orden de drenaje por prioridad de PORTFOLIO (PLATA/octubre primer
 Nota menor: frioseguro y cosechador quedaron con el working tree en un branch nocturno (de turnos previos) — conviene volverlos a `main` al cerrar el drenaje.
 ===== FIN vie 24/07/2026 22:07:45,08 ===== 
 ===== TURNO NOCHE s�b 25/07/2026  2:00:01,80 ===== 
+Listo. Trabajo de la noche completo.
+
+## Resumen
+
+**Tarea elegida:** cerrar la decisión "par redundante `sd-integrity`" que la cola de merge (turno 24-c) dejó pendiente para el día — la única de las 3 pendientes que un worker nocturno puede resolver sin humano ni hardware. Elegida porque el sistema entero viene diagnosticando que **el cuello de botella es drenar branches, no producir más**; esta tarea *saca 2 de la pila*.
+
+**Hallazgo grave (con evidencia de git):** ni `07-09-sd-integrity` ni `07-15-sd-integrity` son mergeables. Además del entregable, **cada una borra el subsistema `misiones/` entero (~1591 líneas)** porque se cortaron de un main viejo — y el main de hoy tiene **6 commits construyendo justamente ese subsistema**. `merge-tree` las daba "LIMPIO", pero mergear cualquiera **habría borrado el núcleo del firmware actual**. Ese es el peligro STALE exacto que la cola advertía, ahora confirmado.
+
+**Qué hice:** extraje el entregable real limpio (`tools/sd_integrity.py` + su test — stdlib puro, no existían en main → 100% aditivo, cero borrado) sobre el main vivo, en:
+
+- **Branch:** `nocturno/local-2026-07-25-sd-integrity-rebase` (datalogger, pusheado)
+- **Verificación offline:** `python -m unittest tests.test_sd_integrity` → **29/29 OK**
+- **Neto: 2 branches tóxicos → 1 limpio.** `main` de datalogger quedó prístino.
+
+**Docs:** `COLA_MERGE_NOCTURNOS.md` y `QUE_FALTA.md #5` actualizados; diario en `diario/nocturno-local-2026-07-25.md`. MATI-HQ commiteado y pusheado.
+
+**Para el día (Matías + @verificador):** mergear el branch limpio y borrar `07-09`/`07-15`; y **diffear igual el otro par STALE `07-07`/`07-08` eco-LoRa antes de mergear** — mismo patrón, no confiar en `merge-tree "LIMPIO"`. La parte de firmware del DoD #5 (seq numbers + prueba de N horas) sigue necesitando hardware.
+
+Reglas respetadas: solo software/análisis, nada mergeado/borrado/movido, sin force-push, `field_captures` intacto, sin compilaciones → cero riesgo de timeout.
+===== FIN s�b 25/07/2026  2:06:00,29 ===== 
+===== TURNO NOCHE s�b 25/07/2026 22:00:01,41 ===== 
+Turno cerrado. Resumen de la noche:
+
+## Qué hice
+Seguí el aviso explícito del 1er turno de esta noche (`-25`): diffear el **último par STALE ambiguo de datalogger** (`07-07-ina219-ecolora` / `07-08-ecolora-fixes`), que la cola de merge marcaba como *"el mayor riesgo de la pila"*.
+
+**Hallazgo:** mismo patrón tóxico que el par sd-integrity de anoche —
+- `07-07` es **ancestro de `07-08`** (subsumido, como frioseguro 07-11-b⊂07-13).
+- `07-08` **borra 41 archivos, entre ellos todo `misiones/` (−4266 líneas)** porque salió de un main viejo → **merge naïve nukearía el firmware vivo.** Ninguno es mergeable.
+
+**Rescate:** adentro estaba `ina219.py`, el **driver INA219** que el PORTFOLIO/DoD #4 marca pendiente ("consumo MEDIDO, no estimado"). Depende solo de `machine`, no existía en main → 100% aditivo. Lo extraje **byte-fiel sobre el main de HOY** + escribí un **test offline nuevo** que ejercita el código real del driver (calibración datasheet §8.5.1, cap de overflow, conversión signada, decode de registros, sleep/wake).
+
+## Verificado (sin hardware)
+- `python -m unittest tools.test_ina219 -v` → **13 tests OK**
+- `py_compile ina219.py` → OK
+- `git diff main --stat` → 3 archivos, +318, **0 borrados**
+
+## Sin verificar (necesita hardware)
+Medir consumo REAL con el INA219 físico + LiPo por estado. El resto del par eco-LoRa (`eco.py` reescrito, ventana-RX = item #3) **no se extrajo** — entrelazado con firmware que main cambió; rehacer sobre main, no mergear los viejos.
+
+## Neto
+2 branches tóxicos → **1 branch limpio**. Con esto **los 2 pares STALE peligrosos de datalogger quedan triados** (sd-integrity + eco-LoRa).
+
+**Branch:** `nocturno/local-2026-07-25-b-ina219-extract` (datalogger, pusheado). Main quedó prístino.
+**Para el día:** mergear el branch limpio y borrar `07-07`/`07-08` al confirmar con @verificador.
+
+Todo commiteado y pusheado (datalogger + MATI-HQ). Paro acá.
+===== FIN s�b 25/07/2026 22:07:57,39 ===== 
+===== TURNO NOCHE dom 26/07/2026  2:00:01,79 ===== 
+Listo. Noche cerrada. Resumen:
+
+## Qué hice esta noche
+
+**Tarea:** terminar de triar el **cluster STALE de datalogger** — el peligro #1 de la cola de merge ("el mayor riesgo de la pila"). Las 2 noches previas cerraron los 2 pares tóxicos; quedaban 4 branches STALE flagged.
+
+**Hallazgo (git real):** los 4 branches restantes (eco-schedule, rv1-mesh, ssid-casing, rssi-calib) salen todos de `8784075` (main viejo) y **un merge naïve borraría todo `misiones/`** — el mismo patrón tóxico ya conocido. `merge-tree` los daba "limpios" (engañoso).
+
+**Acción:** extraje los 3 deliverables **cleanly-extractables** (modelos+tests offline, solo stdlib, no existen en main → 100% aditivos) byte-fiel sobre el main de HOY en un branch:
+- `eco_schedule_model` (23 tests) → DoD #3 ECO-LoRa
+- `rv1_mesh_model` (32 tests) → DoD #6 mesh RV1
+- `rssi_calibrate` (27 tests) → DoD #7 RSSI↔distancia
+- **82/82 tests OK offline**, 0 borrados.
+
+El 4º (`ssid-casing/wifi_nets.py`) es un **módulo de firmware** que main ya cubre con el WiFi manager (513c79b) → **NO lo extraje** (sería código muerto especulativo; documentado para rehacer con integración).
+
+**Neto: 4 branches tóxicos STALE → 1 branch limpio aditivo.** Con esto el cluster STALE de datalogger (8 branches) queda **100% triado** — lo que resta es acción humana (mergear los 3 branches limpios de estas noches + borrar los 8 viejos).
+
+**Branch:** `nocturno/local-2026-07-26-stale-cluster-extract` (datalogger, pusheado). Main quedó prístino.
+
+**Sin verificar (hardware):** los 3 modelos son oráculos/gates offline — el consumo real (INA219), la prueba de alcance/salto y las capturas RSSI de campo siguen pendientes.
+
+MATI-HQ: informe en `diario/nocturno-local-2026-07-26.md` + `COLA_MERGE_NOCTURNOS.md` actualizada, commiteado y pusheado.
+
+Nada mergeado, borrado ni deployado. Sin hardware, sin timeouts.
+===== FIN dom 26/07/2026  2:06:32,59 ===== 
+===== TURNO NOCHE dom 26/07/2026 22:00:01,43 ===== 
+Noche cerrada. Resumen de lo hecho:
+
+## Tarea: generador de config por cliente para FrioSeguro (PLATA, categoría 1)
+
+**Por qué esta tarea:** el 1er turno de hoy (`-26`) dejó el cluster STALE de datalogger 100% triado y anotó que lo que falta ahí es merge humano/hardware, no más branches nocturnos. Así que subí a la prioridad más alta disponible — **PLATA** (FrioSeguro), bloqueante 🔴 **#4 del primer abono**: "credencial única por cliente".
+
+**Qué construí:** `tools/provision_device.py` — la mitad que faltaba del pipeline de provisioning. Ya existía `lint_device_config.py` (12/07) que *valida* un config y encontró defectos reales en el `config.h` (`OTA_PASSWORD ""`, chat de Telegram compartido). Faltaba el que *genera* uno correcto. Ahora onboardear un comercio es un comando en vez de editar `config.h` a mano:
+
+```
+python tools/provision_device.py --client "Carniceria La Esquina" --placa 1 --telegram-chat 111222333 --show-secret
+```
+
+**El contrato clave:** antes de escribir, pasa el resultado por el linter y **se niega a emitir si no queda apto**. Un config salido del tool está garantizado a pasar el gate pre-flasheo.
+
+**Evidencia (offline, sin hardware):**
+- 36/36 tests OK · regresión del linter existente 35 OK
+- `config.h` real HOY: **NO apto** (OTA_OPEN) → tras provisionar: **APTA** con OTA password única generada
+- probado que rechaza (exit 1, no escribe) un override que rompe `temp_min<temp_max<temp_critical`
+- salida bajo `provisioning/` (agregado a `.gitignore` — lleva secretos por cliente)
+
+**Branch:** `nocturno/local-2026-07-26-b-provision-device` (frioseguro, pusheado). `main` quedó prístino; de paso devolví frioseguro a `main` (venía checkouteado en un branch nocturno).
+
+**Sin verificar (día/hardware):** flashear un config generado y confirmar OTA + alertas al chat del cliente en banco; definir de dónde salen los `chat_id` en el alta comercial. [@firmware / @backend]
+
+**MATI-HQ:** informe en `diario/nocturno-local-2026-07-26-b.md`, cola de merge actualizada (frioseguro 8 branches, 7 útiles), ambos repos pusheados. Nada mergeado/borrado; sin tocar `data/field_captures`, sin migraciones, sin mDNS. El branch espera a @verificador.
+===== FIN dom 26/07/2026 22:10:29,47 ===== 
+===== TURNO NOCHE lun 27/07/2026  2:00:01,77 ===== 
+Noche cerrada. Resumen de lo hecho:
+
+## Tarea: fix del drift del README de galgas (item #14, P0 octubre)
+
+**Por qué esta tarea.** El sistema lleva ~10 noches marcando lo mismo: el cuello ya no es *producir* branches, es *drenarlos* (25 sin mergear). Datalogger quedó 100% triado y el pipeline de provisioning de FrioSeguro completo — un modelo+tests #28 tendría valor negativo. Tomé el **fallback explícito del protocolo (paso 5)**: arreglar un README que miente. Era el item #14 de `galgas/QUE_FALTA.md`, sin tocar desde el 07-07, y galgas es P0 octubre.
+
+**El drift era real** (lo confirmé antes de tocar nada, contra `act.md`/PORTFOLIO/estructura):
+- Estado falso: *"🟡 Scaffolding creado, esperando contexto de uso real"* → el sistema está validado E2E en banco.
+- Ruta muerta: `C:\Users\Pandemonium\Documents\GALGAS CON SUPABASE\` → hoy es `C:\Proyectos\galgas`.
+- Pointer roto: mandaba a `docs/PLAN_v2_DEFINITIVO.md`, que **no existe**.
+
+**Qué hice.** Reescribí `README.md` reflejando el estado real (tabla de nodos: A 0.1.3 vía OTA / B 0.1.1 / RX heartbeat-only), designé **`act.md` como fuente de verdad** (como manda PORTFOLIO), corregí ruta y pointers, y aclaré que `build/`/`bins_*`/sketches experimentales no son estructura canónica. **Verifiqué que los 14 pointers del README nuevo existen en disco** — un fix de drift no debe introducir otro.
+
+**Verificación.** Solo docs, sin build ni tests. `git show HEAD:README.md | Select-String "Scaffolding|GALGAS CON SUPABASE|PLAN_v2_DEFINITIVO"` → vacío (ya no miente). 14/14 pointers OK. `main` de galgas quedó **prístino** (pointer en el branch).
+
+**Branch:** `nocturno/local-2026-07-27-readme-drift` (galgas, pusheado). No se mergea hasta @verificador.
+
+**MATI-HQ (pusheado):** `diario/nocturno-local-2026-07-27.md`, COLA_MERGE (galgas fila #11) y bitácora del Director.
+
+Reglas respetadas: nada mergeado/borrado/deployado, sin tocar firmware/backend/`data/field_captures`, sin compilaciones → cero riesgo de timeout. Paro acá.
+===== FIN lun 27/07/2026  2:06:08,39 ===== 
+===== TURNO NOCHE lun 27/07/2026 22:00:01,46 ===== 

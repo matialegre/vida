@@ -11,6 +11,18 @@
 > **Este es el análisis de la noche, no un branch nuevo** (hubiera sido el #27). Es 100 %
 > software/análisis, no destructivo, no toca ninguno de los 4 repos.
 
+> ## ⚠️ CORRECCIÓN (2026-07-27) — leer ANTES que lo de abajo
+> Este doc es del **07-24 y ya drifteó** (le faltan branches, arrastra clasificaciones viejas).
+> **Reemplazado por un tool que lo regenera con git en vivo:** `tools/merge_queue_status.py`
+> (reporte fresco en `COLA_MERGE_STATUS_2026-07-27.md`). **Corrección de fondo:** la alarma de
+> abajo *"los 8 branches STALE de datalogger borrarían `misiones/`"* **es FALSA** — surgió de medir
+> con `git diff main..branch` (two-dot), que muestra las adiciones POSTERIORES de main como falsos
+> "borrados". Con la métrica correcta (merge 3-way real: `merge-tree --write-tree` → diff vs main),
+> **ninguno de los 32 branches borra un solo archivo** (verificado esta noche). Los 8 de datalogger
+> mergean **limpios**; 7 quedan como `REVISAR-STALE` (modifican firmware/QUE_FALTA desde una base
+> vieja — revisar, no tóxicos) y 1 es `SUBSUMIDO`. Correr `python tools/merge_queue_status.py` para
+> el estado de HOY antes de drenar. (Lo de abajo se conserva como registro del análisis del 07-24.)
+
 ## TL;DR para Matías / @verificador (si leés una sola cosa)
 1. **galgas (10 branches)** y **cosechador (1)** están **sanos**: salen del mismo main, 0
    commits atrás, mergean limpio. Drenaje mecánico — el único cuidado es `QUE_FALTA.md`
