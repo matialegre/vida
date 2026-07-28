@@ -20,7 +20,8 @@ Estados: identificado → contactado → demo hecha → piloto → ABONO → (ch
 - [ ] Pitch 5 renglones por segmento — vie 10-jul
 - [ ] Hoja de mostrador (1 página)
 - [ ] Contrato simple con límite de responsabilidad (validar con contador)
-- [ ] Plantillas WhatsApp Business
+- [x] Plantillas WhatsApp Business → `comercial/plantillas_whatsapp.md` (2026-07-28)
 
 ## Bitácora
 - 2026-07-07 — Agente creado por Claude Fable. Primer hito: piloto casero (heladera de Matías) jue 9-jul; precio+pitch vie 10-jul; primera visita a comercio sáb 11 o lun 13-jul.
+- 2026-07-28 (nocturno-local) — Escritas las **plantillas de WhatsApp Business** (`comercial/plantillas_whatsapp.md`): configuración de la cuenta (perfil, bienvenida/ausencia, respuestas rápidas, etiquetas = pipeline) + 12 plantillas del funnel (§A–§L: primer contacto → demo → follow-ups → cierre → onboarding → alerta real → conversión de piloto → cobro → retención → reactivación) + objeciones versión chat (§M) + upsell/cross-sell/referido (§N/§O/§P) — 16 secciones §A–§P. Todo anclado y verificado contra PITCH/PRECIOS/guion_visita/CONTRATO (mismos precios, mismo disclaimer, sin nombrar "FrioSeguro"). Cierra el item #13 de `frioseguro/QUE_FALTA.md`. Falta (Matías): [MARCA], CBU/alias, número, tono, y grabar el video-demo de §B.

@@ -802,3 +802,20 @@ Noche cerrada. Resumen de lo hecho:
 Reglas respetadas: nada mergeado/borrado/deployado, sin tocar firmware/backend/`data/field_captures`, sin compilaciones → cero riesgo de timeout. Paro acá.
 ===== FIN lun 27/07/2026  2:06:08,39 ===== 
 ===== TURNO NOCHE lun 27/07/2026 22:00:01,46 ===== 
+Los 4 repos intactos (cosechador sigue en su branch de antes, como estaba — no lo toqué). Terminé.
+
+## Resumen del turno
+
+**Tarea elegida:** `tools/merge_queue_status.py` en MATI-HQ — un tool que regenera la cola de merge de los 32 branches nocturnos con git **en vivo** y la **métrica correcta de merge**. Elegida porque el cuello documentado hace ~10 noches no es producir branches sino **drenarlos**, y el doc a mano (`COLA_MERGE_NOCTURNOS.md`, del 07-24) ya drifteó en 3 días.
+
+**Hallazgo de la noche (lo importante):** corriendo el tool se desmintió la alarma central del doc a mano. Decía que los 8 branches STALE de datalogger *"borrarían todo `misiones/`"* — pero eso salía de medir con `git diff main..branch` (two-dot), que muestra las adiciones **posteriores** de main como falsos "borrados". Con la métrica real (merge 3-way `merge-tree --write-tree` → diff contra main), **0 de 32 branches borra un solo archivo** (verificado con git, en los 4 repos).
+
+**Estado real de la cola hoy:** 19 LIMPIO-ADITIVO · 8 REVISAR-STALE · 2 CONFLICTO · 1 BINARIOS · 1 SUBSUMIDO · 1 YA-EN-MAIN (galgas `07-21-b` = rama huérfana en el tip de main, borrar el ref). → **27/32 mergeables sin drama**: una sesión con @verificador baja la cola fuerte.
+
+**Verificado sin hardware:** 12 tests de `classify()` OK; corrida real contra los 4 repos; suma independiente de borrados = 0. Todo read-only (sin checkout/merge/reset).
+
+**Entregable:** en MATI-HQ `main` (cuartel, igual criterio que la COLA_MERGE original — análisis cross-repo, no toca ninguno de los 4 repos). Commit `8617a3d` pusheado. Sin branch nuevo.
+
+**Sin verificar / para el día:** `REVISAR-STALE` no es "mergear a ciegas" — hay que mirar los archivos de firmware que modifican desde base vieja; los branches de extracción `07-25/-25-b/-26` siguen siendo la vía limpia para lo entrelazado con firmware. Confirmar con @verificador antes de borrar los 8 viejos.
+===== FIN lun 27/07/2026 22:12:00,20 ===== 
+===== TURNO NOCHE mar 28/07/2026  2:00:01,76 ===== 
