@@ -819,3 +819,20 @@ Los 4 repos intactos (cosechador sigue en su branch de antes, como estaba — no
 **Sin verificar / para el día:** `REVISAR-STALE` no es "mergear a ciegas" — hay que mirar los archivos de firmware que modifican desde base vieja; los branches de extracción `07-25/-25-b/-26` siguen siendo la vía limpia para lo entrelazado con firmware. Confirmar con @verificador antes de borrar los 8 viejos.
 ===== FIN lun 27/07/2026 22:12:00,20 ===== 
 ===== TURNO NOCHE mar 28/07/2026  2:00:01,76 ===== 
+Listo. Noche cerrada con **una tarea bien hecha**.
+
+## Resumen del turno nocturno — 2026-07-28
+
+**Tarea elegida:** Plantillas de WhatsApp Business para el funnel de FrioSeguro (item #13 de `frioseguro/QUE_FALTA.md`, y el `[ ]` sin tachar de `dominios/comercial.md`).
+
+**Por qué esa y no otra:** Es el único deliverable de **PLATA (categoría 1, la cima de la jerarquía)** que era puro software/docs, offline, genuinamente pendiente y **no** estaba en ningún branch. El worker venía atrapado sirviendo solo a octubre (galgas) porque todos los bloqueantes de FrioSeguro son hardware/humanos — este era la excepción. Descarté producir otro modelo/test offline (el cuello hace ~10 noches es merge humano, no producción) y aplicar el fix de firmware del alert-model (necesita verificación en hardware, generator≠evaluator).
+
+**Qué hice:** Escribí `comercial/plantillas_whatsapp.md` — 16 secciones §A–§P: 12 plantillas del funnel completo (primer contacto → demo → follow-ups → cierre → onboarding → **alerta real** → conversión de piloto → cobro → retención → reactivación) + objeciones en versión chat + upsell/cross-sell/referido + config de la cuenta (perfil, respuestas rápidas, etiquetas = pipeline CRM). Todo **anclado y verificado** contra PITCH/PRECIOS/guion_visita/CONTRATO: mismos precios ($70k/$45k/$25k), mismo disclaimer legal (cláusula 2ª), sin nombrar "FrioSeguro".
+
+**Verificado sin hardware:** conteo de secciones (16 §A–§P ✔), precios consistentes con PRECIOS ✔, cero "FrioSeguro" en el copy (solo en refs a docs) ✔, disclaimer fiel al CONTRATO ✔. Corregí una imprecisión propia ("16 plantillas" → "16 secciones / 12 plantillas + objeciones + extras") antes de commitear para que el informe no mienta.
+
+**Sin verificar (para Matías, día):** tono (es borrador), completar `[MARCA]`/CBU/número, grabar el video-demo una vez. §H y §K se automatizan cuando estén en producción el aviso de desconexión y el branch `resumen-mensual`.
+
+**Entregable:** MATI-HQ `main` (cuartel — donde vive TODO el material comercial hermano; precedente del tool de cola de merge). **Los 4 repos de proyecto quedaron intactos.** Sin branch nocturno. Commit `b235fe4` pusheado a github.com/matialegre/vida. Informe completo en `diario/nocturno-local-2026-07-28.md`.
+===== FIN mar 28/07/2026  2:08:20,44 ===== 
+===== TURNO NOCHE mar 28/07/2026 22:00:01,43 ===== 

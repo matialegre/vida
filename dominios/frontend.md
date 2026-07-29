@@ -3,6 +3,15 @@
 Doc de dominio + bitacora. El agente lo lee al arrancar y lo actualiza al cerrar. Backlog inicial: ver seccion "Tu backlog inicial" en ~/.claude/agents/frontend.md (copia en ../agentes/frontend.md).
 
 ## Bitacora
+- 2026-07-28 - **Monopoly ("El Banquero") de la APK del auto: 3 dispositivos + hoteles + rondas largas** (@frontend).
+  Archivo unico: `C:\Proyectos\batalla-naval-lan\assets\monopoly.html` (34 KB -> 42 KB, todo inline, sin CDN).
+  - **Red host-autoritativa** sobre el relay de salas existente (WebServer.java / `pc\test_relay.py`). Clase `Sala` de bomber.html + `hostId()` y `onclose`. Protocolo nuevo dentro del payload: `N <ficha>` (elegir ficha en la sala), `GO <cfg>` (host arranca), `Q <accion>` (cliente PIDE), `A <accion>` (host difunde la accion canonica, incluidos los dados), `S <snapshot>` (host difunde estado completo, se aplica cuando termina la animacion). Los clientes ya NO aplican nada localmente al tocar un boton -> se acabo la divergencia. Si se cae el host, el id mas chico que queda toma la autoridad automaticamente.
+  - **Hoteles**: 4 casas + hotel (nivel 5). Reglas clasicas: hace falta el color completo y construir parejo (`minGrupo`). Alquiler x[2,5,15,40,70,110] sobre la renta base. Overlay 🏗 CONSTRUIR con botones grandes que muestran "alquiler $X -> $Y" y por que no podes construir.
+  - **Partidas mas largas**: se fue el final por "4 vueltas"; ahora Corta 10 / Normal 20 / Larga 35 rondas (lo elige el host en la sala), contador "Ronda X de Y" siempre visible. Sigue el final por bancarrota.
+  - **Claridad para Ainho (7)**: barra gigante "👉 ¡TE TOCA A VOS!" verde y latiendo vs "⏳ Juega <fulano>", tu tarjeta con borde punteado, indicador 🟢/🔴 de conexion arriba a la derecha, tablero centrado y hoteles mas grandes en la celda.
+  - **Verificado con Playwright, 3 pestanas contra `pc\test_relay.py`**: los 3 se ven en la sala con su ficha; turnos rotan entre los 3; plata/posiciones/duenos/casas/turno/ronda IDENTICOS en las 3 pestanas tras ~25 acciones; casa->hotel se ve en las 3; alquiler con hotel $2860 (26 x 110) cobrado y visto igual por todos; se cae un jugador -> quiebra y el resto sigue; se cae el HOST -> el otro toma la autoridad y cierra la partida sin colgarse. Cero errores de consola. Modo 1J vs Bot llega al final por rondas y hot-seat 3J sigue andando (sin regresion).
+  - Pendiente: hipotecar/vender propiedades, cambios entre jugadores, reconexion a partida en curso (hoy el que se va queda quebrado), y probar en la APK real (BN.hostJuegos) con celu+tablet+iPhone.
+
 - 2026-07-07 - Agente creado por Claude Fable con backlog real de los repos migrados (C:/Proyectos).
 
 - 2026-07-13 - **FrioSeguro dashboard migrado a Vercel + Supabase nuevo** (@frontend):
