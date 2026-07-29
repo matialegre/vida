@@ -836,3 +836,29 @@ Listo. Noche cerrada con **una tarea bien hecha**.
 **Entregable:** MATI-HQ `main` (cuartel — donde vive TODO el material comercial hermano; precedente del tool de cola de merge). **Los 4 repos de proyecto quedaron intactos.** Sin branch nocturno. Commit `b235fe4` pusheado a github.com/matialegre/vida. Informe completo en `diario/nocturno-local-2026-07-28.md`.
 ===== FIN mar 28/07/2026  2:08:20,44 ===== 
 ===== TURNO NOCHE mar 28/07/2026 22:00:01,43 ===== 
+Noche cerrada. Una tarea bien hecha.
+
+## Resumen del turno nocturno — 2026-07-28-b (2º turno)
+
+**Tarea:** Corregí un **cry-wolf del SCADA de galgas** (la vista "Planta" que ve Dreyfus en la parada de octubre) y de paso cerré el **drift del item #9** de `QUE_FALTA.md`.
+
+**El hallazgo (con evidencia):**
+- Firmware: ALERTA dispara a **40 mV** (`SELF_TRIGGER_VPP_V 0.040`), y el vpp de **reposo** en operación normal es **~30 mV** (`config.h:108`: *"vpp pequeno 0.03V → NO triggea ALERTA"*).
+- Pero `PlantaView.jsx` clasificaba con `TH_VPP_MONITOR = 0.020` (20 mV) → como el reposo (30) es mayor que 20, **la card quedaba en ámbar "MONITOREO" de forma permanente en operación normal** = desensibiliza al operario justo cuando importa.
+
+**Fix (quirúrgico, correctitud no diseño):** subí `TH_VPP_MONITOR` a **0.035** (30 mV reposo + 1σ de ruido 5 mV, quedando 5 mV bajo el ALERT). **La lógica de ALERTA de 40 mV NO se toca** → es imposible que el cambio cause una alerta perdida; el peor caso es una banda ámbar más angosta. También alineé el `redler/README.md` que mentía (decía MONITOR 25-40 mV, igual de mal).
+
+**Por qué esa:** P0-octubre + converge con SCI (categoría 1); no estaba en ninguno de los 32 branches pendientes; es puro software offline. Descarté producir otro modelo (el cuello es merge humano, no producción) y el fix del alert-model de FrioSeguro (necesita hardware).
+
+**Verificado offline:** `web/ npm run build` → OK (vite, 394 módulos, 4.72 s, sin errores).
+
+**Sin verificar (campo, @muestreador/@diseno):** el borde exacto (35 mV es estimación de specs) contra `data/field_captures/` con señal real — no toqué field_captures (read-only).
+
+**Entregables:**
+- Branch `nocturno/local-2026-07-28-b-scada-monitor-threshold` (galgas) — pusheado.
+- Puntero `🔀 EN BRANCH` en `QUE_FALTA.md` de galgas **main** (commit `bbe095f`).
+- MATI-HQ: informe `diario/nocturno-local-2026-07-28-b.md` + bitácora del Director en PORTFOLIO (commit `954dcfc`). También commiteé aparte 3 bitácoras sueltas de sesiones previas (drive-torno, Monopoly) que estaban sin commitear, para que no rompan el próximo `git pull`.
+
+Working tree limpio en los dos repos, galgas de vuelta en `main`.
+===== FIN mar 28/07/2026 22:08:49,40 ===== 
+===== TURNO NOCHE mi� 29/07/2026  2:00:01,76 ===== 
