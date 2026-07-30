@@ -11,6 +11,22 @@
 > **Este es el análisis de la noche, no un branch nuevo** (hubiera sido el #27). Es 100 %
 > software/análisis, no destructivo, no toca ninguno de los 4 repos.
 
+> ## ✅ ACTUALIZACIÓN (2026-07-29) — el estado fresco y la buena noticia
+> Reporte de HOY: **`COLA_MERGE_STATUS_2026-07-29.md`** (34 branches). El tool
+> `tools/merge_queue_status.py` fue **corregido y extendido** esta noche:
+> 1. **Bug del conteo de conflictos:** antes reportaba "3 archivos en conflicto" donde había
+>    **1** — metía las 2 líneas informativas de git (`Auto-merging…`, `CONFLICT (content):…`)
+>    como si fueran archivos. Ahora corta en la línea en blanco → conteo real.
+> 2. **Clasificación doc vs código:** cada conflicto/colisión se etiqueta `[SOLO docs]`,
+>    `[codigo]` o `[doc+codigo]`. **Hallazgo que des-asusta la cola:** de los **8 CONFLICTO,
+>    los 8 son SOLO `QUE_FALTA.md`** (0 tocan firmware/código); y de 14 `REVISAR-STALE`, 10
+>    son solo docs. El atasco entero es de **bitácora, no de código**: se resuelve tomando
+>    ambos lados del `.md`, no es riesgo. **Orden de drenaje sugerido:** 9 `LIMPIO-ADITIVO`
+>    primero (mecánico) → 10 stale-docs (revisión de 1 min) → 8 conflictos-docs (tomar ambos)
+>    → dejar para el final los pocos que tocan código (datalogger `ecolora-fixes` doc+código,
+>    galgas `rx-deuda` con binarios, frioseguro `resumen-mensual` código). Correr
+>    `python tools/merge_queue_status.py` para el estado del momento.
+>
 > ## ⚠️ CORRECCIÓN (2026-07-27) — leer ANTES que lo de abajo
 > Este doc es del **07-24 y ya drifteó** (le faltan branches, arrastra clasificaciones viejas).
 > **Reemplazado por un tool que lo regenera con git en vivo:** `tools/merge_queue_status.py`

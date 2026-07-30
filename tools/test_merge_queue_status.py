@@ -11,7 +11,7 @@ import sys
 import unittest
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from merge_queue_status import classify
+from merge_queue_status import classify, is_doc, collision_kind
 
 
 def clean(**kw):
@@ -81,6 +81,56 @@ class TestClassify(unittest.TestCase):
         # Un branch sin commits nuevos no puede conflictuar; ahead=0 manda y es no-op.
         label, _ = classify(clean(ahead=0), [])
         self.assertEqual(label, "YA-EN-MAIN")
+
+    def test_conflicto_solo_docs_es_trivial(self):
+        # El caso real de galgas: todos conflictuan solo en QUE_FALTA.md.
+        a = {"clean": False, "ahead": 1, "conflict_files": ["QUE_FALTA.md"]}
+        label, note = classify(a, [])
+        self.assertEqual(label, "CONFLICTO")
+        self.assertIn("SOLO docs", note)
+        self.assertIn("QUE_FALTA.md", note)
+
+    def test_conflicto_codigo_pide_revision(self):
+        a = {"clean": False, "ahead": 1, "conflict_files": ["firmware/main.py"]}
+        _, note = classify(a, [])
+        self.assertIn("CODIGO", note)
+
+    def test_conflicto_mixto(self):
+        a = {"clean": False, "ahead": 1, "conflict_files": ["QUE_FALTA.md", "config.h"]}
+        _, note = classify(a, [])
+        self.assertIn("doc+codigo", note)
+
+    def test_stale_solo_docs_tag(self):
+        _, note = classify(clean(behind=2, modified=["QUE_FALTA.md", "README.md"]), [])
+        self.assertIn("solo docs", note)
+
+
+class TestIsDoc(unittest.TestCase):
+    def test_markdown_y_texto(self):
+        for p in ("QUE_FALTA.md", "docs/x.md", "notas.txt", "README", "CHANGELOG"):
+            self.assertTrue(is_doc(p), p)
+
+    def test_carpeta_docs_cualquier_extension(self):
+        self.assertTrue(is_doc("docs/diagrama.svg"))
+        self.assertTrue(is_doc("firmware/docs/api.html"))
+
+    def test_codigo_config_sql_no_son_doc(self):
+        for p in ("firmware/main.py", "config.h", "web/App.jsx", "migration.sql", "eco.py"):
+            self.assertFalse(is_doc(p), p)
+
+
+class TestCollisionKind(unittest.TestCase):
+    def test_vacio_es_doc(self):
+        self.assertEqual(collision_kind([]), "doc")
+
+    def test_todos_doc(self):
+        self.assertEqual(collision_kind(["QUE_FALTA.md", "README.md"]), "doc")
+
+    def test_todos_codigo(self):
+        self.assertEqual(collision_kind(["a.py", "b.ino"]), "codigo")
+
+    def test_mixto(self):
+        self.assertEqual(collision_kind(["QUE_FALTA.md", "a.py"]), "mixto")
 
 
 if __name__ == "__main__":

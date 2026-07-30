@@ -20,6 +20,15 @@ Asi ``-D`` (borrados) y ``-M`` (modificados) reflejan el impacto real sobre main
 artefacto del diff de tips. ``merge-tree --write-tree`` escribe objetos al object-store pero
 NO toca refs ni working-tree: el tool es 100% de solo lectura (sin checkout/merge/reset).
 
+Colision doc vs codigo (agregado 2026-07-29)
+--------------------------------------------
+Cada conflicto/colision se clasifica ``[SOLO docs]`` / ``[codigo]`` / ``[doc+codigo]``
+(``collision_kind``): un choque en ``QUE_FALTA.md`` o un ``README.md`` es trivial (se
+resuelve tomando ambos lados) y NO debe tratarse igual que un choque en firmware/SQL. Esto
+des-asusta la cola: casi todos los "CONFLICTO" de galgas son un unico ``QUE_FALTA.md`` que
+cada nocturno amplia. Ademas se corrigio el parseo de ``merge-tree`` (antes contaba las
+lineas informativas ``Auto-merging``/``CONFLICT`` como archivos e inflaba el conteo 3x).
+
 Uso
 ---
     python tools/merge_queue_status.py                 # markdown a stdout (default: los 4 repos)
@@ -43,6 +52,37 @@ DEFAULT_REPOS = [
 
 # Extensiones que casi nunca deben entrar a main (artefactos de build).
 BUILD_EXTS = (".bin", ".elf", ".map", ".hex", ".o", ".a", ".uf2", ".bootloader")
+
+# Documentacion: una colision/conflicto aca es TRIVIAL (se resuelve tomando ambos lados,
+# nadie rompe firmware por dos entradas de bitacora). Distinta de codigo/config/SQL, que
+# exige revision real. Esta distincion es la que des-asusta la cola: casi todos los
+# "CONFLICTO" de galgas son un unico QUE_FALTA.md, no firmware.
+DOC_EXTS = (".md", ".txt", ".rst")
+DOC_STEMS = ("readme", "changelog", "que_falta", "que_hacer", "progress", "decisions", "act")
+
+
+def is_doc(path: str) -> bool:
+    """True si el path es documentacion (markdown/texto, doc conocido, o vive en docs/)."""
+    p = path.lower().replace("\\", "/")
+    if p.endswith(DOC_EXTS):
+        return True
+    if p.startswith("docs/") or "/docs/" in p:
+        return True
+    stem = p.rsplit("/", 1)[-1].rsplit(".", 1)[0]
+    return stem in DOC_STEMS
+
+
+def collision_kind(paths: list) -> str:
+    """Clasifica un set de archivos colisionados: 'doc' (todos docs => trivial),
+    'codigo' (ninguno doc) o 'mixto'. Lista vacia => 'doc' (nada real que revisar)."""
+    if not paths:
+        return "doc"
+    docs = sum(1 for p in paths if is_doc(p))
+    if docs == len(paths):
+        return "doc"
+    if docs == 0:
+        return "codigo"
+    return "mixto"
 
 
 def git(repo: str, *args: str) -> tuple[int, str]:
@@ -81,8 +121,19 @@ def merge_result(repo: str, base: str, branch: str) -> dict:
     lines = out.splitlines()
     tree = lines[0] if lines else ""
     if rc != 0:
-        # rc==1 => conflicto; la 1ra linea es el OID del arbol, el resto los archivos en conflicto.
-        return {"clean": False, "conflict_files": [l for l in lines[1:] if l.strip()]}
+        # rc==1 => conflicto. Formato de merge-tree --name-only:
+        #   <OID-arbol>
+        #   <archivos en conflicto, uno por linea>
+        #   <linea en blanco>
+        #   Auto-merging X / CONFLICT (content): ...   <- mensajes informativos, NO archivos
+        # Los nombres de archivo van SOLO hasta la 1ra linea en blanco. Antes se tomaba
+        # lines[1:] entero => el conteo salia inflado 3x (metia los 2 mensajes como "archivos").
+        conflict_files = []
+        for l in lines[1:]:
+            if not l.strip():
+                break
+            conflict_files.append(l.strip())
+        return {"clean": False, "conflict_files": conflict_files}
 
     added, modified, deleted = [], [], []
     _, ns = git(repo, "diff", "--name-status", base, tree)
@@ -157,8 +208,15 @@ def classify(a: dict, subsumers: list[str]) -> tuple[str, str]:
     if a.get("ahead", 0) == 0:
         return "YA-EN-MAIN", "sin commits mas alla de main — nada que mergear, borrar la rama"
     if not a.get("clean"):
-        n = len(a.get("conflict_files", []))
-        return "CONFLICTO", f"{n} archivo(s) en conflicto — resolver a mano"
+        cf = a.get("conflict_files", [])
+        kind = collision_kind(cf)
+        hint = {
+            "doc": "SOLO docs — trivial, tomar ambos lados",
+            "codigo": "CODIGO — revisar a mano",
+            "mixto": "doc+codigo — revisar a mano",
+        }[kind]
+        files = ", ".join(cf[:4]) if cf else "?"
+        return "CONFLICTO", f"{len(cf)} archivo(s) en conflicto [{hint}]: {files}"
     if a.get("deleted"):
         d = a["deleted"]
         return "BORRA-ARCHIVOS", f"el merge borraria {len(d)} archivo(s): {', '.join(d[:4])}"
@@ -168,8 +226,9 @@ def classify(a: dict, subsumers: list[str]) -> tuple[str, str]:
         return "SUBSUMIDO", f"ancestro de {', '.join(subsumers)} — drenar solo ese"
     if a.get("modified") and a.get("behind", 0) > 0:
         m = a["modified"]
+        tag = {"doc": "solo docs", "codigo": "codigo", "mixto": "doc+codigo"}[collision_kind(m)]
         return "REVISAR-STALE", (
-            f"limpio+aditivo pero modifica {len(m)} archivo(s) desde base {a['behind']} atras: "
+            f"limpio+aditivo pero modifica {len(m)} archivo(s) [{tag}] desde base {a['behind']} atras: "
             f"{', '.join(m[:4])} — revisar que no reviertan main"
         )
     return "LIMPIO-ADITIVO", "solo agrega archivos — drenaje mecanico seguro"
@@ -185,6 +244,27 @@ def render_markdown(report: list[dict]) -> str:
     out.append("")
     total = sum(len(r["branches"]) for r in report)
     out.append(f"**{total} branches nocturnos** en {len(report)} repos.")
+    out.append("")
+
+    # Rollup accionable: la mayoria de los "bloqueos" son triviales (docs), no codigo.
+    # Este es el numero que des-asusta la cola y ordena el drenaje.
+    all_b = [b for r in report for b in r["branches"]]
+    conf = [b for b in all_b if not b["clean"]]
+    conf_doc = [b for b in conf if collision_kind(b.get("conflict_files", [])) == "doc"]
+    aditivo = [b for b in all_b if b["status"] == "LIMPIO-ADITIVO"]
+    stale = [b for b in all_b if b["status"] == "REVISAR-STALE"]
+    stale_doc = [b for b in stale if collision_kind(b.get("modified", [])) == "doc"]
+    out.append("**Lectura rapida (drenaje):**")
+    out.append(f"- **[VERDE] {len(aditivo)} LIMPIO-ADITIVO** — merge mecanico seguro, empezar por aca.")
+    out.append(
+        f"- **[AMBAR] {len(stale)} REVISAR-STALE**, de los cuales **{len(stale_doc)} tocan solo docs** "
+        "(revision de 1 minuto: que no reviertan el estado actual del .md)."
+    )
+    out.append(
+        f"- **[ROJO] {len(conf)} CONFLICTO**, de los cuales **{len(conf_doc)} son SOLO docs** "
+        "(triviales: tomar ambos lados; el conflicto es de bitacora, no de firmware). "
+        f"Solo {len(conf) - len(conf_doc)} tocan codigo/config."
+    )
     out.append("")
     for r in report:
         out.append(f"## {r['repo']}  ·  main={r['main']} ({r['main_commits']} commits)")

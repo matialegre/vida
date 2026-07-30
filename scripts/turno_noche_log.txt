@@ -862,3 +862,25 @@ Noche cerrada. Una tarea bien hecha.
 Working tree limpio en los dos repos, galgas de vuelta en `main`.
 ===== FIN mar 28/07/2026 22:08:49,40 ===== 
 ===== TURNO NOCHE mi� 29/07/2026  2:00:01,76 ===== 
+Listo. Noche cerrada con una tarea, bien hecha.
+
+## Resumen
+
+**Tarea elegida:** revalidar los umbrales de `v_pp` del sistema de galgas **contra la señal real de campo** — bloqueante **#2 de galgas** (P0-octubre) y el pendiente exacto que dejó el fix del SCADA de anoche. Era genuinamente nuevo (ningún branch de los 13 mide el v_pp real de las capturas), offline, read-only sobre datos sagrados, y converge con Medidas 2.
+
+**Qué hice** (branch `nocturno/local-2026-07-29-vpp-field-characterization` en galgas):
+- `tools/analyze_vpp_field.py` — reconstruye la **ventana exacta del firmware** (500 muestras = 1 s, `BURST_SAMPLES_NORMAL`) desde los `bufA` crudos y mide el v_pp real. Stdlib, **solo lee** las capturas (nunca escribe).
+- `tools/test_analyze_vpp_field.py` — 9 tests sintéticos, **OK**.
+- `docs/vpp-field-characterization.md` — método + hallazgos + fix candidato.
+
+**Dos hallazgos con evidencia:**
+1. ✅ El v_pp real es **≤14 mV mediana en toda condición normal** → el ALERT de 40 mV tiene margen enorme; el fix MONITOR=35 mV del 07-28-b queda **validado y hasta conservador** (el "reposo 30 mV" del `config.h` era una estimación del simulador, pesimista frente al campo ~6 mV).
+2. ⚠️ **Cry-wolf latente en el firmware v3 (para @firmware):** el self-trigger (`v_pp>40mV`, 1 burst, **sin hold**) convierte los **dropouts de 0.0 V** (1.2 % de muestras con motor ON) en **alertas espurias** (3.0 % de los segundos; 0 % con guard de rango). El legacy tenía `HOLD_SEC=1.5s`, el informe §9.2 pide 2–3 s. **No lo apliqué** (generator≠evaluator): fix candidato documentado para confirmar en banco. El tool además demuestra que el guard **no enmascara roturas reales** (la CADENA B ROTA de `reposo_1.csv` sigue > ALERT con guard).
+
+**Verificación:** `python tools/test_analyze_vpp_field.py` (9/9 OK) y `python tools/analyze_vpp_field.py` (tabla + veredicto, <5 s). `data/field_captures/` intacto (`git status` limpio ahí).
+
+**Sin verificar (hardware):** patrón de dropout del ADC v3 real y valor exacto del guard — para @muestreador/@firmware en banco.
+
+Todo pusheado: branch + puntero en `main` de galgas (`b717127`), e informe + bitácora del Director en MATI-HQ main (`2b6f029`). Estado limpio.
+===== FIN mi� 29/07/2026  2:13:24,50 ===== 
+===== TURNO NOCHE mi� 29/07/2026 22:00:01,44 ===== 
