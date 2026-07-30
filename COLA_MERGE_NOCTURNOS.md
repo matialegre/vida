@@ -11,6 +11,18 @@
 > **Este es el análisis de la noche, no un branch nuevo** (hubiera sido el #27). Es 100 %
 > software/análisis, no destructivo, no toca ninguno de los 4 repos.
 
+> ## ✅ ACTUALIZACIÓN (2026-07-30) — los 8 conflictos-docs YA vienen pre-resueltos
+> El paso que faltaba después de *clasificar* la cola: **resolverla de antemano**. El tool
+> nuevo **`tools/resolve_doc_conflicts.py`** toma cada uno de los **8 branches CONFLICTO
+> solo-docs** (6 galgas + 2 frioseguro, todos chocan únicamente en `QUE_FALTA.md`) y deja el
+> archivo ya fusionado por **union 3-way** (toma ambos lados, sin marcadores) en
+> `COLA_MERGE_RESOLUCIONES/<repo>/<branch>/QUE_FALTA.md`, con los comandos exactos de drenaje.
+> Verificado: 0 marcadores de conflicto, cada resolución conserva **tanto** el avance de main
+> (bullets 07-28-b/07-29) **como** la línea nueva del branch → no revierte nada. Reporte:
+> **`COLA_MERGE_RESOLUCIONES.md`**. Con esto los 8 "conflictos" son *revisar-y-copiar*, no
+> merges a mano. **El drenaje de día quedó mecánico de punta a punta.** (Read-only sobre los
+> repos; escribe solo en MATI-HQ; NO mergea — el humano corre los comandos tras revisar.)
+>
 > ## ✅ ACTUALIZACIÓN (2026-07-29) — el estado fresco y la buena noticia
 > Reporte de HOY: **`COLA_MERGE_STATUS_2026-07-29.md`** (34 branches). El tool
 > `tools/merge_queue_status.py` fue **corregido y extendido** esta noche:
