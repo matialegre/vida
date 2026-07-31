@@ -35,6 +35,7 @@ from __future__ import annotations
 
 import argparse
 import os
+import re
 import subprocess
 import sys
 import tempfile
@@ -61,6 +62,53 @@ def safe_name(branch: str) -> str:
     return "".join(out).strip("_") or "branch"
 
 
+# Anotacion de bitacora "EN BRANCH `nocturno/...`" (con o sin ** de markdown / backtick).
+_EN_BRANCH_RE = re.compile(r"EN BRANCH\**\s*`?(nocturno/[A-Za-z0-9._/\-]+)")
+
+
+def en_branch_refs(text: str) -> dict:
+    """Mapa ``{nombre_de_branch: [indices de linea 0-based]}`` de las anotaciones
+    ``EN BRANCH `nocturno/...` `` en ``text``. Funcion pura."""
+    refs: dict = {}
+    for i, line in enumerate(text.splitlines()):
+        for m in _EN_BRANCH_RE.finditer(line):
+            refs.setdefault(m.group(1), []).append(i)
+    return refs
+
+
+def dedup_en_branch(union_text: str, ours_text: str) -> tuple:
+    """Corrige el falso-duplicado que produce la union 3-way cuando ``main`` (ours) YA
+    documentaba un branch con otra redaccion.
+
+    La union toma ambos lados: si ``main`` agrego su propia linea ``EN BRANCH `X` `` (via una
+    sync posterior) y el branch ``X`` trae la suya, quedan las DOS -> bullet repetido en el
+    ``QUE_FALTA.md`` resuelto (sin marcador de conflicto, por eso el chequeo del 07-30 no lo
+    vio). Regla: si un mismo branch aparece en 2+ anotaciones ``EN BRANCH`` y al menos una es
+    identica a una linea de ``main``, se conservan las de ``main`` y se descartan las demas
+    (la variante que aporto el branch, subsumida). Si ninguna coincide con ``main`` (caso raro),
+    se deja la primera y se descartan las repetidas. Funcion pura.
+
+    Devuelve ``(texto_dedup, lineas_descartadas)``. Sin duplicados -> texto intacto y ``[]``.
+    """
+    ours_lines = {l.strip() for l in ours_text.splitlines() if l.strip()}
+    union_lines = union_text.splitlines()
+    drop_idx: set = set()
+    for _branch, idxs in en_branch_refs(union_text).items():
+        if len(idxs) < 2:
+            continue
+        in_ours = [i for i in idxs if union_lines[i].strip() in ours_lines]
+        keep = set(in_ours) if in_ours else {idxs[0]}
+        for i in idxs:
+            if i not in keep:
+                drop_idx.add(i)
+    if not drop_idx:
+        return union_text, []
+    dropped = [union_lines[i] for i in sorted(drop_idx)]
+    kept = [l for i, l in enumerate(union_lines) if i not in drop_idx]
+    trailing = "\n" if union_text.endswith("\n") else ""
+    return "\n".join(kept) + trailing, dropped
+
+
 def is_resolvable(conflict_files: list) -> bool:
     """True si el conflicto es 100% docs (se puede pre-resolver por union). Funcion pura.
 
@@ -84,12 +132,14 @@ def _show_to_file(repo: str, rev: str, path: str, dest: str) -> None:
         # rc!=0 => el path no existe en ese rev: base/ours/theirs vacio, merge-file lo maneja.
 
 
-def union_merge_file(repo: str, base_ref: str, branch: str, path: str) -> tuple[bool, str]:
+def union_merge_file(repo: str, base_ref: str, branch: str, path: str) -> tuple:
     """Union 3-way de ``path`` entre main (ours), la merge-base (base) y ``branch`` (theirs).
 
-    Devuelve (ok, texto_fusionado). ``ok`` refleja que ``git merge-file --union`` no reporto
-    error de I/O (con --union el rc de conflicto textual es 0 igual: no hay marcadores). NO
-    toca el repo: extrae los 3 blobs a temporales y fusiona ahi.
+    Devuelve ``(ok, texto_fusionado, lineas_descartadas)``. ``ok`` refleja que
+    ``git merge-file --union`` no reporto error de I/O (con --union el rc de conflicto textual
+    es 0 igual: no hay marcadores). Tras la union, ``dedup_en_branch`` limpia los bullets
+    ``EN BRANCH`` que main ya documentaba (falso-duplicado de la union). NO toca el repo:
+    extrae los 3 blobs a temporales y fusiona ahi.
     """
     rc, mbase = mq.git(repo, "merge-base", mq.main_branch(repo) or base_ref, branch)
     base_rev = mbase if rc == 0 and mbase else base_ref
@@ -110,7 +160,12 @@ def union_merge_file(repo: str, base_ref: str, branch: str, path: str) -> tuple[
         text = proc.stdout.decode("utf-8", errors="replace")
         # rc>=0 son conflictos resueltos por union; rc<0 (=-1 en git) es error real de I/O.
         ok = proc.returncode >= 0
-        return ok, text
+        dropped = []
+        if ok:
+            with open(ours, encoding="utf-8", errors="replace") as f:
+                ours_text = f.read()
+            text, dropped = dedup_en_branch(text, ours_text)
+        return ok, text, dropped
     finally:
         for p in (ours, base, theirs):
             try:
@@ -165,14 +220,17 @@ def build_plan(repos: list, outdir: str, write: bool) -> list:
                 "resolvable": is_resolvable(cf),
                 "files_written": [],
                 "errors": [],
+                "deduped": [],
             }
             if entry["resolvable"]:
                 res_dir = os.path.join(outdir, repo_name, safe_name(branch))
                 for path in cf:
-                    ok, text = union_merge_file(repo, main, branch, path)
+                    ok, text, dropped = union_merge_file(repo, main, branch, path)
                     if not ok:
                         entry["errors"].append(f"merge-file fallo en {path}")
                         continue
+                    if dropped:
+                        entry["deduped"].append((path, len(dropped)))
                     if write:
                         dest = os.path.join(res_dir, path)
                         os.makedirs(os.path.dirname(dest), exist_ok=True)
@@ -213,6 +271,12 @@ def render_markdown(plan: list, write: bool) -> str:
             out.append(f"- Conflicto en: {', '.join('`'+f+'`' for f in e['conflict_files'])}")
             if e["errors"]:
                 out.append(f"- ⚠️ Errores: {'; '.join(e['errors'])}")
+            if e.get("deduped"):
+                det = ", ".join(f"`{p}` ({n})" for p, n in e["deduped"])
+                out.append(
+                    f"- 🧹 De-duplicado: main ya documentaba este branch → "
+                    f"bullets `EN BRANCH` repetidos descartados en {det}."
+                )
             if write and e["files_written"]:
                 out.append(f"- Resolucion escrita en: `{e['res_dir_abs']}`")
             out.append("- Drenaje sugerido (correr a mano, tras revisar la resolucion):")

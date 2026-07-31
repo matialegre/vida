@@ -11,6 +11,21 @@
 > **Este es el análisis de la noche, no un branch nuevo** (hubiera sido el #27). Es 100 %
 > software/análisis, no destructivo, no toca ninguno de los 4 repos.
 
+> ## 🩹 CORRECCIÓN (2026-07-30-b, 2do turno) — las auto-resoluciones duplicaban un bullet; arreglado
+> Pase de **evaluador** sobre la salida del turno anterior (generator≠evaluator): de las 8
+> resoluciones pre-generadas hoy, **3 tenían un `EN BRANCH` duplicado** (galgas `07-29` líneas
+> 11-12; frioseguro `07-11-b` y `07-13`, ambas por `07-11-b`). Causa: la union 3-way toma
+> ambos lados, y cuando **main ya documentaba** ese branch (con otra redacción, vía una sync
+> posterior) sumaba las DOS anotaciones → bullet repetido en el `QUE_FALTA.md` resuelto. Sin
+> marcador de conflicto, por eso el chequeo "0 marcadores" del 1er turno no lo vio. Un humano
+> que corriera el drenaje a ciegas commiteaba la bitácora con el bullet repetido (P0 galgas /
+> P1 frioseguro). **Fix en el harness** (`resolve_doc_conflicts.py`): función pura
+> `dedup_en_branch` que descarta la anotación repetida y **conserva la de main**; ahora las 8
+> resoluciones tienen **0 duplicados** (re-verificado) y las 3 subsumidas quedan idénticas a
+> main (su único cambio de docs ya vivía ahí; el valor real del branch —el código/tests— entra
+> igual, merge-a limpio aparte). Tests: `test_resolve_doc_conflicts` **13→20 OK**. Reporte
+> regenerado con notas 🧹 de-duplicado. Sin branch (tooling del cuartel).
+>
 > ## ✅ ACTUALIZACIÓN (2026-07-30) — los 8 conflictos-docs YA vienen pre-resueltos
 > El paso que faltaba después de *clasificar* la cola: **resolverla de antemano**. El tool
 > nuevo **`tools/resolve_doc_conflicts.py`** toma cada uno de los **8 branches CONFLICTO

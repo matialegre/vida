@@ -79,6 +79,7 @@ git commit --no-edit   # cierra el merge
 
 ### `galgas` · `nocturno/local-2026-07-29-vpp-field-characterization`
 - Conflicto en: `QUE_FALTA.md`
+- 🧹 De-duplicado: main ya documentaba este branch → bullets `EN BRANCH` repetidos descartados en `QUE_FALTA.md` (1).
 - Resolucion escrita en: `C:\Users\Pandemonium\Documents\MATI-HQ\COLA_MERGE_RESOLUCIONES\galgas\nocturno_local-2026-07-29-vpp-field-characterization`
 - Drenaje sugerido (correr a mano, tras revisar la resolucion):
 
@@ -93,6 +94,7 @@ git commit --no-edit   # cierra el merge
 
 ### `frioseguro` · `nocturno/local-2026-07-11-b-resumen-mensual`
 - Conflicto en: `QUE_FALTA.md`
+- 🧹 De-duplicado: main ya documentaba este branch → bullets `EN BRANCH` repetidos descartados en `QUE_FALTA.md` (1).
 - Resolucion escrita en: `C:\Users\Pandemonium\Documents\MATI-HQ\COLA_MERGE_RESOLUCIONES\frioseguro\nocturno_local-2026-07-11-b-resumen-mensual`
 - Drenaje sugerido (correr a mano, tras revisar la resolucion):
 
@@ -107,6 +109,7 @@ git commit --no-edit   # cierra el merge
 
 ### `frioseguro` · `nocturno/local-2026-07-13-resumen-mensual-fixes`
 - Conflicto en: `QUE_FALTA.md`
+- 🧹 De-duplicado: main ya documentaba este branch → bullets `EN BRANCH` repetidos descartados en `QUE_FALTA.md` (1).
 - Resolucion escrita en: `C:\Users\Pandemonium\Documents\MATI-HQ\COLA_MERGE_RESOLUCIONES\frioseguro\nocturno_local-2026-07-13-resumen-mensual-fixes`
 - Drenaje sugerido (correr a mano, tras revisar la resolucion):
 

@@ -12,7 +12,9 @@ import sys
 import unittest
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from resolve_doc_conflicts import safe_name, is_resolvable, drain_commands
+from resolve_doc_conflicts import (
+    safe_name, is_resolvable, drain_commands, en_branch_refs, dedup_en_branch,
+)
 
 
 class TestSafeName(unittest.TestCase):
@@ -86,6 +88,69 @@ class TestDrainCommands(unittest.TestCase):
         joined = "\n".join(cmds)
         self.assertIn("git add QUE_FALTA.md README.md", joined)
         self.assertEqual(sum(1 for c in cmds if c.startswith("cp ")), 2)
+
+
+class TestEnBranchRefs(unittest.TestCase):
+    def test_detecta_anotacion_con_markdown_y_backtick(self):
+        txt = "    - 🔀 **EN BRANCH** `nocturno/local-2026-07-29-vpp` (pendiente)"
+        self.assertEqual(en_branch_refs(txt), {"nocturno/local-2026-07-29-vpp": [0]})
+
+    def test_multiples_lineas_mismo_branch(self):
+        txt = ("a\n"
+               "EN BRANCH `nocturno/local-x`\n"
+               "b\n"
+               "EN BRANCH nocturno/local-x otra redaccion\n")
+        self.assertEqual(en_branch_refs(txt), {"nocturno/local-x": [1, 3]})
+
+    def test_sin_anotaciones(self):
+        self.assertEqual(en_branch_refs("solo texto\nsin branches"), {})
+
+
+class TestDedupEnBranch(unittest.TestCase):
+    def test_escenario_07_29_descarta_variante_del_branch(self):
+        # main (ours) ya documenta el branch con SU redaccion; el branch trae otra.
+        ours = ("2. Validacion\n"
+                "    - EN BRANCH `nocturno/local-2026-07-29-vpp`: version de MAIN\n"
+                "3. Test\n")
+        # union 3-way: quedaron las dos anotaciones (falso duplicado).
+        union = ("2. Validacion\n"
+                 "    - EN BRANCH `nocturno/local-2026-07-29-vpp`: version de MAIN\n"
+                 "    - EN BRANCH `nocturno/local-2026-07-29-vpp`: version del BRANCH\n"
+                 "3. Test\n")
+        out, dropped = dedup_en_branch(union, ours)
+        self.assertEqual(len(dropped), 1)
+        self.assertIn("version del BRANCH", dropped[0])
+        # conserva EXACTAMENTE la linea de main, una sola vez.
+        self.assertEqual(out.count("version de MAIN"), 1)
+        self.assertNotIn("version del BRANCH", out)
+        self.assertTrue(out.endswith("\n"))
+
+    def test_sin_duplicado_no_toca_nada(self):
+        txt = ("1. x\n"
+               "    - EN BRANCH `nocturno/local-a`: unica\n"
+               "2. y\n")
+        out, dropped = dedup_en_branch(txt, txt)
+        self.assertEqual(dropped, [])
+        self.assertEqual(out, txt)
+
+    def test_ninguna_coincide_con_main_deja_la_primera(self):
+        # caso raro: ninguna de las dos anotaciones esta en main -> dedup puro, deja la 1a.
+        ours = "sin anotaciones de branch\n"
+        union = ("EN BRANCH `nocturno/local-a`: primera\n"
+                 "EN BRANCH `nocturno/local-a`: segunda\n")
+        out, dropped = dedup_en_branch(union, ours)
+        self.assertEqual(len(dropped), 1)
+        self.assertIn("segunda", dropped[0])
+        self.assertIn("primera", out)
+
+    def test_no_borra_bullets_de_branches_distintos(self):
+        ours = "EN BRANCH `nocturno/local-a`: main-a\n"
+        union = ("EN BRANCH `nocturno/local-a`: main-a\n"
+                 "EN BRANCH `nocturno/local-b`: nuevo-b\n")
+        out, dropped = dedup_en_branch(union, ours)
+        self.assertEqual(dropped, [])
+        self.assertIn("nuevo-b", out)
+        self.assertIn("main-a", out)
 
 
 if __name__ == "__main__":
