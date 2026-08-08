@@ -1,2 +1,49 @@
 .playwright-mcp/
 *.png
+
+# ============================================================
+# ENLACE — nada de esto entra JAMAS al repo.
+# Son credenciales, estado de sesion o basura especifica de cada maquina.
+# Ver enlace/PROTOCOLO.md, seccion "Que NO se sincroniza".
+# ============================================================
+
+# --- Credenciales y tokens (CRITICO) ---
+**/.credentials.json
+.credentials.json
+**/credentials.json
+*.token
+*.pem
+*.key
+.env
+.env.*
+!.env.example
+**/apiKey*.json
+**/oauth*.json
+
+# --- Estado de sesion de Claude Code (no viaja: es de la maquina) ---
+enlace/payload/claude/history.jsonl
+enlace/payload/claude/sessions/
+enlace/payload/claude/cache/
+enlace/payload/claude/paste-cache/
+enlace/payload/claude/file-history/
+enlace/payload/claude/debug/
+enlace/payload/claude/session-env/
+enlace/payload/claude/backups/
+enlace/payload/claude/shell-snapshots/
+enlace/payload/claude/uploads/
+enlace/payload/claude/downloads/
+enlace/payload/claude/tasks/
+enlace/payload/claude/plugins/
+enlace/payload/claude/statsig/
+enlace/payload/claude/todos/
+enlace/payload/claude/mcp-needs-auth-cache.json
+enlace/payload/claude/.last-*
+
+# Por las dudas, en cualquier profundidad:
+**/history.jsonl
+**/shell-snapshots/
+**/statsig/
+
+# --- Temporales del buzon ---
+enlace/buzon/**/*.tmp
+enlace/**/*.log

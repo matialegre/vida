@@ -1,0 +1,16 @@
+{
+  "hostname": "DESKTOP-RK8DH7C",
+  "rol": "escritorio",
+  "ultima_vez_viva": "2026-08-07T08:59:58.1770511-03:00",
+  "ultima_vez_legible": "2026-08-07 08:59:58",
+  "zona_horaria": "Argentina Standard Time",
+  "claude_corriendo": true,
+  "ip_tailscale": null,
+  "ip_lan": "192.168.0.232",
+  "so": "Microsoft Windows 11 Home",
+  "usuario": "Pandemonium",
+  "repo": "C:\\Users\\Pandemonium\\Documents\\MATI-HQ",
+  "buzon_pendiente": 0,
+  "buzon_haciendo": 0,
+  "en_que_anda": "buzon vacio, esperando"
+}

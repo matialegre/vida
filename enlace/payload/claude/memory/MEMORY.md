@@ -1,0 +1,5 @@
+- [Familia: Aldi y Ainho](familia-aldi-ainho.md) — novia ing. electrónica + nena de 7, juegan en el auto
+- [Juegos del Viaje](juegos-del-viaje.md) — APK suite de juegos offline; relay WS 8080, build.sh, personajes Ainho/Mati/Aldi
+- [PCB con criterio, no con DRC](pcb-placement-con-criterio.md) — DRC 0 no significa buena placa; agrupar por bloque funcional antes de colocar
+- [Una sola fuente de verdad en EDA](una-sola-fuente-de-verdad-eda.md) — todo dato duplicado a mano se desincroniza y el DRC no lo ve
+- [PPS en Embels](pps-embels.md) — informe redactado en Downloads (carpeta de WhatsApp), faltan datos administrativos
