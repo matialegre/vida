@@ -2,4 +2,8 @@
 - [Juegos del Viaje](juegos-del-viaje.md) — APK suite de juegos offline; relay WS 8080, build.sh, personajes Ainho/Mati/Aldi
 - [PCB con criterio, no con DRC](pcb-placement-con-criterio.md) — DRC 0 no significa buena placa; agrupar por bloque funcional antes de colocar
 - [Una sola fuente de verdad en EDA](una-sola-fuente-de-verdad-eda.md) — todo dato duplicado a mano se desincroniza y el DRC no lo ve
+- [PLC LOGO! en casa: IP, MAC y la trampa de subredes](plc-logo-red-casa.md) — .2/.3/.4 estáticas en la LAN del TP-LINK; un barrido normal NO los ve
 - [PPS en Embels](pps-embels.md) — informe redactado en Downloads (carpeta de WhatsApp), faltan datos administrativos
+- [Supabase: qué proyecto en qué cuenta](supabase-cuentas-proyectos.md) — los 2 refs vivos, por que el free tier pausa y el guardian que lo evita
+- [Kiosco Ofiuco (cliente Paco)](kiosco-ofiuco-paco.md) — codigo, Supabase, deploy en Vercel, por que se pausaba y la password que viaja en el bundle
+- [Biblioteca de código reusable](biblioteca-codigo-reusable.md) — REGLA PERMANENTE: chequear C:\Proyectos\biblioteca antes de escribir código; cosechar lo probado vía @bibliotecario
