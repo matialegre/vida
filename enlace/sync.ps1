@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
 ENLACE / SYNC — mantiene la identidad de Claude (~/.claude) sincronizada entre maquinas via git.
 

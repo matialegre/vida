@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
 ENLACE / PRESENCIA — escribe el latido de esta maquina en enlace\maquinas\<hostname>.estado.json
 

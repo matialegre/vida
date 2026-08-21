@@ -1,0 +1,167 @@
+<meta charset="utf-8">
+<title>Plan y honorarios — Smart-Ex 03</title>
+<style>
+  @page { size: A4; margin: 0; }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  :root{
+    --grafito:#14181d; --grafito2:#1f262e; --papel:#fff;
+    --tinta:#161a1e; --gris:#5c6670; --linea:#dde2e7;
+    --ambar:#f2a900; --ambar-d:#b97f00; --crema:#fcf7ec;
+  }
+  html,body{ background:#e9edf1; }
+  body{ font-family:"Segoe UI",system-ui,Arial,sans-serif; color:var(--tinta); line-height:1.5; -webkit-font-smoothing:antialiased; }
+  .disp{ font-family:"Bahnschrift","DIN Alternate","Segoe UI Semibold",system-ui,sans-serif; }
+  .hoja{ width:210mm; min-height:297mm; margin:0 auto 8px; background:var(--papel); position:relative; padding:11mm 13mm 9mm; }
+  .idbar{ display:flex; justify-content:space-between; align-items:flex-end; border-bottom:2px solid var(--tinta); padding-bottom:6px; }
+  .idbar .n{ font-family:"Bahnschrift",sans-serif; font-size:19px; letter-spacing:.5px; }
+  .idbar .n span{ display:block; font-size:9px; color:var(--gris); letter-spacing:1px; text-transform:uppercase; }
+  .idbar .r{ text-align:right; font-size:9px; color:var(--gris); text-transform:uppercase; letter-spacing:1px; }
+  .idbar .r b{ display:block; color:var(--tinta); font-size:12px; letter-spacing:.3px; }
+  h1.tit{ font-size:30px; letter-spacing:-.3px; margin:10mm 0 3px; line-height:1.02; }
+  .sub{ font-size:12.5px; color:var(--gris); max-width:150mm; }
+  .sub b{ color:var(--tinta); }
+  .sec{ font-family:"Bahnschrift",sans-serif; font-size:13px; letter-spacing:2px; text-transform:uppercase; color:var(--gris); border-bottom:2px solid var(--tinta); padding-bottom:4px; margin:9mm 0 6px; }
+  /* pasos */
+  .pasos{ display:grid; grid-template-columns:1fr 1fr; gap:5mm 8mm; }
+  .paso{ display:flex; gap:11px; }
+  .paso .num{ flex:0 0 30px; height:30px; background:var(--grafito); color:var(--ambar); display:grid; place-items:center; font-family:"Bahnschrift",sans-serif; font-size:16px; font-weight:700; }
+  .paso h3{ font-size:14px; font-family:"Bahnschrift",sans-serif; letter-spacing:.2px; }
+  .paso p{ font-size:11px; color:var(--gris); line-height:1.45; }
+  /* honorarios */
+  .precios{ display:grid; grid-template-columns:1fr 1fr; gap:0; border:2px solid var(--tinta); margin-top:4px; }
+  .pr{ padding:6mm; }
+  .pr.pri{ border-right:2px solid var(--tinta); background:var(--crema); }
+  .pr .k{ font-family:"Bahnschrift",sans-serif; font-size:11px; letter-spacing:1.5px; text-transform:uppercase; color:var(--ambar-d); font-weight:700; }
+  .pr h4{ font-size:15px; margin:2px 0 4px; font-family:"Bahnschrift",sans-serif; }
+  .pr .monto{ font-family:"Bahnschrift",sans-serif; font-size:32px; letter-spacing:-.5px; margin:5px 0 2px; }
+  .pr .monto small{ font-size:14px; color:var(--gris); }
+  .pr ul{ list-style:none; margin-top:6px; }
+  .pr li{ font-size:10.5px; color:var(--tinta); padding:2px 0 2px 15px; position:relative; }
+  .pr li::before{ content:"›"; position:absolute; left:0; color:var(--ambar-d); font-weight:700; }
+  .nota{ font-size:10px; color:var(--gris); margin-top:7px; border-left:3px solid var(--ambar); padding:5px 10px; background:#faf6ee; }
+  /* lista prospectos */
+  .tier{ margin-bottom:5mm; }
+  .tierh{ display:flex; align-items:baseline; gap:9px; margin-bottom:4px; }
+  .tierh b{ font-family:"Bahnschrift",sans-serif; font-size:14px; letter-spacing:.5px; }
+  .tierh span{ font-size:9.5px; color:var(--gris); text-transform:uppercase; letter-spacing:1px; }
+  table{ width:100%; border-collapse:collapse; }
+  th{ font-family:"Bahnschrift",sans-serif; font-size:9px; letter-spacing:1px; text-transform:uppercase; color:var(--gris); text-align:left; padding:3px 8px 3px 0; border-bottom:1px solid var(--linea); }
+  td{ font-size:10.2px; padding:3px 8px 3px 0; border-bottom:1px dotted var(--linea); vertical-align:top; }
+  td.emp{ font-weight:600; white-space:nowrap; }
+  td.rol{ color:var(--gris); }
+  .seo{ display:grid; grid-template-columns:1fr 1fr; gap:2px 22px; margin-top:4px; }
+  .seo div{ font-size:10.8px; padding:3px 0 3px 16px; position:relative; }
+  .seo div::before{ content:"●"; position:absolute; left:0; color:var(--ambar-d); font-size:8px; top:5px; }
+  .seo b{ font-weight:600; }
+  .fin{ font-size:8.5px; color:var(--gris); margin-top:8mm; border-top:1px solid var(--linea); padding-top:5px; }
+</style>
+
+<!-- ====== PAGINA 1 ====== -->
+<div class="hoja">
+  <div class="idbar">
+    <div class="n">Matías Alegre<span>Ingeniería electrónica · comunicación técnica industrial</span></div>
+    <div class="r">Propuesta para<b>EMSICA S.R.L.</b>Agosto 2026</div>
+  </div>
+
+  <h1 class="tit disp">Posicionar y vender el Smart-Ex 03</h1>
+  <div class="sub">Una prueba concreta con <b>un</b> producto: armo la lista de plantas que lo necesitan, preparo la pieza, las contacto y trabajo la web para que los encuentren. Si funciona, lo escalamos a todo el catálogo. <b>Escrito por alguien que entiende el equipo</b>, no por una agencia que copia el folleto del fabricante.</div>
+
+  <div class="sec">Cómo trabajo</div>
+  <div class="pasos">
+    <div class="paso"><div class="num disp">1</div><div><h3 class="disp">Investigo y armo la lista</h3><p>Relevo las plantas de la región y del país que operan áreas clasificadas (gas o polvo) y por lo tanto necesitan un equipo Ex. Sector, planta y a quién hay que llegar: Seguridad e Higiene y Compras técnicas.</p></div></div>
+    <div class="paso"><div class="num disp">2</div><div><h3 class="disp">Preparo la pieza</h3><p>El folleto y el mail listos para enviar — como el ejemplo del Smart-Ex 03 que ya viste. Contenido técnico correcto, ángulo de seguridad, y el llamado a pedir cotización a Emsica.</p></div></div>
+    <div class="paso"><div class="num disp">3</div><div><h3 class="disp">Contacto y hago seguimiento</h3><p>Envío por mail y, donde se pueda, WhatsApp y LinkedIn — pocos y bien apuntados, con opción de baja, para no quemar el correo de Emsica. Registro quién abrió, quién respondió y sigo el hilo.</p></div></div>
+    <div class="paso"><div class="num disp">4</div><div><h3 class="disp">Los hago encontrables</h3><p>Trabajo la web y el perfil de Google para que, cuando alguien busque “celular antiexplosivo” o la marca en la zona, Emsica aparezca. Una página por producto que Google pueda indexar.</p></div></div>
+  </div>
+
+  <div class="sec">Honorarios</div>
+  <div class="precios">
+    <div class="pr pri">
+      <div class="k">Empezar — prueba con este equipo</div>
+      <h4 class="disp">Piloto Smart-Ex 03</h4>
+      <div class="monto disp">$ 450.000</div>
+      <ul>
+        <li>Lista de 20 plantas objetivo con sus datos</li>
+        <li>El folleto del producto (ya hecho)</li>
+        <li>La campaña de mail + seguimiento</li>
+        <li>Arranque de Google para este equipo</li>
+        <li>Un mes de trabajo, precio cerrado</li>
+      </ul>
+    </div>
+    <div class="pr">
+      <div class="k">Continuar — todo el catálogo</div>
+      <h4 class="disp">Servicio mensual</h4>
+      <div class="monto disp">$ 600.000 <small>/ mes</small></div>
+      <ul>
+        <li>4 campañas por mes (las marcas que definan)</li>
+        <li>Prospección continua de nuevos clientes</li>
+        <li>Posicionamiento en Google sostenido</li>
+        <li>Reporte mensual de qué entró</li>
+        <li>Sin permanencia: se corta cuando quieran</li>
+      </ul>
+    </div>
+  </div>
+  <div class="nota"><b>Simple:</b> arrancan con el piloto y ven resultados con un solo producto. Si convence, pasa al mensual y el piloto cuenta como primer mes. La puesta a punto del sistema completo (catálogo, base de datos y web) se cotiza aparte sólo si van por el mensual. La pauta paga en Google, si deciden hacerla, la ponen ellos; yo la gestiono.</div>
+
+  <div class="fin">Matías Alegre · Ingeniero en Electrónica (UTN FRBB) · Bahía Blanca · Valores en pesos, válidos 30 días. El envío de correos se realiza cumpliendo la Ley 25.326 de Protección de Datos, sólo a contactos comerciales y con opción de baja.</div>
+</div>
+
+<!-- ====== PAGINA 2 ====== -->
+<div class="hoja">
+  <div class="idbar">
+    <div class="n">Matías Alegre<span>Ingeniería electrónica · comunicación técnica industrial</span></div>
+    <div class="r">Anexo<b>A quién le apunta el Smart-Ex 03</b>Agosto 2026</div>
+  </div>
+
+  <h1 class="tit disp" style="font-size:24px;margin-top:8mm;">Clientes objetivo</h1>
+  <div class="sub">Plantas que operan atmósferas explosivas (gas o polvo) y por norma no pueden meter un celular común. Empiezo por Bahía Blanca y abro a todo el país. <b>Los contactos directos se confirman en el relevamiento</b> — acá va la planta, el sector y a quién hay que llegar.</div>
+
+  <div class="sec" style="margin-top:6mm;">La lista</div>
+
+  <div class="tier">
+    <div class="tierh"><b class="disp">1 · Bahía Blanca</b><span>tu zona — visita en persona posible</span></div>
+    <table>
+      <tr><th style="width:32%">Planta</th><th style="width:34%">Por qué la necesita</th><th>A quién llegar</th></tr>
+      <tr><td class="emp">Dow Argentina</td><td>Polietileno — unidades de proceso Zona 1</td><td class="rol">Seguridad e Higiene</td></tr>
+      <tr><td class="emp">Profertil</td><td>Urea y amoníaco — riesgo muy alto</td><td class="rol">SHA / Compras técnicas</td></tr>
+      <tr><td class="emp">Compañía Mega</td><td>Fraccionamiento de gas — Zona 1</td><td class="rol">Seguridad e Higiene</td></tr>
+      <tr><td class="emp">Unipar Indupa</td><td>Cloro y soda cáustica — Zona 1/2</td><td class="rol">SHA</td></tr>
+      <tr><td class="emp">TGS — Complejo Cerri</td><td>Acondicionamiento de gas — Zona 1</td><td class="rol">Seguridad e Higiene</td></tr>
+      <tr><td class="emp">Oiltanking Ebytem</td><td>Terminal de crudo — Zona 1</td><td class="rol">Operaciones / SHA</td></tr>
+      <tr><td class="emp">Cargill · Bunge · Dreyfus</td><td>Terminales de granos — <b>polvo</b> combustible Zona 21/22 (versión DZ2)</td><td class="rol">Seguridad e Higiene</td></tr>
+    </table>
+  </div>
+
+  <div class="tier">
+    <div class="tierh"><b class="disp">2 · Buenos Aires</b><span>refinerías y polo químico</span></div>
+    <table>
+      <tr><th style="width:32%">Planta</th><th style="width:34%">Por qué la necesita</th><th>A quién llegar</th></tr>
+      <tr><td class="emp">YPF — Refinería La Plata</td><td>La refinería más grande del país — Zona 1</td><td class="rol">Seguridad e Higiene</td></tr>
+      <tr><td class="emp">Raízen (ex Shell) Dock Sud</td><td>Refinería — Zona 1</td><td class="rol">SHA</td></tr>
+      <tr><td class="emp">Axion Energy — Campana</td><td>Refinería — Zona 1</td><td class="rol">Seguridad e Higiene</td></tr>
+      <tr><td class="emp">Polo químico Dock Sud / Zárate-Campana</td><td>Varias químicas — Zona 1/2</td><td class="rol">SHA por planta</td></tr>
+    </table>
+  </div>
+
+  <div class="tier">
+    <div class="tierh"><b class="disp">3 · Argentina</b><span>el mercado más grande — Vaca Muerta</span></div>
+    <table>
+      <tr><th style="width:32%">Operadora / sector</th><th style="width:34%">Por qué la necesita</th><th>A quién llegar</th></tr>
+      <tr><td class="emp">YPF · Vista · Pluspetrol</td><td>Vaca Muerta — yacimiento. <b>El botón de trabajador solitario es clave</b>: operarios solos en el campo</td><td class="rol">Seguridad e Higiene</td></tr>
+      <tr><td class="emp">Pan American · Tecpetrol · Shell · Pampa</td><td>Upstream — pozos y plantas, Zona 1/2</td><td class="rol">SHA / HSE</td></tr>
+      <tr><td class="emp">Refinerías Luján de Cuyo · Plaza Huincul</td><td>Proceso — Zona 1</td><td class="rol">Seguridad e Higiene</td></tr>
+      <tr><td class="emp">Minería (litio Salta/Jujuy · oro San Juan)</td><td>Áreas con gas/polvo y operarios remotos</td><td class="rol">HSE</td></tr>
+      <tr><td class="emp">TGN · Camuzzi · distribuidoras de gas</td><td>Plantas y estaciones — Zona 1/2</td><td class="rol">Seguridad e Higiene</td></tr>
+    </table>
+  </div>
+
+  <div class="sec">Para que los encuentren en Google</div>
+  <div class="seo">
+    <div><b>Perfil de Google Business</b> reclamado y completo: es lo que aparece en el mapa. Gratis y da resultado en días.</div>
+    <div><b>Una página por producto y marca</b> en el sitio, con texto técnico real — cada página es una puerta de entrada que Google indexa.</div>
+    <div>Apuntar a lo que <b>sí se puede ganar</b>: “celular antiexplosivo Argentina”, “smartphone ATEX zona clasificada”, no la palabra suelta “Fluke”.</div>
+    <div>Arreglar la base del sitio actual: hoy no tiene <b>mapa del sitio ni HTTPS forzado</b>, y corre software sin soporte — Google lo penaliza.</div>
+  </div>
+
+  <div class="fin">La lista prioriza fit técnico y cercanía. Los contactos nominales (mail y teléfono directo del responsable) se relevan en la etapa 1, por canales públicos y profesionales, sin comprar bases de terceros.</div>
+</div>

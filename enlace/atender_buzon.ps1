@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
 ENLACE / BUZON — la maquina servidora levanta tareas de enlace\buzon\pendiente\ y las ejecuta
 con Claude Code en modo headless (claude -p).

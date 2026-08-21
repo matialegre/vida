@@ -1,0 +1,161 @@
+<meta charset="utf-8">
+<title>Los 3 métodos — Smart-Ex 03</title>
+<style>
+  @page { size: A4; margin: 0; }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  :root{
+    --grafito:#14181d; --grafito2:#1f262e; --papel:#fff;
+    --tinta:#161a1e; --gris:#5c6670; --linea:#dde2e7;
+    --ambar:#f2a900; --ambar-d:#b97f00; --crema:#fcf7ec;
+  }
+  html,body{ background:#e9edf1; }
+  body{ font-family:"Segoe UI",system-ui,Arial,sans-serif; color:var(--tinta); line-height:1.5; -webkit-font-smoothing:antialiased; }
+  .disp{ font-family:"Bahnschrift","DIN Alternate","Segoe UI Semibold",system-ui,sans-serif; }
+  .hoja{ width:210mm; min-height:297mm; margin:0 auto 8px; background:var(--papel); padding:11mm 13mm 9mm; display:flex; flex-direction:column; }
+  .idbar{ display:flex; justify-content:space-between; align-items:flex-end; border-bottom:2px solid var(--tinta); padding-bottom:6px; }
+  .idbar .n{ font-family:"Bahnschrift",sans-serif; font-size:18px; letter-spacing:.5px; }
+  .idbar .n span{ display:block; font-size:8.5px; color:var(--gris); letter-spacing:1px; text-transform:uppercase; }
+  .idbar .r{ text-align:right; font-size:8.5px; color:var(--gris); text-transform:uppercase; letter-spacing:1px; }
+  .idbar .r b{ display:block; color:var(--tinta); font-size:11px; }
+  h1.tit{ font-size:27px; letter-spacing:-.3px; margin:9mm 0 3px; line-height:1.03; }
+  .sub{ font-size:12px; color:var(--gris); max-width:155mm; }
+  .sub b{ color:var(--tinta); }
+  /* metodo */
+  .met{ display:flex; gap:14px; margin-top:7mm; }
+  .met .num{ flex:0 0 46px; }
+  .met .num .b{ width:46px; height:46px; background:var(--grafito); color:var(--ambar); display:grid; place-items:center; font-family:"Bahnschrift",sans-serif; font-size:26px; font-weight:700; }
+  .met .num .lin{ width:2px; background:var(--linea); margin:6px auto 0; height:calc(100% - 52px); }
+  .met .body{ flex:1; padding-bottom:1mm; }
+  .met h2{ font-family:"Bahnschrift",sans-serif; font-size:19px; letter-spacing:.2px; }
+  .met h2 em{ font-style:normal; color:var(--ambar-d); }
+  .met .lede{ font-size:11px; color:var(--gris); margin:2px 0 7px; max-width:150mm; }
+  .cols{ display:grid; grid-template-columns:1fr 1fr; gap:0; border:1px solid var(--linea); }
+  .cell{ padding:7px 11px; }
+  .cell.izq{ border-right:1px solid var(--linea); }
+  .cell.der{ background:var(--crema); }
+  .cell h4{ font-family:"Bahnschrift",sans-serif; font-size:9.5px; letter-spacing:1.5px; text-transform:uppercase; color:var(--gris); margin-bottom:5px; }
+  .cell.der h4{ color:var(--ambar-d); }
+  .cell ul{ list-style:none; }
+  .cell li{ font-size:10.3px; padding:2.5px 0 2.5px 14px; position:relative; line-height:1.4; }
+  .cell li::before{ content:"›"; position:absolute; left:0; color:var(--ambar-d); font-weight:700; }
+  .cell li b{ font-weight:600; }
+  .chips{ display:flex; flex-wrap:wrap; gap:4px; margin-top:3px; }
+  .chip{ font-family:"Consolas",monospace; font-size:9px; background:#eef1f4; padding:2px 7px; border-radius:3px; color:var(--tinta); }
+  .cierre{ margin-top:auto; background:var(--grafito); color:#fff; padding:6mm 8mm; display:flex; justify-content:space-between; align-items:center; gap:16px; }
+  .cierre .l b{ font-family:"Bahnschrift",sans-serif; font-size:16px; color:var(--ambar); letter-spacing:.3px; }
+  .cierre .l p{ font-size:11px; color:#c8ced5; margin-top:3px; max-width:110mm; }
+  .cierre .r{ text-align:right; font-size:11px; line-height:1.5; }
+  .cierre .r .em{ font-family:"Bahnschrift",sans-serif; font-size:14px; color:#fff; letter-spacing:.5px; }
+  .cierre .r span{ color:#9aa4ae; }
+  .fin{ font-size:8px; color:var(--gris); margin-top:5mm; }
+</style>
+
+<div class="hoja">
+  <div class="idbar">
+    <div class="n disp">Matías Alegre<span>Ingeniería electrónica · comunicación técnica industrial</span></div>
+    <div class="r">Para EMSICA S.R.L.<b>Los 3 métodos · Smart-Ex 03</b>Agosto 2026</div>
+  </div>
+
+  <h1 class="tit disp">Cómo promocionaríamos el Smart-Ex 03</h1>
+  <div class="sub">Tres métodos que trabajan juntos, aplicados a <b>este equipo</b> en concreto. El <b>1</b> y el <b>3</b> hacen que el cliente caiga solo; el <b>2</b> es salir a buscarlo. Los mismos tres sirven después para cualquier producto del catálogo — este es el ejemplo.</div>
+
+  <!-- METODO 1 -->
+  <div class="met">
+    <div class="num"><div class="b disp">1</div><div class="lin"></div></div>
+    <div class="body">
+      <h2 class="disp">Que te <em>encuentren</em> · Google</h2>
+      <div class="lede">Cuando un ingeniero de seguridad necesita un celular apto para su planta, lo primero que hace es buscarlo en Google. Que ahí aparezca Emsica.</div>
+      <div class="cols">
+        <div class="cell izq">
+          <h4>Qué hago</h4>
+          <ul>
+            <li>Una <b>página propia del Smart-Ex 03</b> en la web, con la ficha y el botón de cotización — es lo que Google muestra y donde caen los anuncios.</li>
+            <li><b>Posicionamiento natural</b>: escribo la página con las palabras que la gente busca. Gratis, tarda unos meses, dura.</li>
+            <li><b>Anuncio de Google</b> apuntado a esas búsquedas y a la zona (Bahía, Vaca Muerta, todo el país). Aparece ya; se paga por clic. La pauta la pone Emsica, yo la gestiono.</li>
+          </ul>
+        </div>
+        <div class="cell der">
+          <h4>Con el Smart-Ex 03, en concreto</h4>
+          <div style="font-size:10.3px;color:var(--tinta);margin-bottom:5px;">Palabras por las que Emsica debería salir primera:</div>
+          <div class="chips">
+            <span class="chip">celular antiexplosivo</span>
+            <span class="chip">smartphone ATEX</span>
+            <span class="chip">teléfono área clasificada</span>
+            <span class="chip">celular intrínsecamente seguro</span>
+            <span class="chip">smartphone Ex zona 1</span>
+            <span class="chip">Smart-Ex 03 Argentina</span>
+            <span class="chip">Pepperl+Fuchs teléfono</span>
+          </div>
+          <div style="font-size:10px;color:var(--gris);margin-top:6px;">Casi nadie en el país compite por estas búsquedas: es muy alcanzable estar primero.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- METODO 2 -->
+  <div class="met">
+    <div class="num"><div class="b disp">2</div><div class="lin"></div></div>
+    <div class="body">
+      <h2 class="disp">Que vos los <em>busques</em> · Prospección directa</h2>
+      <div class="lede">No esperar a que lleguen: ir a tocar la puerta de las plantas que sí o sí necesitan un equipo así.</div>
+      <div class="cols">
+        <div class="cell izq">
+          <h4>Qué hago</h4>
+          <ul>
+            <li>La <b>lista de 20 plantas</b> ya está armada (planilla aparte): petroquímica, refinerías, Vaca Muerta y terminales de granos.</li>
+            <li>Secuencia por cada una: <b>folleto + mail</b> a Seguridad e Higiene → <b>LinkedIn</b> al responsable → <b>seguimiento</b> por WhatsApp o teléfono a los 7 días.</li>
+            <li>Registro quién abrió y quién pidió cotización, y te lo paso.</li>
+          </ul>
+        </div>
+        <div class="cell der">
+          <h4>Con el Smart-Ex 03, en concreto</h4>
+          <ul>
+            <li>El gancho del mensaje: el <b>botón de trabajador solitario</b> y entrar a la <b>Zona 1</b> sin permiso de trabajo en caliente. Eso es lo que le mueve la aguja a un jefe de seguridad.</li>
+            <li>Segmento la oferta: la <b>versión DZ1</b> a refinerías, petroquímica y Vaca Muerta; la <b>DZ2</b> a las terminales de granos (polvo combustible).</li>
+            <li>Arranco por las plantas que Emsica <b>ya conoce</b> — presentación caliente, no puerta fría.</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- METODO 3 -->
+  <div class="met">
+    <div class="num"><div class="b disp">3</div></div>
+    <div class="body">
+      <h2 class="disp">Que te tengan <em>presente</em> · Marca y web</h2>
+      <div class="lede">Que Emsica se vea activa y profesional siempre, para que cuando llegue la necesidad ya estés en la cabeza del cliente.</div>
+      <div class="cols">
+        <div class="cell izq">
+          <h4>Qué hago</h4>
+          <ul>
+            <li><b>Perfil de Google / Maps</b> reclamado y completo: aparecer en el mapa. Gratis y rinde en días.</li>
+            <li><b>Un posteo por semana</b> en LinkedIn — el equipo y sus casos de uso. Instagram y Facebook (Meta) para mostrar que existís, no para vender directo.</li>
+            <li>Arreglar la <b>base del sitio</b>: HTTPS forzado, mapa del sitio y servidor al día — hoy le falta y Google lo penaliza.</li>
+          </ul>
+        </div>
+        <div class="cell der">
+          <h4>Con el Smart-Ex 03, en concreto</h4>
+          <ul>
+            <li>Posteos con casos reales del equipo: <b>permiso de trabajo digital</b>, inspección con foto georreferenciada, aviso de hombre caído.</li>
+            <li>Ficha técnica <b>descargable</b> en la página, para que el ingeniero la baje y la pase internamente.</li>
+            <li>Cada producto suma una página nueva que Google indexa: el catálogo entero se vuelve un imán de búsquedas.</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="cierre">
+    <div class="l">
+      <b class="disp">Empecemos con un producto y veámoslo funcionar.</b>
+      <p>Arrancamos con el Smart-Ex 03 como piloto. Si trae consultas, aplicamos los mismos tres métodos a todo el catálogo.</p>
+    </div>
+    <div class="r">
+      <div class="em">Matías Alegre</div>
+      <span>Ingeniería electrónica ·<br>comunicación técnica industrial</span>
+    </div>
+  </div>
+
+  <div class="fin">Los valores y el alcance del servicio se detallan en el documento de honorarios. Smart-Ex® es marca de Pepperl+Fuchs / ECOM, representada por Emsica S.R.L.</div>
+</div>

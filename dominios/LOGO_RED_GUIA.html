@@ -1,0 +1,862 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>LOGO! — Programar por red y llegar desde internet (gratis)</title>
+<style>
+  :root{ --tinta:#1b1f24; --gris:#5b6570; --linea:#d7dde3; --acento:#0b5fa5; --ok:#0a7a41; --alerta:#a5460b; --mal:#a51b1b; --fondo:#fbfcfd; }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--fondo);color:var(--tinta);font-family:"Segoe UI",Roboto,Helvetica,Arial,sans-serif;font-size:15.5px;line-height:1.62}
+  .wrap{max-width:1080px;margin:0 auto;padding:32px 26px 80px}
+  header{border-bottom:3px solid var(--acento);padding-bottom:18px;margin-bottom:26px}
+  h1{font-size:27px;margin:0 0 6px;letter-spacing:-.3px}
+  .sub{color:var(--gris);font-size:14px}
+  h2{font-size:21px;margin:42px 0 12px;padding:8px 0 8px 12px;border-left:5px solid var(--acento);background:#eef4fa}
+  h3{font-size:17px;margin:26px 0 8px;color:#12395e}
+  h4{font-size:15px;margin:18px 0 6px;color:#2a3742}
+  p{margin:9px 0}
+  code{font-family:Consolas,"Courier New",monospace;background:#eceff2;padding:1px 5px;border-radius:3px;font-size:13.6px}
+  pre{background:#12212e;color:#e6edf3;padding:13px 15px;border-radius:6px;overflow-x:auto;font-family:Consolas,"Courier New",monospace;font-size:13.4px;line-height:1.55;border-left:4px solid var(--acento)}
+  pre .c{color:#8fa6b8}
+  table{border-collapse:collapse;width:100%;margin:14px 0;font-size:14.2px;background:#fff}
+  th,td{border:1px solid var(--linea);padding:7px 10px;text-align:left;vertical-align:top}
+  th{background:#eef2f6;font-weight:600}
+  tr:nth-child(even) td{background:#fafbfc}
+  .caja{border:1px solid var(--linea);border-left:5px solid var(--gris);background:#fff;padding:12px 16px;margin:16px 0;border-radius:0 5px 5px 0}
+  .ok{border-left-color:var(--ok);background:#f2faf5}
+  .alerta{border-left-color:var(--alerta);background:#fdf7f1}
+  .mal{border-left-color:var(--mal);background:#fdf2f2}
+  .info{border-left-color:var(--acento);background:#f2f7fc}
+  .caja .t{font-weight:700;display:block;margin-bottom:4px;font-size:14px;text-transform:uppercase;letter-spacing:.4px}
+  ul,ol{margin:8px 0 8px 22px;padding:0}
+  li{margin:5px 0}
+  .fig{background:#fff;border:1px solid var(--linea);border-radius:6px;padding:14px;margin:18px 0;text-align:center}
+  .fig figcaption{color:var(--gris);font-size:13px;margin-top:8px;text-align:left}
+  .tag{display:inline-block;font-size:11.5px;padding:1px 7px;border-radius:10px;background:#e3eaf1;color:#2a4a66;margin-left:6px;vertical-align:middle;font-weight:600}
+  .tag.si{background:#dff0e6;color:#0a7a41}
+  .tag.no{background:#f7dede;color:#a51b1b}
+  .chk{list-style:none;margin-left:0}
+  .chk li{padding-left:28px;position:relative;margin:7px 0}
+  .chk li:before{content:"[ ]";position:absolute;left:0;font-family:Consolas,monospace;color:var(--acento);font-weight:700}
+  .toc{background:#fff;border:1px solid var(--linea);border-radius:6px;padding:14px 18px}
+  .toc ol{margin-left:18px}
+  a{color:var(--acento)}
+  .small{font-size:13.2px;color:var(--gris)}
+  hr{border:0;border-top:1px solid var(--linea);margin:34px 0}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <h1>LOGO! — programarlos por red y llegar a ellos desde internet, gratis</h1>
+  <div class="sub">Guia operativa para el kit de LOGO! (0BA7 + 0BA8) en la red de casa. Redactada por @comms el 2026-08-06, con la red REAL medida ese dia en la PC de Matias. Reemplaza al plan generico del 2026-07-14.</div>
+</header>
+
+<div class="toc">
+  <strong>Contenido</strong>
+  <ol>
+    <li><a href="#enchufar"><strong>ENCHUFAR AHORA — la topologia paso a paso</strong></a></li>
+    <li>Lo que medi hoy en tu red (hechos, no supuestos)</li>
+    <li>ETAPA 1 — Programar los LOGO por LAN (cable y WiFi)</li>
+    <li>ETAPA 2 — Doble NAT: que es, como lo confirmas, como lo arreglas</li>
+    <li>ETAPA 3 — Acceso desde internet, gratis (Tailscale y alternativas)</li>
+    <li>Tabla de direccionamiento final</li>
+    <li>Checklist de puesta en marcha, en orden</li>
+  </ol>
+</div>
+
+<h2 id="enchufar" style="background:#0b3a6b;color:#fff;padding:10px 16px;border-radius:6px">0. ENCHUFAR AHORA — la topologia paso a paso</h2>
+
+<p><strong>Regla de oro:</strong> todo va a <strong>una sola red</strong> (192.168.0.x). El cablemodem manda; el TP-LINK
+solo reparte y da WiFi (modo AP, sin hacer de router). El TP-LINK tiene <strong>solo 4 puertos LAN</strong>: uno se va en el cable al cablemodem y los otros tres son justo
+para los dos LOGO y el TDE. Todo lo demas (tu PC, la PC dedicada) va al cablemodem o por WiFi &mdash; da igual de que
+caja cuelgue, porque todos quedan en la misma red.</p>
+
+<h3>Los cables, uno por uno</h3>
+<div class="fig">
+<svg viewBox="0 0 900 560" width="100%" style="max-width:900px" xmlns="http://www.w3.org/2000/svg" font-family="Segoe UI, Arial" font-size="13">
+  <defs><marker id="p" markerWidth="8" markerHeight="8" refX="7" refY="2.5" orient="auto"><path d="M0,0 L7,2.5 L0,5 z" fill="#333"/></marker></defs>
+
+  <!-- CABLEMODEM -->
+  <rect x="30" y="30" width="200" height="70" rx="6" fill="#eef2f8" stroke="#0b3a6b" stroke-width="2"/>
+  <text x="130" y="52" text-anchor="middle" font-weight="700" fill="#0b3a6b">CABLEMODEM</text>
+  <text x="130" y="69" text-anchor="middle" font-size="12">192.168.0.1</text>
+  <rect x="60" y="78" width="30" height="16" rx="2" fill="#fff" stroke="#666"/><text x="75" y="90" text-anchor="middle" font-size="9">LAN</text>
+  <rect x="95" y="78" width="30" height="16" rx="2" fill="#fff" stroke="#666"/><text x="110" y="90" text-anchor="middle" font-size="9">LAN</text>
+  <rect x="130" y="78" width="30" height="16" rx="2" fill="#fff" stroke="#666"/><text x="145" y="90" text-anchor="middle" font-size="9">LAN</text>
+  <rect x="165" y="78" width="30" height="16" rx="2" fill="#fff" stroke="#666"/><text x="180" y="90" text-anchor="middle" font-size="9">LAN</text>
+
+  <!-- cable 1 -->
+  <path d="M75,96 L75,150 L120,150" stroke="#c0392b" stroke-width="3" fill="none" marker-end="url(#p)"/>
+  <rect x="88" y="118" width="120" height="20" rx="3" fill="#fdecec" stroke="#c0392b"/>
+  <text x="148" y="132" text-anchor="middle" font-size="11" font-weight="700" fill="#c0392b">CABLE 1</text>
+
+  <!-- TP-LINK -->
+  <rect x="120" y="165" width="240" height="86" rx="6" fill="#fffbe6" stroke="#b8860b" stroke-width="2"/>
+  <text x="240" y="186" text-anchor="middle" font-weight="700" fill="#8a6400">TP-LINK  (modo AP)</text>
+  <text x="240" y="202" text-anchor="middle" font-size="12">192.168.0.5 · DHCP OFF</text>
+  <rect x="140" y="212" width="40" height="20" rx="2" fill="#dff0d8" stroke="#2e7d32" stroke-width="2"/><text x="160" y="226" text-anchor="middle" font-size="10" font-weight="700">LAN1</text>
+  <rect x="185" y="212" width="40" height="20" rx="2" fill="#dff0d8" stroke="#2e7d32" stroke-width="2"/><text x="205" y="226" text-anchor="middle" font-size="10" font-weight="700">LAN2</text>
+  <rect x="230" y="212" width="40" height="20" rx="2" fill="#dff0d8" stroke="#2e7d32" stroke-width="2"/><text x="250" y="226" text-anchor="middle" font-size="10" font-weight="700">LAN3</text>
+  <rect x="275" y="212" width="40" height="20" rx="2" fill="#dff0d8" stroke="#2e7d32" stroke-width="2"/><text x="295" y="226" text-anchor="middle" font-size="10" font-weight="700">LAN4</text>
+  <rect x="320" y="212" width="34" height="20" rx="2" fill="#f5f5f5" stroke="#999" stroke-dasharray="3,2"/><text x="337" y="226" text-anchor="middle" font-size="9" fill="#999">WAN</text>
+  <text x="337" y="246" text-anchor="middle" font-size="9" fill="#c0392b" font-weight="700">VACIO</text>
+  <text x="160" y="246" text-anchor="middle" font-size="9" fill="#c0392b">↑ cable 1</text>
+
+  <!-- cable 2: LAN2 -> TDE -->
+  <path d="M205,234 L205,300 L470,300" stroke="#1e7d34" stroke-width="3" fill="none" marker-end="url(#p)"/>
+  <rect x="255" y="290" width="115" height="20" rx="3" fill="#e8f4e8" stroke="#1e7d34"/>
+  <text x="312" y="304" text-anchor="middle" font-size="11" font-weight="700" fill="#1e7d34">CABLE 2</text>
+
+  <!-- cable 3: LAN3 -> LOGO1 -->
+  <path d="M250,234 L250,370 L470,370" stroke="#0b3a6b" stroke-width="3" fill="none" marker-end="url(#p)"/>
+  <rect x="290" y="360" width="115" height="20" rx="3" fill="#eef2f8" stroke="#0b3a6b"/>
+  <text x="347" y="374" text-anchor="middle" font-size="11" font-weight="700" fill="#0b3a6b">CABLE 3</text>
+
+  <!-- cable 5: LAN4 -> PC -->
+  <path d="M295,234 L295,450 L470,450" stroke="#7b3fa0" stroke-width="3" fill="none" marker-end="url(#p)"/>
+  <rect x="320" y="440" width="115" height="20" rx="3" fill="#f3ecf8" stroke="#7b3fa0"/>
+  <text x="377" y="454" text-anchor="middle" font-size="11" font-weight="700" fill="#7b3fa0">CABLE 5</text>
+
+  <!-- TDE -->
+  <rect x="475" y="270" width="220" height="62" rx="6" fill="#fff" stroke="#1e7d34" stroke-width="2"/>
+  <text x="585" y="290" text-anchor="middle" font-weight="700" fill="#1e7d34">LOGO! TDE (pantalla)</text>
+  <text x="585" y="306" text-anchor="middle" font-size="12">192.168.0.4</text>
+  <rect x="500" y="312" width="42" height="16" rx="2" fill="#dff0d8" stroke="#1e7d34" stroke-width="2"/><text x="521" y="324" text-anchor="middle" font-size="9" font-weight="700">P1</text>
+  <rect x="548" y="312" width="42" height="16" rx="2" fill="#ffe8cc" stroke="#e07b00" stroke-width="2"/><text x="569" y="324" text-anchor="middle" font-size="9" font-weight="700">P2</text>
+  <text x="640" y="325" font-size="9" fill="#555">2 puertos = switch</text>
+
+  <!-- cable 4: TDE P2 -> LOGO2 -->
+  <path d="M569,330 L569,345 L735,345 L735,213" stroke="#e07b00" stroke-width="3" fill="none" marker-end="url(#p)"/>
+  <rect x="748" y="258" width="115" height="20" rx="3" fill="#fff2e0" stroke="#e07b00"/>
+  <text x="805" y="272" text-anchor="middle" font-size="11" font-weight="700" fill="#e07b00">CABLE 4</text>
+
+  <!-- LOGO 1 -->
+  <rect x="475" y="340" width="220" height="60" rx="6" fill="#fff" stroke="#0b3a6b" stroke-width="2"/>
+  <text x="585" y="360" text-anchor="middle" font-weight="700" fill="#0b3a6b">LOGO! #1 — 0BA7</text>
+  <text x="585" y="378" text-anchor="middle" font-size="12">192.168.0.2</text>
+  <text x="585" y="393" text-anchor="middle" font-size="9" fill="#c0392b">en LOGO!Soft: 0BA7.ES4</text>
+
+  <!-- LOGO 2 -->
+  <rect x="700" y="140" width="180" height="70" rx="6" fill="#fff" stroke="#e07b00" stroke-width="2"/>
+  <text x="790" y="162" text-anchor="middle" font-weight="700" fill="#e07b00">LOGO! #2 — 0BA8</text>
+  <text x="790" y="180" text-anchor="middle" font-size="12">192.168.0.3</text>
+  <text x="790" y="196" text-anchor="middle" font-size="9" fill="#555">viene del TDE, NO del router</text>
+
+  <!-- PC dedicada -->
+  <rect x="475" y="420" width="220" height="60" rx="6" fill="#f3ecf8" stroke="#7b3fa0" stroke-width="2"/>
+  <text x="585" y="440" text-anchor="middle" font-weight="700" fill="#7b3fa0">PC DEDICADA</text>
+  <text x="585" y="458" text-anchor="middle" font-size="12">192.168.0.6</text>
+  <text x="585" y="473" text-anchor="middle" font-size="9" fill="#555">Tailscale (entrar desde afuera)</text>
+
+  <!-- Tu PC -->
+  <path d="M110,96 L110,520 L470,520" stroke="#888" stroke-width="2" fill="none" stroke-dasharray="6,3" marker-end="url(#p)"/>
+  <rect x="475" y="500" width="220" height="42" rx="6" fill="#f7f7f7" stroke="#888" stroke-width="2"/>
+  <text x="585" y="518" text-anchor="middle" font-weight="700" fill="#555">Tu PC de escritorio</text>
+  <text x="585" y="534" text-anchor="middle" font-size="11" fill="#555">ya esta enchufada al modem, no la toques</text>
+</svg>
+<div class="cap">5 cables en total. Fijate que el LOGO #2 sale del TDE, no del router.</div>
+</div>
+
+<table>
+<tr><th>Cable</th><th>De donde sale</th><th>A donde va</th></tr>
+<tr style="background:#fdecec"><td><strong>CABLE 1</strong></td><td>CABLEMODEM &mdash; cualquier puerto <strong>LAN</strong></td><td>TP-LINK &mdash; <strong>LAN 1</strong> &nbsp;<span style="color:#c0392b">(NUNCA al WAN)</span></td></tr>
+<tr style="background:#e8f4e8"><td><strong>CABLE 2</strong></td><td>TP-LINK &mdash; <strong>LAN 2</strong></td><td>TDE &mdash; <strong>puerto 1</strong></td></tr>
+<tr style="background:#eef2f8"><td><strong>CABLE 3</strong></td><td>TP-LINK &mdash; <strong>LAN 3</strong></td><td>LOGO! <strong>#1</strong> (0BA7)</td></tr>
+<tr style="background:#fff2e0"><td><strong>CABLE 4</strong></td><td>TDE &mdash; <strong>puerto 2</strong></td><td>LOGO! <strong>#2</strong> (0BA8) &nbsp;<span style="color:#e07b00">&larr; este NO va al router</span></td></tr>
+<tr style="background:#f3ecf8"><td><strong>CABLE 5</strong></td><td>TP-LINK &mdash; <strong>LAN 4</strong></td><td>PC dedicada</td></tr>
+</table>
+<p><strong>Total: 5 cables.</strong> Al TP-LINK llegan 4 (cables 1, 2, 3 y 5) &mdash; justo sus 4 puertos LAN.
+El cable 4 no toca el router: va de la pantalla al LOGO #2, porque el TDE tiene dos puertos y hace de switch.
+Tu PC de escritorio queda como esta, enchufada al cablemodem.</p>
+
+
+
+<h3>Reparto de puertos (el TP-LINK tiene 4 LAN, quedan todos ocupados)</h3>
+<table>
+<tr><th>Equipo / puerto</th><th>Donde se enchufa</th><th>IP</th></tr>
+<tr><td><strong>TP-LINK &mdash; LAN 1</strong></td><td>cable a un <strong>LAN</strong> del cablemodem (NUNCA al WAN)</td><td>192.168.0.5</td></tr>
+<tr><td><strong>TP-LINK &mdash; LAN 3</strong></td><td>LOGO! #1 (0BA7)</td><td>192.168.0.2</td></tr>
+<tr><td><strong>TP-LINK &mdash; LAN 2</strong></td><td><strong>TDE puerto 1</strong> (y del <strong>TDE puerto 2</strong> sale el cable al LOGO! #2)</td><td>TDE 192.168.0.4<br>LOGO#2 192.168.0.3</td></tr>
+<tr><td><strong>TP-LINK &mdash; LAN 4</strong></td><td style="color:#1e7d34"><strong>LIBRE</strong> &mdash; aca va la PC dedicada</td><td>192.168.0.6</td></tr>
+<tr><td><strong>TP-LINK &mdash; WAN</strong></td><td colspan="2" style="color:#c0392b"><strong>VACIO</strong> &mdash; no se usa nunca en modo AP</td></tr>
+<tr><td>Tu PC de escritorio</td><td>ya esta en el <strong>cablemodem</strong>, se queda ahi</td><td>192.168.0.232 (DHCP)</td></tr>
+<tr><td>PC dedicada (Tailscale)</td><td><strong>LAN 4 del TP-LINK</strong> (liberado por el encadenado del TDE), o el cablemodem, o WiFi</td><td>192.168.0.6</td></tr>
+<tr><td>Celular / notebook</td><td><strong>WiFi</strong> del TP-LINK</td><td>DHCP, desde .10</td></tr>
+</table>
+
+<div style="background:#e8f4e8;border-left:4px solid #2e7d32;padding:10px 14px;margin:12px 0">
+<strong>El TDE tiene DOS puertos Ethernet: es un switch interno.</strong> Sirve para <em>encadenar</em> equipos
+(daisy chain, tipico de Siemens). Los dos puertos son equivalentes: no hay "entrada" y "salida".
+Aprovechalo asi &mdash; <code>TP-LINK LAN 2 &rarr; TDE puerto 1</code>, y <code>TDE puerto 2 &rarr; LOGO! #2</code> &mdash;
+y te queda <strong>un puerto libre</strong> en el TP-LINK para la PC dedicada.
+<br><br>
+<strong>La contra a tener presente:</strong> lo que cuelga del TDE depende de que el TDE este alimentado.
+Si lo apagas, el LOGO! #2 se queda sin red (sigue funcionando su programa, pero no lo ves por LAN).
+Como el TDE comparte la fuente de 24 V con los LOGO, en la practica siempre va a estar prendido &mdash;
+pero por eso encadenamos el #2 y no algo critico. Si preferis cero dependencias, enchufa cada equipo
+directo al TP-LINK y la PC dedicada por WiFi.
+</div>
+
+<p><strong>No importa de que caja cuelgue cada cosa.</strong> Con el TP-LINK en modo AP el cablemodem y el TP-LINK
+son la misma red: un equipo enchufado en uno ve a los del otro sin ningun salto. Lo unico que importa es que
+el cable entre ambos sea <strong>LAN a LAN</strong>.</p>
+<p>Si en algun momento te quedas sin bocas, un <strong>switch de 5 puertos</strong> (unos $15.000) se enchufa a
+cualquier LAN y suma 4 puertos mas. No se configura: es transparente.</p>
+
+<h3>Orden exacto para enchufar (no lo cambies)</h3>
+<ol>
+  <li><strong>Antes de cablear nada:</strong> conectate solo al TP-LINK (por cable o su WiFi) y entra a su
+  administracion. De fabrica suele venir en <strong>192.168.0.1</strong>, que es la MISMA que tu cablemodem:
+  si los enchufas asi, se pelean y no anda nada. Cambiale la IP LAN a <strong>192.168.0.5</strong> y
+  <strong>apaga su DHCP</strong>. Guardar y reiniciar.</li>
+
+  <li><strong>Cable del cablemodem al TP-LINK: de puerto LAN a puerto LAN.</strong> El puerto WAN
+  (azul, el que dice Internet) queda <strong>vacio</strong>. Este es el paso que mata el doble NAT.</li>
+
+  <li><strong>Alimentacion 24 Vcc:</strong> LOGO!Power detras de la termica; de ahi +24 V y M a los bornes
+  de alimentacion de los dos LOGO y del TDE. Verifica polaridad antes de energizar.</li>
+
+  <li><strong>Cables Ethernet:</strong> LOGO #1, LOGO #2 y TDE a puertos LAN del TP-LINK (o del cablemodem si
+  te faltan bocas: es la misma red).</li>
+
+  <li><strong>IP fija en cada LOGO</strong>, desde el teclado del equipo: menu &rarr; Red / Network &rarr;
+  direccion IP. LOGO #1 = <strong>192.168.0.2</strong>, LOGO #2 = <strong>192.168.0.3</strong>, TDE =
+  <strong>192.168.0.4</strong>. En los tres: mascara <strong>255.255.255.0</strong>, gateway
+  <strong>192.168.0.1</strong>.</li>
+
+  <li><strong>Probar desde la PC:</strong> <code>ping 192.168.0.2</code> y <code>ping 192.168.0.3</code>.
+  Si responden, ya estan en la red. Al 0BA8 ademas podes entrarle por navegador:
+  <code>http://192.168.0.3</code></li>
+
+  <li><strong>Programar:</strong> LOGO!Soft Comfort &rarr; nuevo diagrama eligiendo la generacion correcta
+  (<strong>0BA7.ES4</strong> explicito para el #1; 0BA8 para el #2) &rarr; Herramientas &rarr; Conexiones
+  Ethernet &rarr; agregar el equipo por su IP &rarr; transferir.</li>
+</ol>
+
+<div class="warn" style="background:#fdecec;border-left:4px solid #c0392b;padding:10px 14px;margin:12px 0">
+<strong>Los tres errores que te van a hacer perder la tarde:</strong>
+<ol style="margin:6px 0 0 0">
+<li>Enchufar el TP-LINK <em>por su puerto WAN</em> &rarr; doble NAT, los LOGO quedan invisibles.</li>
+<li>Dejar el TP-LINK en 192.168.0.1 (choca con el cablemodem) o con su DHCP prendido (dos servidores repartiendo IP).</li>
+<li>Crear el proyecto del #1 como "0BA7" generico o dejarlo en 0BA8 &rarr; la lectura del programa vuelve vacia.
+Tiene que ser <strong>0BA7.ES4</strong>.</li>
+</ol>
+</div>
+
+
+<h2>1. Lo que medi hoy en tu red</h2>
+
+<p>Todo lo que sigue esta medido el 2026-08-06 desde tu PC de escritorio (DESKTOP-RK8DH7C, Realtek GbE, cable). No hay nada inventado aca.</p>
+
+<table>
+<thead><tr><th>Dato</th><th>Valor medido</th><th>Que significa</th></tr></thead>
+<tbody>
+<tr><td>PC por Ethernet</td><td><code>192.168.0.232/24</code>, gateway <code>192.168.0.1</code>, DHCP server <code>192.168.0.1</code></td><td>Tu PC cuelga directo del equipo <code>.1</code></td></tr>
+<tr><td>Sufijo DNS / DNS</td><td><code>fibertel.com.ar</code> — DNS <code>181.30.140.197</code> y <code>.132</code></td><td>ISP = Fibertel (Telecom/Personal)</td></tr>
+<tr><td><strong>Que es 192.168.0.1</strong></td><td>HTTP 302 a <code>Docsis_system.php</code>, <code>Server: lighttpd</code>, <code>X-Powered-By: PHP/5.3.2</code>. Puertos 80, 443 y 53 abiertos</td><td><strong>Es el CABLEMODEM/router de Fibertel</strong>, NO el TP-LINK. Tu PC esta enchufada al modem del ISP</td></tr>
+<tr><td>IP publica vista desde afuera</td><td><code>181.231.144.34</code> (ifconfig.me y api.ipify.org coinciden)</td><td>Rango normal de Telecom, no es rango CGNAT visible</td></tr>
+<tr><td>Traceroute a 8.8.8.8</td><td>1: <code>192.168.0.1</code> — 2: sin respuesta — 3: sin respuesta — 4: <code>181.106.12.160</code></td><td><strong>Dos saltos mudos</strong> entre tu modem y la red del ISP. Compatible con doble NAT y/o CGNAT, pero no lo prueba solo</td></tr>
+<tr><td>Otras subredes tipicas</td><td><code>192.168.1.1</code>, <code>192.168.100.1</code>, <code>10.0.0.1</code>: <strong>ninguna responde</strong></td><td>Desde donde estas no hay un segundo router visible: si el TP-LINK esta enchufado, esta <em>aguas abajo</em> tuyo (su LAN no se ve desde arriba) o esta apagado</td></tr>
+<tr><td>Barrido ping de 192.168.0.0/24</td><td>Vivos: <code>.1</code> (gateway), <code>.46</code> (TTL 64, 443 abierto), <code>.232</code> (tu PC), <code>.254</code> (TTL 64)</td><td><strong>NINGUN LOGO conectado en este momento.</strong> <code>192.168.0.2</code> (donde estaba el 0BA7 el 14-jul) no responde</td></tr>
+<tr><td>Escaneo de puerto 102 (ISO-TSAP, el de LOGO/S7)</td><td>Cerrado en todos los hosts vivos</td><td>Confirma: no hay LOGO en linea ahora</td></tr>
+<tr><td>Vecinos ARP</td><td><code>.1</code> 86:17:ef:.., <code>.46</code> 3c:64:cf:.., <code>.49</code> a8:ca:77:.., <code>.93</code> d0:57:94:.. (Sagemcom), <code>.254</code> 00:50:f1:.. (Intel)</td><td>Red domestica con celulares/notebooks. El pool DHCP repartio al menos de <code>.46</code> a <code>.232</code></td></tr>
+</tbody>
+</table>
+
+<div class="caja info">
+<span class="t">Conclusion practica de la medicion</span>
+<ol>
+<li><strong>El equipo que manda es el cablemodem Fibertel en <code>192.168.0.1</code></strong>, que hace NAT y DHCP. El TP-LINK, si esta en uso, es el SEGUNDO router (ahi aparece el doble NAT).</li>
+<li><strong>Los LOGO no estan conectados ahora.</strong> Todo lo de la Etapa 1 hay que hacerlo con ellos alimentados y cableados.</li>
+<li><strong>El pool DHCP llega bajo</strong> (vi un <code>.46</code>): por eso las IP fijas de los LOGO van en <code>.2</code>, <code>.3</code>, <code>.4</code>, <code>.5</code> — bien abajo, y ademas hay que confirmar el rango en el modem.</li>
+<li><strong>CGNAT: no confirmado ni descartado.</strong> Ver el test exacto en la Etapa 2. Pero da igual: la solucion que te recomiendo (Tailscale) funciona igual con o sin CGNAT.</li>
+</ol>
+</div>
+
+<h2>2. ETAPA 1 — Programar los LOGO por LAN</h2>
+
+<h3>2.1 El software: que necesitas de verdad</h3>
+
+<p><strong>LOGO!Soft Comfort</strong> es el unico entorno oficial para programar estos equipos. Version en tu maquina: <strong>V8.0.0, licencia COMPLETA</strong> (verificado el 2026-07-14 en Ayuda &rarr; Acerca de; instalado en <code>C:\Program Files\Siemens\LOGOComfort_V8</code>). Programa las dos generaciones, 0BA7 y 0BA8.</p>
+
+<table>
+<thead><tr><th>Version</th><th>Que permite</th><th>Que NO permite</th></tr></thead>
+<tbody>
+<tr><td><strong>LOGO!Soft Comfort completo</strong> (el que tenes)<span class="tag si">disponible</span></td><td>Editar FBD/LAD/UDF, simular, guardar, imprimir, <strong>transferir PC&rarr;LOGO y LOGO&rarr;PC</strong>, modo online (test en vivo), configurar servidor web y conexiones Ethernet</td><td>—</td></tr>
+<tr><td><strong>Demo / trial de Siemens</strong></td><td>Editar y <strong>simular</strong> el programa completo. Sirve para todo el trabajo de escritorio y para el TP de SCI</td><td>Segun version: guardar el proyecto y/o <strong>transferir al PLC</strong>. Regla practica: <strong>no cuentes con bajar el programa al LOGO desde la demo</strong></td></tr>
+</tbody>
+</table>
+
+<div class="caja ok">
+<span class="t">Si algun dia te quedas sin licencia — alternativa gratis real</span>
+Los dos LOGO son modelos <strong>con display y teclado</strong> (12/24RCE y 24RCE; la "E" es Ethernet, y la ausencia de "o" final significa que traen pantalla). Se pueden <strong>programar directo desde el teclado del equipo</strong> (Programar &rarr; Editar programa), sin PC y sin licencia. Es incomodo para logicas grandes, pero para 10-15 bloques del TP alcanza y es 100% gratis. La IP tambien se setea desde el teclado (ver 2.3).
+</div>
+
+<h3>2.2 Direccionamiento: las IP que vas a usar</h3>
+
+<p>Subred real: <code>192.168.0.0/24</code>, mascara <code>255.255.255.0</code>, gateway <code>192.168.0.1</code>. Las IP fijas van <strong>por debajo del pool DHCP</strong>. Elegi <code>.2</code> a <code>.6</code> porque el DHCP del modem ya repartio desde <code>.46</code> para arriba.</p>
+
+<pre><span class="c"># Antes de fijar nada: confirma el rango DHCP del cablemodem</span>
+<span class="c"># Navegador -&gt; http://192.168.0.1  -&gt; seccion LAN / DHCP</span>
+<span class="c"># Anota "DHCP start" y "DHCP end". Las IP fijas deben quedar FUERA de ese rango.</span>
+
+<span class="c"># Y verifica que la IP que vas a usar este libre (tiene que dar timeout):</span>
+ping 192.168.0.2
+ping 192.168.0.3
+ping 192.168.0.4</pre>
+
+<h3>2.3 Setear la IP desde el propio LOGO (sin PC) — lo mas confiable</h3>
+
+<p>Es el camino a prueba de balas: si el LOGO ya tiene IP correcta, LOGO!Soft lo encuentra siempre. Se hace igual en 0BA7 y 0BA8:</p>
+<ol>
+<li>El LOGO tiene que estar en <strong>STOP</strong> (menu principal &rarr; <em>Stop</em>, o ya venir parado).</li>
+<li><code>ESC</code> para entrar al menu principal.</li>
+<li>Bajar hasta <strong>Red</strong> (en ingles <em>Network</em>) &rarr; <code>OK</code>.</li>
+<li><strong>Direccion IP</strong>: con las flechas arriba/abajo cambias el digito, izquierda/derecha te moves de campo. Cargar <code>192.168.000.002</code> para el 0BA7. <code>OK</code>.</li>
+<li><strong>Mascara de subred</strong>: <code>255.255.255.000</code>. <code>OK</code>.</li>
+<li><strong>Gateway</strong>: <code>192.168.000.001</code>. <code>OK</code>.</li>
+<li><code>ESC</code> hasta salir. Repetir en el 0BA8 con <code>192.168.000.003</code>.</li>
+</ol>
+
+<div class="caja alerta">
+<span class="t">Cuidado</span>
+El LOGO escribe los octetos con ceros a la izquierda (<code>192.168.000.002</code>) — es lo mismo que <code>192.168.0.2</code>, no te asustes. Y si cambias la IP con el cable puesto, la sesion online de LOGO!Soft se te va a caer: es normal, reconecta con la IP nueva.
+</div>
+
+<h3>2.4 Setear la IP desde LOGO!Soft (Tools &rarr; Ethernet Connections)</h3>
+<ol>
+<li>Cableado: PC y LOGO al <strong>mismo switch/router</strong> (o PC-LOGO directo con cable comun: los dos puertos son auto-MDIX).</li>
+<li>LOGO!Soft &rarr; pestana <strong>Proyecto de red</strong> (no "Modo de diagrama").</li>
+<li><strong>Herramientas &rarr; Determinar LOGO!</strong> (<code>F2</code>) lista los equipos del segmento por MAC aunque tengan IP fuera de tu subred. Ojo: <em>eso no es conectarse</em>, es descubrimiento.</li>
+<li>Desde ahi o desde <strong>Herramientas &rarr; Conexiones Ethernet</strong> asignas IP/mascara/gateway y confirmas.</li>
+</ol>
+<p class="small">MAC conocidas: LOGO! 0BA7 = <code>00-1C-06-26-AD-4C</code> · LOGO! 0BA8 = <code>E0-DC-A0-32-EC-1B</code>. Sirven para identificar cual es cual en la lista.</p>
+
+<h3>2.5 Agregar el dispositivo con la generacion CORRECTA (el bug que te comio una tarde)</h3>
+
+<div class="caja mal">
+<span class="t">Esto es lo que fallo el 14-jul y no tiene que volver a fallar</span>
+LOGO!Soft abre por defecto en <strong>0BA8</strong>. Si agregas el equipo asi y el fisico es 0BA7, la conexion "parece" andar pero al leer el programa te tira <em>"el tipo de dispositivo es diferente del conectado"</em> y la lectura vuelve <strong>vacia</strong>.
+<br><br>
+Peor: tu 0BA7 no es el generico. Es <strong>LOGO! 0BA7.ES4, firmware V1.03.37</strong> (variante Economy, NO Standard) — leido en vivo del equipo. Cuando crees el proyecto, elegi <strong>0BA7.ES4</strong> explicitamente, no "0BA7" a secas.
+</div>
+
+<h4>Procedimiento correcto, LOGO por LOGO</h4>
+<ol>
+<li><strong>Archivo &rarr; Nuevo</strong> y elegir el modelo exacto ANTES de dibujar nada:
+  <ul>
+    <li>Para el LOGO #1: <strong>0BA7.ES4</strong> (12/24RCE, 6ED1 052-1MD00-0BA7)</li>
+    <li>Para el LOGO #2: <strong>0BA8</strong> (24RCE, 6ED1 052-1HB08-0BA8)</li>
+  </ul>
+</li>
+<li><strong>Un programa por generacion.</strong> No se mezclan 0BA7 y 0BA8 en el mismo diagrama. Son dos archivos distintos.</li>
+<li>Si ya tenes un diagrama en la generacion equivocada: <strong>Archivo &rarr; Convertir</strong> (cambiar tipo de dispositivo). Bajar de 0BA8 a 0BA7 puede perder bloques que el 0BA7 no soporta — revisar el log de conversion.</li>
+<li>En <strong>Proyecto de red</strong>: <em>Agregar nuevo dispositivo</em> &rarr; seleccionar la generacion correcta &rarr; cargar la IP (<code>.2</code> o <code>.3</code>) &rarr; Aceptar.</li>
+<li><strong>Establecer conexion online</strong>. Evidencia de que anda: tilde verde, cable verde PC&harr;LOGO y puerto Ethernet en verde.</li>
+</ol>
+
+<h3>2.6 Transferir y probar</h3>
+<pre><span class="c"># Antes de escribir nada: BACKUP de lo que haya adentro</span>
+Herramientas -&gt; Transferir -&gt; LOGO! -&gt; PC        (leer el programa actual)
+<span class="c"># Nota 14-jul: el 0BA7 volvio VACIO. Lo mas probable es que el kit UTN</span>
+<span class="c"># no tenga programa de usuario. Reintentar con el tipo 0BA7.ES4 exacto</span>
+<span class="c"># para descartar que haya sido un mismatch de modelo.</span>
+
+Herramientas -&gt; Transferir -&gt; PC -&gt; LOGO!        (bajar tu programa)
+<span class="c"># El LOGO tiene que estar en STOP. Al terminar, pasarlo a RUN.</span></pre>
+
+<ul>
+<li><strong>Simulacion</strong> (icono de play verde, <code>F3</code>): corre el programa en la PC sin PLC. Podes clickear entradas y ver salidas. Ideal para el TP de SCI y no requiere hardware.</li>
+<li><strong>Modo online / test</strong> (<em>Herramientas &rarr; Simulacion online</em>): el programa corre en el LOGO REAL y LOGO!Soft te pinta los estados en vivo sobre el diagrama. Es lo que uses con el tablero UTN.</li>
+<li><strong>Prueba con el tablero</strong>: los 12 switches son I1..I12, los 2 potes son AI1/AI2 (en el 0BA7 entran por I7/I8 configuradas como analogicas 0-10 V), las 8 luces son Q1..Q8. Empeza con algo trivial (I1 &rarr; Q1) para validar cableado antes de la logica de verdad.</li>
+</ul>
+
+<h3>2.7 Servidor web del 0BA8 (acceso desde el celular por WiFi)</h3>
+<ol>
+<li>En LOGO!Soft, con el proyecto 0BA8 abierto: <strong>Herramientas &rarr; Ajustes online / Propiedades del modulo &rarr; pestana Servidor web</strong> (segun version: <em>Configuracion &rarr; Acceso al servidor web</em>).</li>
+<li>Tildar <strong>habilitar acceso al servidor web</strong> y definir una <strong>contrasena de usuario</strong>. Sin contrasena no lo habilites.</li>
+<li>Transferir la configuracion al LOGO y pasarlo a RUN.</li>
+<li>Desde el celular en el WiFi de casa: <code>http://192.168.0.3</code> &rarr; usuario y contrasena &rarr; se ve el display virtual y podes operar teclas. No hay que instalar nada.</li>
+</ol>
+<p class="small">El 0BA7 no tiene servidor web util. A ese lo monitoreas con LOGO!Soft online o con la LOGO! App.</p>
+
+<h3>2.8 LOGO! App en el celular</h3>
+<ol>
+<li>Instalar <strong>LOGO! App</strong> (Siemens) de Play Store / App Store. Es gratis.</li>
+<li>Celular conectado al WiFi de casa (misma subred <code>192.168.0.x</code> — ver Etapa 2: esto SOLO funciona si el TP-LINK esta en modo AP).</li>
+<li>Agregar dispositivo: IP <code>192.168.0.3</code> (0BA8) o <code>192.168.0.2</code> (0BA7), puerto <code>102</code>, <strong>TSAP local 20.00 / TSAP remoto 20.00</strong>.</li>
+<li>Si no conecta (tipico en 0BA7): en LOGO!Soft &rarr; <strong>Herramientas &rarr; Conexiones Ethernet</strong>, agregar una <strong>conexion de cliente/servidor libre</strong> con esos TSAP y transferir. El LOGO tiene un numero limitado de conexiones: reserva una para la app y otra para el TDE.</li>
+</ol>
+
+<h3>2.9 LOGO! TDE (el display Ethernet del 0BA8)</h3>
+<ol>
+<li>Alimentar el TDE con 24 Vcc desde la LOGO!Power y cablearlo por Ethernet al mismo switch que los LOGO.</li>
+<li>En el primer arranque el TDE entra en su <strong>menu de configuracion</strong> (si no, mantene pulsadas <code>ESC</code>+<code>OK</code> al energizar).</li>
+<li>Setear <strong>IP del propio TDE</strong>: <code>192.168.0.4</code>, mascara <code>255.255.255.0</code>, gateway <code>192.168.0.1</code>.</li>
+<li>Setear la <strong>IP del LOGO maestro</strong> al que se conecta: <code>192.168.0.3</code> (el 0BA8).</li>
+<li>El TDE es del 0BA8. No lo cuelgues del 0BA7.</li>
+</ol>
+
+<h2>3. ETAPA 2 — Doble NAT: diagnostico y arreglo</h2>
+
+<h3>3.1 Que es, en criollo</h3>
+<p>NAT es el portero que traduce las IP privadas de tu casa a la unica IP publica que te da el ISP. Con <strong>un</strong> portero, todo bien. <strong>Doble NAT</strong> es tener dos porteros en fila: el cablemodem de Fibertel hace NAT, y detras el TP-LINK hace NAT otra vez y crea su propia subred (tipico <code>192.168.1.x</code>). Consecuencias:</p>
+<ul>
+<li>Los equipos de la subred de arriba (tu PC en <code>192.168.0.232</code>) <strong>no pueden iniciar conexion</strong> hacia los de la subred de abajo. Si el LOGO quedo colgado del TP-LINK, tu PC no lo ve. Al reves si (de abajo hacia arriba funciona).</li>
+<li>El descubrimiento por broadcast/multicast (el <em>Determinar LOGO!</em> de LOGO!Soft, la LOGO! App) <strong>no cruza</strong> el router: se muere en el borde de la subred.</li>
+<li>El port forwarding hay que hacerlo <strong>dos veces</strong>, en cascada, y aun asi puede no servir.</li>
+</ul>
+
+<div class="fig">
+<svg viewBox="0 0 940 400" width="100%" style="max-width:940px" xmlns="http://www.w3.org/2000/svg" font-family="Segoe UI, Arial" font-size="12">
+  <defs>
+    <marker id="fa" markerWidth="9" markerHeight="9" refX="8" refY="3" orient="auto"><path d="M0,0 L8,3 L0,6 z" fill="#5b6570"/></marker>
+  </defs>
+  <text x="14" y="20" font-size="14" font-weight="700" fill="#a51b1b">TOPOLOGIA ACTUAL (sospecha de doble NAT) — lo que NO permite llegar de una subred a la otra</text>
+
+  <ellipse cx="80" cy="95" rx="60" ry="30" fill="#e9eef3" stroke="#5b6570"/>
+  <text x="80" y="92" text-anchor="middle" font-weight="600">INTERNET</text>
+  <text x="80" y="108" text-anchor="middle" font-size="10" fill="#5b6570">8.8.8.8</text>
+
+  <line x1="140" y1="95" x2="196" y2="95" stroke="#5b6570" stroke-width="2" marker-end="url(#fa)"/>
+
+  <rect x="200" y="55" width="180" height="80" rx="5" fill="#fdf2f2" stroke="#a51b1b" stroke-width="1.6"/>
+  <text x="290" y="76" text-anchor="middle" font-weight="700">Red Fibertel</text>
+  <text x="290" y="93" text-anchor="middle" font-size="11">salto 4: 181.106.12.160</text>
+  <text x="290" y="109" text-anchor="middle" font-size="11" fill="#a51b1b">saltos 2 y 3: SIN RESPUESTA</text>
+  <text x="290" y="125" text-anchor="middle" font-size="11" fill="#a51b1b">(posible CGNAT)</text>
+
+  <line x1="380" y1="95" x2="436" y2="95" stroke="#5b6570" stroke-width="2" marker-end="url(#fa)"/>
+
+  <rect x="440" y="48" width="215" height="94" rx="5" fill="#eef4fa" stroke="#0b5fa5" stroke-width="1.8"/>
+  <text x="547" y="68" text-anchor="middle" font-weight="700">CABLEMODEM FIBERTEL</text>
+  <text x="547" y="85" text-anchor="middle" font-size="11">Docsis_system.php / lighttpd</text>
+  <text x="547" y="101" text-anchor="middle" font-size="11" font-weight="600">LAN 192.168.0.1</text>
+  <text x="547" y="117" text-anchor="middle" font-size="11" fill="#a5460b">NAT #1 + DHCP activo</text>
+  <text x="547" y="133" text-anchor="middle" font-size="11">IP publica vista: 181.231.144.34</text>
+
+  <line x1="547" y1="142" x2="547" y2="180" stroke="#5b6570" stroke-width="2"/>
+  <line x1="300" y1="180" x2="820" y2="180" stroke="#5b6570" stroke-width="2"/>
+  <text x="620" y="174" font-size="11" fill="#5b6570">subred 192.168.0.0/24</text>
+
+  <line x1="360" y1="180" x2="360" y2="212" stroke="#5b6570" stroke-width="2" marker-end="url(#fa)"/>
+  <rect x="280" y="216" width="160" height="52" rx="5" fill="#fff" stroke="#5b6570"/>
+  <text x="360" y="236" text-anchor="middle" font-weight="600">PC de Matias</text>
+  <text x="360" y="253" text-anchor="middle" font-size="11">192.168.0.232 (cable)</text>
+
+  <line x1="520" y1="180" x2="520" y2="212" stroke="#5b6570" stroke-width="2" marker-end="url(#fa)"/>
+  <rect x="452" y="216" width="140" height="52" rx="5" fill="#fff" stroke="#5b6570"/>
+  <text x="522" y="236" text-anchor="middle" font-size="11">Celulares / notebooks</text>
+  <text x="522" y="253" text-anchor="middle" font-size="11">.46 .49 .93 .254</text>
+
+  <line x1="740" y1="180" x2="740" y2="212" stroke="#5b6570" stroke-width="2" marker-end="url(#fa)"/>
+  <rect x="640" y="216" width="200" height="70" rx="5" fill="#fdf2f2" stroke="#a51b1b" stroke-width="1.8"/>
+  <text x="740" y="236" text-anchor="middle" font-weight="700">TP-LINK 2.4 GHz</text>
+  <text x="740" y="253" text-anchor="middle" font-size="11" fill="#a51b1b">puerto WAN usado = NAT #2</text>
+  <text x="740" y="270" text-anchor="middle" font-size="11">crea 192.168.1.0/24 propia</text>
+
+  <line x1="740" y1="286" x2="740" y2="316" stroke="#a51b1b" stroke-width="2" stroke-dasharray="4,3" marker-end="url(#fa)"/>
+  <rect x="630" y="320" width="220" height="60" rx="5" fill="#fff" stroke="#a51b1b" stroke-dasharray="4,3"/>
+  <text x="740" y="340" text-anchor="middle" font-weight="600">LOGO! 0BA7 / 0BA8 / TDE</text>
+  <text x="740" y="357" text-anchor="middle" font-size="11">192.168.1.x — ISLA</text>
+  <text x="740" y="373" text-anchor="middle" font-size="11" fill="#a51b1b">no alcanzables desde 192.168.0.x</text>
+
+  <path d="M440 300 L620 300" stroke="#a51b1b" stroke-width="2.2" stroke-dasharray="7,5"/>
+  <line x1="520" y1="288" x2="540" y2="312" stroke="#a51b1b" stroke-width="2.6"/>
+  <line x1="540" y1="288" x2="520" y2="312" stroke="#a51b1b" stroke-width="2.6"/>
+  <text x="220" y="298" font-size="11.5" fill="#a51b1b" font-weight="600">La PC no llega al LOGO,</text>
+  <text x="220" y="315" font-size="11.5" fill="#a51b1b">ni el broadcast de "Determinar LOGO!"</text>
+</svg>
+<figcaption><strong>Figura 1.</strong> Topologia actual segun lo medido. El cablemodem Fibertel es el router principal (NAT #1). Si el TP-LINK esta conectado por su puerto WAN, agrega NAT #2 y una subred aparte: todo lo que cuelgue de el queda aislado de la PC. Hoy los LOGO no responden en ninguna subred visible.</figcaption>
+</div>
+
+<h3>3.2 Como lo confirmas (los comandos que corri)</h3>
+<pre><span class="c"># 1) Cual es tu gateway y tu subred</span>
+ipconfig /all
+
+<span class="c"># 2) Cuantos routers hay antes de salir a internet</span>
+tracert -d -h 6 8.8.8.8
+<span class="c"># Si el salto 2 es OTRA IP PRIVADA (192.168.x.x / 10.x.x.x) -&gt; DOBLE NAT confirmado</span>
+<span class="c"># Si el salto 2 esta entre 100.64.x.x y 100.127.x.x      -&gt; CGNAT del ISP confirmado</span>
+<span class="c"># Tu caso: saltos 2 y 3 MUDOS -&gt; no concluyente, hay que mirar el modem</span>
+
+<span class="c"># 3) Tu IP publica real</span>
+Invoke-RestMethod ifconfig.me
+<span class="c"># Medido hoy: 181.231.144.34</span>
+
+<span class="c"># 4) EL TEST DEFINITIVO DE CGNAT (2 minutos, en el navegador)</span>
+<span class="c">#    Entra a http://192.168.0.1 -&gt; pagina de estado / WAN / Docsis</span>
+<span class="c">#    Busca la "IP WAN" del cablemodem y comparala con 181.231.144.34:</span>
+<span class="c">#      IGUALES                       -&gt; tenes IP publica. Port forwarding POSIBLE</span>
+<span class="c">#      WAN entre 100.64 y 100.127    -&gt; CGNAT. Port forwarding IMPOSIBLE</span>
+<span class="c">#      WAN es 192.168.x.x o 10.x.x.x -&gt; hay otro router arriba. Tambien imposible</span>
+
+<span class="c"># 5) Quien vive en la red (barrido)</span>
+1..254 | %{ $ip="192.168.0.$_"; if(Test-Connection $ip -Count 1 -Quiet) {$ip} }
+arp -a</pre>
+
+<h3>3.3 La solucion limpia: TP-LINK en modo Access Point (bridge)</h3>
+
+<p>Regla de oro: <strong>una sola red, un solo DHCP, un solo NAT</strong>. El TP-LINK deja de rutear y pasa a ser solamente un switch con antena. Todo (PC, celulares, LOGO, TDE) queda en <code>192.168.0.x</code> y se ven entre si.</p>
+
+<h4>Procedimiento para un TP-LINK TL-WR74x</h4>
+<ol>
+<li><strong>Desconecta el TP-LINK del cablemodem</strong> (saca el cable de su puerto WAN/Internet, el azul).</li>
+<li>Con una PC/notebook enchufada a un puerto <strong>LAN</strong> del TP-LINK, entra a su admin: <code>http://192.168.0.1</code> o <code>http://tplinkwifi.net</code> (usuario/clave por defecto <code>admin</code>/<code>admin</code>; si no entra, reset de 10 s con el boton).</li>
+<li><strong>Network &rarr; LAN</strong>: cambiar la IP del TP-LINK a <strong><code>192.168.0.5</code></strong>, mascara <code>255.255.255.0</code>. Guardar. El equipo reinicia y a partir de ahora se administra en esa IP.
+  <div class="caja alerta"><span class="t">Importante</span>El TP-LINK viene de fabrica muchas veces en <code>192.168.0.1</code> — la MISMA que el cablemodem. Si los enchufas asi, hay choque de IP y no anda nada. Por eso este paso va ANTES de cablearlos juntos.</div>
+</li>
+<li><strong>DHCP &rarr; DHCP Settings</strong>: <strong>Disable</strong>. Guardar. El DHCP unico lo da el cablemodem.</li>
+<li><strong>Wireless</strong>: SSID a gusto (podes usar el mismo del modem para roaming, o uno propio tipo <code>CASA-LOGO</code>), WPA2-PSK con clave decente, canal fijo <strong>1, 6 u 11</strong> (elegi el que este mas libre respecto del WiFi del cablemodem).</li>
+<li>Si tu modelo tiene <strong>Operation Mode</strong> en el menu, elegi directamente <strong>Access Point</strong> y el firmware apaga NAT y DHCP solo.</li>
+<li><strong>Cableado final, el punto clave</strong>: un cable Ethernet desde un puerto <strong>LAN</strong> del cablemodem a un puerto <strong>LAN</strong> del TP-LINK. <strong>El puerto WAN/Internet del TP-LINK queda VACIO.</strong> Eso es lo que mata el segundo NAT.</li>
+<li>Enchufa los LOGO y el TDE a los puertos LAN libres del TP-LINK. Verifica desde tu PC:
+  <pre>ping 192.168.0.5   <span class="c"># el TP-LINK como AP</span>
+ping 192.168.0.2   <span class="c"># LOGO 0BA7</span>
+ping 192.168.0.3   <span class="c"># LOGO 0BA8</span>
+ping 192.168.0.4   <span class="c"># TDE</span></pre>
+</li>
+</ol>
+
+<h3>3.4 Si no podes tocar el cablemodem (plan B: convivir)</h3>
+<p>Si por lo que sea el TP-LINK tiene que seguir haciendo NAT, entonces <strong>meti TODO del lado del TP-LINK</strong>: los dos LOGO, el TDE, y sobre todo <strong>la PC dedicada de la Etapa 3</strong>. La PC dedicada, al estar en la misma subred que los LOGO, los alcanza sin problema, y Tailscale publica esa subred hacia afuera. La subred a anunciar ya no seria <code>192.168.0.0/24</code> sino la del TP-LINK (tipicamente <code>192.168.1.0/24</code>) — lo unico que cambia es ese numero en el comando. Lo que NO vas a poder es alcanzar los LOGO desde tu PC de escritorio actual sin pasar por la VPN.</p>
+
+<h2>4. ETAPA 3 — Llegar desde internet, gratis</h2>
+
+<h3>4.1 Comparacion honesta</h3>
+<table>
+<thead><tr><th>Opcion</th><th>Costo</th><th>Anda con CGNAT / doble NAT</th><th>Acceso DIRECTO a los LOGO desde el celu</th><th>Que hace falta</th><th>Veredicto</th></tr></thead>
+<tbody>
+<tr><td><strong>Tailscale</strong> + subnet router</td><td>Gratis (plan Personal: hasta 3 usuarios y 100 dispositivos)</td><td><strong>SI</strong>, sin abrir un solo puerto</td><td><strong>SI</strong> — <code>http://192.168.0.3</code>, LOGO!Soft, LOGO! App, todo</td><td>Una PC siempre prendida + cuenta gratuita</td><td><span class="tag si">RECOMENDADA</span></td></tr>
+<tr><td><strong>ZeroTier</strong> + managed route</td><td>Gratis (hasta 25 dispositivos por red)</td><td>SI</td><td>SI</td><td>Igual que Tailscale, algo mas manual (ruta gestionada + forwarding/NAT a mano)</td><td>Alternativa valida</td></tr>
+<tr><td><strong>Chrome Remote Desktop</strong></td><td>Gratis</td><td>SI (no toca la red)</td><td><strong>NO</strong> — manejas el mouse de la PC remota, nada mas</td><td>Cuenta Google + PC prendida</td><td>Backup util, no la solucion</td></tr>
+<tr><td><strong>Port forwarding + DDNS</strong></td><td>Gratis</td><td><strong>NO</strong></td><td>Si, pero exponiendo el PLC</td><td>IP publica real del ISP + configurar el modem</td><td><span class="tag no">DESCARTADA</span></td></tr>
+</tbody>
+</table>
+
+<div class="caja ok">
+<span class="t">Recomendacion</span>
+<strong>Tailscale con subnet router en una PC siempre prendida.</strong> Es la unica que te da, gratis y sin depender de que Fibertel te de IP publica: acceso directo por IP a los dos LOGO, al servidor web del 0BA8, al TDE y a LOGO!Soft desde tu notebook en cualquier lado; sin exponer absolutamente nada a internet. Chrome Remote Desktop queda como red de seguridad (ya lo usas para Santa Cruz) para cuando necesites la GUI de LOGO!Soft de esa PC.
+</div>
+
+<div class="fig">
+<svg viewBox="0 0 940 470" width="100%" style="max-width:940px" xmlns="http://www.w3.org/2000/svg" font-family="Segoe UI, Arial" font-size="12">
+  <defs>
+    <marker id="fb" markerWidth="9" markerHeight="9" refX="8" refY="3" orient="auto"><path d="M0,0 L8,3 L0,6 z" fill="#5b6570"/></marker>
+    <marker id="fg" markerWidth="9" markerHeight="9" refX="8" refY="3" orient="auto"><path d="M0,0 L8,3 L0,6 z" fill="#0a7a41"/></marker>
+  </defs>
+  <text x="14" y="20" font-size="14" font-weight="700" fill="#0a7a41">TOPOLOGIA OBJETIVO — una sola subred (TP-LINK en modo AP) + tunel Tailscale</text>
+
+  <rect x="14" y="34" width="912" height="256" rx="7" fill="#f6f9fb" stroke="#c3cfda" stroke-dasharray="5,4"/>
+  <text x="26" y="52" font-size="11.5" font-weight="700" fill="#5b6570">CASA — unica subred 192.168.0.0/24, unico DHCP, unico NAT</text>
+
+  <ellipse cx="80" cy="360" rx="58" ry="28" fill="#e9eef3" stroke="#5b6570"/>
+  <text x="80" y="358" text-anchor="middle" font-weight="600">INTERNET</text>
+  <text x="80" y="374" text-anchor="middle" font-size="10" fill="#5b6570">CGNAT o no, da igual</text>
+
+  <rect x="200" y="66" width="200" height="80" rx="5" fill="#eef4fa" stroke="#0b5fa5" stroke-width="1.8"/>
+  <text x="300" y="86" text-anchor="middle" font-weight="700">CABLEMODEM FIBERTEL</text>
+  <text x="300" y="103" text-anchor="middle" font-size="11" font-weight="600">192.168.0.1</text>
+  <text x="300" y="119" text-anchor="middle" font-size="11">UNICO NAT + UNICO DHCP</text>
+  <text x="300" y="135" text-anchor="middle" font-size="11" fill="#0a7a41">sin port forwarding</text>
+  <polyline points="200,106 80,106 80,330" fill="none" stroke="#5b6570" stroke-width="2"/>
+
+  <rect x="470" y="66" width="210" height="80" rx="5" fill="#f2faf5" stroke="#0a7a41" stroke-width="1.8"/>
+  <text x="575" y="86" text-anchor="middle" font-weight="700">TP-LINK en modo AP</text>
+  <text x="575" y="103" text-anchor="middle" font-size="11" font-weight="600">192.168.0.5</text>
+  <text x="575" y="119" text-anchor="middle" font-size="11" fill="#0a7a41">DHCP OFF / NAT OFF</text>
+  <text x="575" y="135" text-anchor="middle" font-size="11">cable LAN-LAN (WAN vacio)</text>
+  <line x1="400" y1="106" x2="466" y2="106" stroke="#0a7a41" stroke-width="2.4" marker-end="url(#fg)"/>
+  <text x="404" y="99" font-size="10" fill="#0a7a41">LAN-LAN</text>
+
+  <line x1="575" y1="146" x2="575" y2="176" stroke="#5b6570" stroke-width="2"/>
+  <line x1="180" y1="176" x2="890" y2="176" stroke="#5b6570" stroke-width="2"/>
+
+  <line x1="235" y1="176" x2="235" y2="200" stroke="#5b6570" stroke-width="2" marker-end="url(#fb)"/>
+  <rect x="160" y="204" width="150" height="60" rx="5" fill="#fff" stroke="#5b6570"/>
+  <text x="235" y="224" text-anchor="middle" font-weight="600">LOGO! 0BA7.ES4</text>
+  <text x="235" y="241" text-anchor="middle" font-size="11">192.168.0.2</text>
+  <text x="235" y="256" text-anchor="middle" font-size="10" fill="#5b6570">12/24RCE + DM8 + AM2</text>
+
+  <line x1="395" y1="176" x2="395" y2="200" stroke="#5b6570" stroke-width="2" marker-end="url(#fb)"/>
+  <rect x="325" y="204" width="140" height="60" rx="5" fill="#fff" stroke="#5b6570"/>
+  <text x="395" y="224" text-anchor="middle" font-weight="600">LOGO! 0BA8</text>
+  <text x="395" y="241" text-anchor="middle" font-size="11">192.168.0.3</text>
+  <text x="395" y="256" text-anchor="middle" font-size="10" fill="#5b6570">web server ON</text>
+
+  <line x1="530" y1="176" x2="530" y2="200" stroke="#5b6570" stroke-width="2" marker-end="url(#fb)"/>
+  <rect x="478" y="204" width="105" height="60" rx="5" fill="#fff" stroke="#5b6570"/>
+  <text x="530" y="226" text-anchor="middle" font-weight="600">TDE</text>
+  <text x="530" y="245" text-anchor="middle" font-size="11">192.168.0.4</text>
+
+  <line x1="720" y1="176" x2="720" y2="200" stroke="#0a7a41" stroke-width="2.4" marker-end="url(#fg)"/>
+  <rect x="608" y="204" width="225" height="76" rx="5" fill="#f2faf5" stroke="#0a7a41" stroke-width="2"/>
+  <text x="720" y="224" text-anchor="middle" font-weight="700">PC DEDICADA (siempre ON)</text>
+  <text x="720" y="241" text-anchor="middle" font-size="11">192.168.0.6 · Tailscale</text>
+  <text x="720" y="257" text-anchor="middle" font-size="11" font-weight="600" fill="#0a7a41">SUBNET ROUTER</text>
+  <text x="720" y="273" text-anchor="middle" font-size="10.5">--advertise-routes=192.168.0.0/24</text>
+
+  <path d="M720 280 C 720 340, 520 336, 400 348" fill="none" stroke="#0a7a41" stroke-width="2.6" stroke-dasharray="8,4"/>
+  <text x="180" y="312" font-size="11.5" font-weight="700" fill="#0a7a41">tunel WireGuard saliente</text>
+  <text x="180" y="328" font-size="11.5" fill="#0a7a41">(no requiere abrir puertos en el modem)</text>
+
+  <rect x="255" y="336" width="215" height="56" rx="5" fill="#f2faf5" stroke="#0a7a41" stroke-width="1.6"/>
+  <text x="362" y="357" text-anchor="middle" font-weight="700">TAILNET (red virtual privada)</text>
+  <text x="362" y="375" text-anchor="middle" font-size="11">100.x.x.x + ruta 192.168.0.0/24</text>
+
+  <line x1="470" y1="352" x2="536" y2="352" stroke="#0a7a41" stroke-width="2.4" marker-end="url(#fg)"/>
+  <rect x="540" y="318" width="185" height="62" rx="5" fill="#fff" stroke="#0a7a41"/>
+  <text x="632" y="338" text-anchor="middle" font-weight="600">Celular (datos moviles)</text>
+  <text x="632" y="355" text-anchor="middle" font-size="11">app Tailscale + usar subredes</text>
+  <text x="632" y="372" text-anchor="middle" font-size="11">abre http://192.168.0.3</text>
+
+  <line x1="470" y1="378" x2="505" y2="378" stroke="#0a7a41" stroke-width="2.4"/>
+  <line x1="505" y1="378" x2="505" y2="418" stroke="#0a7a41" stroke-width="2.4"/>
+  <line x1="505" y1="418" x2="536" y2="418" stroke="#0a7a41" stroke-width="2.4" marker-end="url(#fg)"/>
+  <rect x="540" y="390" width="185" height="62" rx="5" fill="#fff" stroke="#0a7a41"/>
+  <text x="632" y="410" text-anchor="middle" font-weight="600">Notebook en la UTN</text>
+  <text x="632" y="427" text-anchor="middle" font-size="11">tailscale up --accept-routes</text>
+  <text x="632" y="444" text-anchor="middle" font-size="11">LOGO!Soft online a 192.168.0.2</text>
+
+  <text x="745" y="345" font-size="11.5" font-weight="700" fill="#0a7a41">Desde afuera ves los LOGO</text>
+  <text x="745" y="363" font-size="11.5" fill="#5b6570">por su IP de casa, como si</text>
+  <text x="745" y="381" font-size="11.5" fill="#5b6570">estuvieras sentado al lado.</text>
+  <text x="745" y="406" font-size="11.5" font-weight="700" fill="#a51b1b">Nada expuesto a internet.</text>
+</svg>
+<figcaption><strong>Figura 2.</strong> Topologia objetivo. El TP-LINK pasa a AP (cable LAN-LAN, DHCP y NAT apagados) y todo vive en <code>192.168.0.0/24</code>. La PC dedicada corre Tailscale como subnet router: publica la subred entera dentro del tailnet. El tunel lo inicia la PC hacia afuera, por eso atraviesa CGNAT y doble NAT sin abrir un solo puerto en el modem.</figcaption>
+</div>
+
+<h3>4.2 Tailscale, paso a paso</h3>
+
+<h4>A. Cuenta e instalacion en la PC dedicada</h4>
+<ol>
+<li>Crear cuenta gratuita en <code>https://login.tailscale.com</code> (podes entrar con la cuenta de Google <code>alegrematiasdev1@gmail.com</code>). Plan <strong>Personal</strong>: gratis, hasta 3 usuarios y 100 dispositivos, subnet routers incluidos.</li>
+<li>Bajar e instalar el cliente de Windows desde <code>https://tailscale.com/download</code>. Se instala como <strong>servicio</strong>: arranca solo con Windows, antes de que inicies sesion. Eso es clave para una PC desatendida.</li>
+<li>Iniciar sesion con esa cuenta.</li>
+</ol>
+
+<h4>B. Activar el subnet router (esta es LA linea)</h4>
+<pre><span class="c"># PowerShell COMO ADMINISTRADOR, en la PC dedicada</span>
+<span class="c"># Si "tailscale" no se reconoce, usa la ruta completa:</span>
+<span class="c">#   &amp; "C:\Program Files\Tailscale\tailscale.exe" ...</span>
+
+tailscale up --advertise-routes=192.168.0.0/24 --accept-dns=false
+
+<span class="c"># Comprobar que quedo anunciada:</span>
+tailscale status
+tailscale ip -4          <span class="c"># te da la IP 100.x.x.x de esta maquina</span></pre>
+
+<div class="caja alerta">
+<span class="t">Si la ruta no funciona: habilitar el reenvio IP en Windows</span>
+Windows no rutea entre interfaces por defecto. Si desde el celular ves la PC (100.x.x.x) pero NO llegas a <code>192.168.0.3</code>, corre esto en la PC dedicada como administrador y reinicia:
+<pre>Set-ItemProperty -Path "HKLM:\SYSTEM\CurrentControlSet\Services\Tcpip\Parameters" -Name IPEnableRouter -Value 1
+Restart-Computer</pre>
+<span class="small">Si en vez de una PC Windows usas una Raspberry Pi o cualquier Linux, el equivalente es <code>echo 'net.ipv4.ip_forward = 1' | sudo tee /etc/sysctl.d/99-tailscale.conf</code>, despues <code>sudo sysctl -p /etc/sysctl.d/99-tailscale.conf</code> y recien ahi <code>sudo tailscale up --advertise-routes=192.168.0.0/24</code>.</span>
+</div>
+
+<h4>C. Aprobar la ruta en la consola (sin esto NO anda, y es el olvido tipico)</h4>
+<ol>
+<li>Entrar a <code>https://login.tailscale.com/admin/machines</code>.</li>
+<li>Buscar la PC dedicada. Va a mostrar un cartel <strong>Subnets</strong> con la ruta <code>192.168.0.0/24</code> en estado pendiente.</li>
+<li>Menu de tres puntos &rarr; <strong>Edit route settings</strong> &rarr; tildar <code>192.168.0.0/24</code> &rarr; <strong>Save</strong>.</li>
+<li>Mientras estas ahi, tildale <strong>Disable key expiry</strong> a esa maquina: si no, a los 180 dias se te cae la sesion sola y te quedas sin acceso justo cuando lo necesites.</li>
+</ol>
+
+<h4>D. Los clientes (celular y notebook)</h4>
+<pre><span class="c"># --- Notebook Windows / Linux: hay que ACEPTAR las rutas ---</span>
+tailscale up --accept-routes
+
+<span class="c"># o, si ya esta logueada:</span>
+tailscale set --accept-routes=true
+
+<span class="c"># --- Android / iOS ---</span>
+<span class="c"># Instalar la app Tailscale, iniciar sesion con la misma cuenta,</span>
+<span class="c"># y en el menu de la app verificar que "Use subnets" / "Usar subredes"</span>
+<span class="c"># este ACTIVADO (en mobile suele venir activo por defecto).</span></pre>
+
+<h4>E. Comprobar desde afuera que anda de verdad</h4>
+<div class="caja info">
+<span class="t">Prueba de aceptacion — hacela con el celular en DATOS MOVILES y el WiFi de casa APAGADO</span>
+<ol>
+<li>Celular en 4G/5G, WiFi apagado, Tailscale conectado.</li>
+<li>Navegador &rarr; <code>http://192.168.0.3</code> &rarr; tiene que pedirte usuario y clave del servidor web del 0BA8 y mostrarte el display virtual.</li>
+<li>Abrir la LOGO! App &rarr; conectar a <code>192.168.0.2</code> y a <code>192.168.0.3</code>.</li>
+<li>Desde la notebook remota: <code>ping 192.168.0.2</code> y <code>tailscale ping pc-dedicada</code>.</li>
+<li>Prueba dura (la que vale): <strong>reinicia la PC dedicada</strong>, espera 3 minutos sin tocarla y repeti los pasos 2 y 4. Si vuelve sola, esta hecho. Si hay que loguearse a Windows para que ande, no quedo instalado como servicio.</li>
+</ol>
+</div>
+
+<h4>F. Diagnostico cuando algo no anda</h4>
+<pre>tailscale status              <span class="c"># quien esta online, quien anuncia rutas</span>
+tailscale ping 100.x.x.x      <span class="c"># latencia, y si va directo o por relay DERP</span>
+tailscale netcheck            <span class="c"># tipo de NAT, si podes hacer conexion directa</span>
+tailscale debug prefs         <span class="c"># confirma advertise-routes / accept-routes</span></pre>
+<p class="small">Si <code>tailscale ping</code> dice "via DERP", el trafico pasa por los relays de Tailscale: funciona igual pero con mas latencia. Para el servidor web del LOGO es irrelevante.</p>
+
+<h3>4.3 ZeroTier (alternativa equivalente)</h3>
+<ol>
+<li>Cuenta en <code>https://my.zerotier.com</code>. Plan gratuito: hasta 25 dispositivos por red.</li>
+<li>Crear una red y anotar el <strong>Network ID</strong> (16 caracteres hexadecimales).</li>
+<li>En la PC dedicada: instalar ZeroTier One y correr <code>zerotier-cli join &lt;NETWORK_ID&gt;</code>. Autorizar el nodo en la web (checkbox <em>Auth</em>).</li>
+<li>En la web de la red &rarr; <strong>Advanced &rarr; Managed Routes</strong>: agregar destino <code>192.168.0.0/24</code> con <em>via</em> = la IP ZeroTier de la PC dedicada.</li>
+<li>En los clientes, tildar <strong>Allow Managed</strong>.</li>
+<li>En la PC dedicada hace falta el mismo <code>IPEnableRouter=1</code> y, en Windows, ademas <strong>NAT o proxy ARP</strong> hacia la LAN — es justo la parte que ZeroTier no automatiza y Tailscale si. Por eso queda como plan B.</li>
+</ol>
+
+<h3>4.4 Chrome Remote Desktop (el mas simple, con limites claros)</h3>
+<ul>
+<li>Instalar el host en la PC dedicada desde <code>remotedesktop.google.com/access</code> con la cuenta de Google. Definir PIN.</li>
+<li>Desde cualquier lado abris esa web (o la app) y manejas la PC entera: incluido LOGO!Soft Comfort, que ademas ya tiene la licencia ahi.</li>
+<li><strong>Limite real</strong>: no te da acceso de red a los LOGO. Desde el celular no vas a poder abrir <code>http://192.168.0.3</code> ni usar la LOGO! App: solo mirar la pantalla de la PC. Y con la conexion de Fibertel, arrastrar bloques en LOGO!Soft por video es incomodo.</li>
+<li><strong>Uso correcto</strong>: complemento de Tailscale. Tailscale para llegar a los PLC; Chrome Remote Desktop para cuando necesites la GUI de LOGO!Soft de esa maquina en particular.</li>
+</ul>
+
+<h3>4.5 Port forwarding + DDNS: por que lo descarto</h3>
+<ul>
+<li><strong>Si hay CGNAT, es imposible.</strong> Punto. Tu IP publica la compartis con decenas de clientes de Fibertel; no existe un puerto tuyo que redirigir. Confirmalo con el test de 3.2 punto 4.</li>
+<li><strong>Si hay doble NAT</strong>, aun con IP publica tenes que hacer dos redirecciones en cascada (modem &rarr; TP-LINK &rarr; LOGO), y se rompe cada vez que algo se reinicia.</li>
+<li><strong>La IP de Fibertel es dinamica</strong>: necesitarias DDNS (No-IP, DuckDNS) y un cliente que lo actualice.</li>
+<li><strong>Y aun si todo eso funcionara, es una mala idea</strong>: dejarias el servidor web de un PLC colgado de internet publica.</li>
+<li><strong>Si igual lo quisieras</strong>: hay que pedirle a Fibertel/Personal una <strong>IP publica fija</strong> (o "salir de CGNAT"). Se pide por soporte, suele ser un adicional mensual o requerir plan empresa. No lo necesitas para nada de esta guia.</li>
+</ul>
+
+<h3>4.6 Seguridad — reglas no negociables</h3>
+<div class="caja mal">
+<span class="t">Lo que nunca se hace</span>
+<ul>
+<li><strong>Jamas expongas el servidor web del 0BA8 directo a internet.</strong> Ni con port forwarding, ni en DMZ, ni en un puerto raro. Es un PLC: no tiene HTTPS, no tiene bloqueo por intentos fallidos, no recibe parches de seguridad.</li>
+<li><strong>Nada de credenciales por defecto en produccion.</strong> Ponele contrasena al LOGO (LOGO!Soft &rarr; propiedades del programa &rarr; contrasena) y al servidor web del 0BA8. Cambia el <code>admin/admin</code> del TP-LINK.</li>
+<li>El puerto <strong>102/TCP</strong> (ISO-TSAP, el que usan LOGO!Soft y la LOGO! App) tampoco se abre nunca al exterior: no tiene autenticacion real.</li>
+</ul>
+</div>
+<div class="caja ok">
+<span class="t">Lo que si</span>
+<ul>
+<li>Con Tailscale, el TDE, la LOGO! App y el servidor web quedan <strong>todos detras de la VPN</strong>: solo alcanzables por los dispositivos que vos autorizaste en tu tailnet. Es exactamente el modelo correcto.</li>
+<li>Activa <strong>MFA</strong> en la cuenta de Tailscale: esa cuenta ES la llave de tu red.</li>
+<li>Revisa <code>https://login.tailscale.com/admin/machines</code> cada tanto y borra dispositivos que ya no uses.</li>
+<li>Si algun dia sumas gente (un companero de la UTN), usa las <strong>ACL</strong> de Tailscale para darle acceso solo a <code>192.168.0.2</code> y <code>192.168.0.3</code>, no a toda la casa.</li>
+</ul>
+</div>
+
+<h3>4.7 Que PC dejar prendida y como dejarla estable</h3>
+<p>Sirve cualquier cosa: una notebook vieja, un mini PC, o una Raspberry Pi (la Pi es la mejor opcion si tenes una: 3 W, silenciosa, Tailscale corre nativo). Requisitos: que este <strong>cableada o con WiFi estable a la misma subred que los LOGO</strong> y que no se apague.</p>
+<pre><span class="c"># --- Windows: que no se duerma nunca (PowerShell como admin) ---</span>
+powercfg /change standby-timeout-ac 0      <span class="c"># nunca suspender</span>
+powercfg /change hibernate-timeout-ac 0    <span class="c"># nunca hibernar</span>
+powercfg /change monitor-timeout-ac 20     <span class="c"># la pantalla si puede apagarse</span>
+powercfg /hibernate off
+<span class="c"># En notebook: Opciones de energia -&gt; "Al cerrar la tapa: No hacer nada"</span>
+
+<span class="c"># --- Verificar que Tailscale arranca solo como servicio ---</span>
+Get-Service Tailscale | Select-Object Name,Status,StartType
+<span class="c"># Tiene que decir Running / Automatic. Si no:</span>
+Set-Service -Name Tailscale -StartupType Automatic
+
+<span class="c"># --- Que la PC se prenda sola despues de un corte de luz ---</span>
+<span class="c"># Se configura en la BIOS/UEFI: "Restore on AC Power Loss" = Power On</span>
+
+<span class="c"># --- Reservarle IP fija a la PC dedicada ---</span>
+<span class="c"># Opcion A (mejor): reserva DHCP por MAC en el cablemodem -&gt; 192.168.0.6</span>
+<span class="c"># Opcion B: IP estatica en el adaptador, fuera del pool DHCP</span></pre>
+
+<div class="caja info">
+<span class="t">Watchdog barato (opcional pero recomendado)</span>
+Una tarea programada cada 15 minutos que revive el enlace si se cayo. Guardala como <code>C:\logo\watchdog.ps1</code> y programala con el Programador de tareas, marcando "ejecutar aunque el usuario no haya iniciado sesion":
+<pre>$ts = "C:\Program Files\Tailscale\tailscale.exe"
+$st = &amp; $ts status 2&gt;&amp;1
+if ($LASTEXITCODE -ne 0 -or $st -match "Logged out|stopped") {
+    &amp; $ts up --advertise-routes=192.168.0.0/24 --accept-dns=false
+}
+<span class="c"># y de paso registra si los LOGO responden</span>
+$linea = "{0};logo7={1};logo8={2}" -f (Get-Date -Format s),
+    (Test-Connection 192.168.0.2 -Count 1 -Quiet),
+    (Test-Connection 192.168.0.3 -Count 1 -Quiet)
+Add-Content C:\logo\enlace.log $linea</pre>
+Ese <code>enlace.log</code> es tu metrica: el dia que "no anda", ahi ves si el problema fue el tunel o el PLC.
+</div>
+
+<h2>5. Tabla de direccionamiento final propuesto</h2>
+<table>
+<thead><tr><th>Equipo</th><th>IP</th><th>Mascara</th><th>Gateway</th><th>Como se asigna</th><th>Notas</th></tr></thead>
+<tbody>
+<tr><td><strong>Cablemodem Fibertel</strong> (router principal)</td><td><code>192.168.0.1</code></td><td>255.255.255.0</td><td>—</td><td>Fija de fabrica</td><td>Unico NAT y unico DHCP. Solo se toca para ver o ajustar el rango DHCP</td></tr>
+<tr><td><strong>LOGO! #1 — 0BA7.ES4</strong> 12/24RCE</td><td><code>192.168.0.2</code></td><td>255.255.255.0</td><td>192.168.0.1</td><td>Fija, por teclado del LOGO</td><td>MAC 00-1C-06-26-AD-4C · fw V1.03.37 · ya usada el 14-jul</td></tr>
+<tr><td><strong>LOGO! #2 — 0BA8</strong> 24RCE</td><td><code>192.168.0.3</code></td><td>255.255.255.0</td><td>192.168.0.1</td><td>Fija, por teclado del LOGO</td><td>MAC E0-DC-A0-32-EC-1B · servidor web ON con contrasena</td></tr>
+<tr><td><strong>LOGO! TDE</strong></td><td><code>192.168.0.4</code></td><td>255.255.255.0</td><td>192.168.0.1</td><td>Fija, menu de setup del TDE</td><td>Apunta al LOGO maestro 192.168.0.3</td></tr>
+<tr><td><strong>TP-LINK</strong> (modo Access Point)</td><td><code>192.168.0.5</code></td><td>255.255.255.0</td><td>192.168.0.1</td><td>Fija, en Network &rarr; LAN</td><td>DHCP OFF, NAT OFF, cable LAN-LAN, WAN vacio</td></tr>
+<tr><td><strong>PC dedicada</strong> (Tailscale subnet router)</td><td><code>192.168.0.6</code></td><td>255.255.255.0</td><td>192.168.0.1</td><td>Reserva DHCP por MAC, o estatica</td><td>Siempre prendida. Anuncia <code>192.168.0.0/24</code> al tailnet</td></tr>
+<tr><td>PC de Matias (escritorio)</td><td><code>192.168.0.232</code></td><td>255.255.255.0</td><td>192.168.0.1</td><td>DHCP</td><td>Realtek GbE, MAC F0-2F-74-32-AD-05</td></tr>
+<tr><td>Resto (celulares, notebooks)</td><td>pool DHCP</td><td>255.255.255.0</td><td>192.168.0.1</td><td>DHCP del modem</td><td>Vistos hoy: .46 .49 .93 .254</td></tr>
+<tr><td><em>Reservado, no usar</em></td><td><code>192.168.0.7</code> a <code>192.168.0.9</code></td><td>—</td><td>—</td><td>—</td><td>Para futuras expansiones (segundo TDE, gateway, etc.)</td></tr>
+</tbody>
+</table>
+<p class="small"><strong>Condicion:</strong> el pool DHCP del cablemodem debe empezar en <code>192.168.0.10</code> o mas arriba. Verificalo en <code>http://192.168.0.1</code> &rarr; LAN/DHCP <em>antes</em> de fijar las IP. Si el pool arranca en <code>.2</code>, o lo subis a <code>.10</code>, o corres las IP fijas al tramo alto (<code>.240</code> a <code>.250</code>) — pero la primera opcion es la limpia.</p>
+
+<h2>6. Checklist de puesta en marcha, en orden</h2>
+
+<h3>Bloque 0 — Preparar la red (30 min, sin los LOGO)</h3>
+<ul class="chk">
+<li>Entrar a <code>http://192.168.0.1</code> (cablemodem) y anotar: usuario y clave de admin, <strong>rango DHCP</strong>, SSID y clave del WiFi.</li>
+<li>Mirar en la pagina de estado la <strong>IP WAN</strong> del modem y compararla con <code>181.231.144.34</code>. Anotar el resultado: define si hay CGNAT. <em>Informativo, no bloquea nada.</em></li>
+<li>Si el pool DHCP arranca por debajo de <code>.10</code>: subirlo a <code>192.168.0.10</code>.</li>
+<li>Desenchufar el TP-LINK del modem. Entrar a su admin, cambiarle la IP LAN a <code>192.168.0.5</code>, <strong>apagar su DHCP</strong>, configurar SSID/WPA2 y canal fijo (1, 6 u 11).</li>
+<li>Cablear <strong>LAN del modem a LAN del TP-LINK</strong>. Dejar el puerto WAN del TP-LINK VACIO.</li>
+<li>Verificar: <code>ping 192.168.0.5</code> desde la PC responde, y un celular conectado al WiFi del TP-LINK recibe una IP <code>192.168.0.x</code> (no <code>192.168.1.x</code>). <strong>Si recibe 192.168.1.x, el modo AP no quedo bien.</strong></li>
+</ul>
+
+<h3>Bloque 1 — Poner los LOGO en la red (30 min)</h3>
+<ul class="chk">
+<li>Alimentar la LOGO!Power y verificar 24 Vcc antes de energizar los LOGO.</li>
+<li>Cablear los dos LOGO y el TDE por Ethernet a puertos LAN del TP-LINK (o del modem).</li>
+<li>0BA7: <code>ESC</code> &rarr; Red &rarr; IP <code>192.168.0.2</code> / mascara <code>255.255.255.0</code> / gw <code>192.168.0.1</code>.</li>
+<li>0BA8: <code>ESC</code> &rarr; Red &rarr; IP <code>192.168.0.3</code> / mascara <code>255.255.255.0</code> / gw <code>192.168.0.1</code>.</li>
+<li>TDE: IP propia <code>192.168.0.4</code>, LOGO maestro <code>192.168.0.3</code>.</li>
+<li>Verificar desde la PC: <code>ping 192.168.0.2</code>, <code>ping 192.168.0.3</code>, <code>ping 192.168.0.4</code> — los tres tienen que responder. <strong>Sin esto no se sigue.</strong></li>
+</ul>
+
+<h3>Bloque 2 — Programar (1-2 h)</h3>
+<ul class="chk">
+<li>Abrir LOGO!Soft Comfort V8 y confirmar en Ayuda &rarr; Acerca de que es la version <strong>completa</strong>.</li>
+<li><strong>Archivo &rarr; Nuevo con modelo 0BA7.ES4</strong> (no "0BA7" generico) &rarr; Herramientas &rarr; Transferir &rarr; <strong>LOGO! a PC</strong> para hacer BACKUP. Si vuelve vacio otra vez, queda confirmado que el kit no tiene programa y se puede escribir libremente. Anotar el resultado.</li>
+<li>Idem con un proyecto <strong>0BA8</strong> para el LOGO #2.</li>
+<li>Programa de humo: <code>I1 &rarr; Q1</code> en el 0BA7. Transferir PC a LOGO, pasar a RUN, mover el switch 1 del tablero UTN y ver encender la luz Q1. <strong>Foto o video: es la evidencia.</strong></li>
+<li>Simulacion online (<em>Herramientas &rarr; Simulacion online</em>) sobre el equipo real: ver los estados en vivo en el diagrama.</li>
+<li>Recien ahora: cargar la logica de verdad (la del TP de Sistemas de Control Industrial).</li>
+</ul>
+
+<h3>Bloque 3 — Acceso local por WiFi (20 min)</h3>
+<ul class="chk">
+<li>Habilitar el servidor web del 0BA8 en LOGO!Soft con contrasena. Transferir.</li>
+<li>Celular en el WiFi de casa &rarr; <code>http://192.168.0.3</code> &rarr; login &rarr; se ve el display virtual.</li>
+<li>Instalar la LOGO! App y conectar a <code>192.168.0.3</code> y <code>192.168.0.2</code> (TSAP 20.00 / 20.00).</li>
+<li>Ponerle contrasena de programa a los dos LOGO.</li>
+</ul>
+
+<h3>Bloque 4 — Acceso desde internet (40 min)</h3>
+<ul class="chk">
+<li>Elegir y dejar fija la PC dedicada. Reservarle <code>192.168.0.6</code>.</li>
+<li>Aplicar los <code>powercfg</code> de 4.7 (que no suspenda ni hiberne) y "no hacer nada al cerrar la tapa".</li>
+<li>Instalar Tailscale, iniciar sesion, y correr <code>tailscale up --advertise-routes=192.168.0.0/24 --accept-dns=false</code>.</li>
+<li><strong>Aprobar la ruta</strong> en <code>login.tailscale.com/admin/machines</code> &rarr; Edit route settings &rarr; tildar <code>192.168.0.0/24</code>. Y tildar <strong>Disable key expiry</strong>.</li>
+<li>Verificar <code>Get-Service Tailscale</code> = Running / Automatic.</li>
+<li>Instalar Tailscale en el celular y en la notebook (<code>--accept-routes</code> en la notebook).</li>
+<li><strong>Prueba de aceptacion</strong>: celular en datos moviles, WiFi apagado &rarr; abrir <code>http://192.168.0.3</code> y conectar la LOGO! App. Anotar si el <code>tailscale ping</code> va directo o por DERP.</li>
+<li><strong>Prueba de recuperacion</strong>: reiniciar la PC dedicada, esperar 3 minutos sin tocarla, repetir la prueba de aceptacion. Si vuelve sola, el enlace esta HECHO.</li>
+<li>Opcional: dejar el watchdog de 4.7 con su <code>enlace.log</code>.</li>
+<li>Activar MFA en la cuenta de Tailscale.</li>
+<li>Anotar todo en <code>dominios\logo_acceso_remoto.md</code>: que anduvo, que no, latencias medidas.</li>
+</ul>
+
+<hr>
+<p class="small">
+Guia generada por @comms — MATI-HQ, 2026-08-06. Mediciones de red hechas ese dia sobre DESKTOP-RK8DH7C.<br>
+Principio que aplica aca: <em>el transporte se elige por escenario</em>. Con CGNAT probable y doble NAT, el port forwarding es deuda tecnica antes de nacer; el tunel saliente (Tailscale) es el transporte correcto. Y <em>todo enlace se mide</em>: la prueba de aceptacion y la de recuperacion no son opcionales — sin ellas el enlace no esta hecho, esta sin probar.
+</p>
+
+</div>
+</body>
+</html>

@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
 ENLACE / BOOTSTRAP — deja una maquina nueva operativa como "el Claude de Matias".
 

@@ -1,4 +1,4 @@
-# enlace/lib/comun.ps1 — funciones compartidas por todos los scripts de ENLACE
+﻿# enlace/lib/comun.ps1 — funciones compartidas por todos los scripts de ENLACE
 # Dot-source: . "$PSScriptRoot\lib\comun.ps1"
 # Sin GUI, sin dependencias externas. PowerShell 5.1+ / 7+.
 

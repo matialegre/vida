@@ -1,0 +1,79 @@
+<meta charset="utf-8">
+<title>Prospectos — Smart-Ex 03</title>
+<style>
+  @page { size: A4 landscape; margin: 0; }
+  *{ box-sizing:border-box; margin:0; padding:0; }
+  :root{ --grafito:#14181d; --tinta:#161a1e; --gris:#5c6670; --linea:#dde2e7; --ambar:#f2a900; --ambar-d:#b97f00; --crema:#fcf7ec; --verde:#2f8f5b; --azul:#0e3a46; }
+  html,body{ background:#e9edf1; }
+  body{ font-family:"Segoe UI",system-ui,Arial,sans-serif; color:var(--tinta); }
+  .disp{ font-family:"Bahnschrift","Segoe UI Semibold",system-ui,sans-serif; }
+  .hoja{ width:297mm; min-height:210mm; margin:0 auto; background:#fff; padding:8mm 11mm; }
+  .top{ display:flex; justify-content:space-between; align-items:flex-end; border-bottom:2px solid var(--tinta); padding-bottom:5px; }
+  .top .n{ font-family:"Bahnschrift",sans-serif; font-size:16px; letter-spacing:.5px; }
+  .top .n span{ display:block; font-size:8px; color:var(--gris); letter-spacing:1px; text-transform:uppercase; }
+  .top .r{ text-align:right; font-size:8.5px; color:var(--gris); text-transform:uppercase; letter-spacing:1px; }
+  .top .r b{ display:block; color:var(--tinta); font-size:11px; }
+  h1{ font-size:20px; margin:5mm 0 1mm; letter-spacing:-.2px; }
+  .lede{ font-size:10px; color:var(--gris); max-width:230mm; margin-bottom:4mm; }
+  .lede b{ color:var(--tinta); }
+  table{ width:100%; border-collapse:collapse; }
+  th{ font-family:"Bahnschrift",sans-serif; font-size:8px; letter-spacing:.7px; text-transform:uppercase; color:#fff; background:var(--grafito); text-align:left; padding:5px 6px; }
+  td{ font-size:9px; padding:4px 6px; border-bottom:1px solid var(--linea); vertical-align:top; }
+  tr:nth-child(even) td{ background:#f7f9fb; }
+  td.emp{ font-weight:700; }
+  .amb{ font-family:"Bahnschrift",sans-serif; font-size:8px; letter-spacing:.5px; padding:1px 6px; border-radius:3px; white-space:nowrap; }
+  .a-bb{ background:var(--crema); color:var(--ambar-d); }
+  .a-ba{ background:#eaf1f2; color:var(--azul); }
+  .a-pa{ background:#eef1f4; color:var(--gris); }
+  .v{ font-family:"Consolas",monospace; font-size:8.5px; }
+  .est{ font-size:8.5px; }
+  .est.propio{ color:var(--verde); font-weight:700; }
+  .est.verif{ color:var(--ambar-d); }
+  .est.portal{ color:var(--azul); }
+  .est.relevar{ color:var(--gris); }
+  .foot{ margin-top:5mm; display:flex; gap:20px; font-size:8.5px; color:var(--gris); }
+  .foot b{ color:var(--tinta); }
+  .nota{ margin-top:4mm; font-size:9px; color:var(--tinta); background:var(--crema); border-left:3px solid var(--ambar); padding:6px 10px; }
+</style>
+
+<div class="hoja">
+  <div class="top">
+    <div class="n disp">Matías Alegre<span>Ingeniería electrónica · comunicación técnica industrial</span></div>
+    <div class="r">Prospección — Smart-Ex 03<b>Para EMSICA S.R.L.</b>Agosto 2026</div>
+  </div>
+
+  <h1 class="disp">Plantas objetivo — quién usa un equipo Ex</h1>
+  <div class="lede">Empresas que operan atmósferas explosivas (gas o polvo) y por norma no pueden usar un celular común. <b>Los teléfonos son las líneas públicas de cada empresa</b>; el mail directo del responsable de Seguridad e Higiene se releva llamando o por LinkedIn. Las petroleras grandes exigen registrarse como proveedor en su portal — donde Emsica probablemente ya esté inscripta.</div>
+
+  <table>
+    <tr><th style="width:15%">Empresa</th><th style="width:15%">Sector / riesgo</th><th style="width:8%">Zona</th><th style="width:10%">Ámbito</th><th style="width:13%">Teléfono público</th><th style="width:19%">Portal / cómo entrar</th><th style="width:5%">Versión</th><th style="width:15%">Estado</th></tr>
+
+    <tr><td class="emp">Dreyfus (LDC)</td><td>Granos — polvo combustible</td><td>21/22</td><td><span class="amb a-bb">Bahía Blanca</span></td><td></td><td>Contacto propio (GIMAP / galgas)</td><td class="v">DZ2</td><td class="est propio">Contacto propio ▸ entrada directa</td></tr>
+    <tr><td class="emp">Profertil</td><td>Urea y amoníaco</td><td>1/2</td><td><span class="amb a-bb">Bahía Blanca</span></td><td class="v">0291 459-8000</td><td>Ing. White — Zona Cangrejales</td><td class="v">DZ1</td><td class="est verif">Verificado ▸ ¿ya es cliente?</td></tr>
+    <tr><td class="emp">Dow Argentina</td><td>Polietileno</td><td>1</td><td><span class="amb a-bb">Bahía Blanca</span></td><td class="v">0291 459-1400</td><td>Av. San Martín 1881, Ing. White</td><td class="v">DZ1</td><td class="est verif">Verificado ▸ ¿ya es cliente?</td></tr>
+    <tr><td class="emp">Compañía Mega</td><td>Fraccionamiento de gas</td><td>1</td><td><span class="amb a-bb">Bahía Blanca</span></td><td class="v">0291 457-2470</td><td>Puerto Galván</td><td class="v">DZ1</td><td class="est verif">Verificado ▸ ¿ya es cliente?</td></tr>
+    <tr><td class="emp">Unipar Indupa</td><td>Cloro y soda cáustica</td><td>1/2</td><td><span class="amb a-bb">Bahía Blanca</span></td><td></td><td>Pto Galván / unipar.com/es/contactenos</td><td class="v">DZ1</td><td class="est relevar">A relevar ▸ ¿ya es cliente?</td></tr>
+    <tr><td class="emp">TGS — Complejo Cerri</td><td>Acondicionamiento de gas</td><td>1</td><td><span class="amb a-bb">Bahía Blanca</span></td><td></td><td>tgs.com.ar (contacto)</td><td class="v">DZ1</td><td class="est relevar">A relevar ▸ ¿ya es cliente?</td></tr>
+    <tr><td class="emp">Cargill · Bunge</td><td>Granos — polvo combustible</td><td>21/22</td><td><span class="amb a-bb">Bahía Blanca</span></td><td></td><td>cargill.com.ar / bunge.com.ar</td><td class="v">DZ2</td><td class="est relevar">A relevar</td></tr>
+
+    <tr><td class="emp">YPF — Ref. La Plata</td><td>Refinación</td><td>1</td><td><span class="amb a-ba">Buenos Aires</span></td><td></td><td>Portal SAP Ariba · proveedores.ypf.com</td><td class="v">DZ1</td><td class="est portal">Registro de proveedor</td></tr>
+    <tr><td class="emp">Raízen (ex Shell)</td><td>Refinación — Dock Sud</td><td>1</td><td><span class="amb a-ba">Buenos Aires</span></td><td></td><td>LinkedIn / canal oficial</td><td class="v">DZ1</td><td class="est relevar">A relevar</td></tr>
+    <tr><td class="emp">Axion Energy</td><td>Refinación — Campana</td><td>1</td><td><span class="amb a-ba">Buenos Aires</span></td><td></td><td>axionenergy.com (proveedores)</td><td class="v">DZ1</td><td class="est relevar">A relevar</td></tr>
+
+    <tr><td class="emp">Vista Energy</td><td>Upstream — Vaca Muerta</td><td>1/2</td><td><span class="amb a-pa">País · Neuquén</span></td><td class="v">0299 430-7100</td><td>Portal vistaenergy.com/proveedores</td><td class="v">DZ1</td><td class="est portal">Registro de proveedor</td></tr>
+    <tr><td class="emp">Pan American (PAE)</td><td>Upstream</td><td>1/2</td><td><span class="amb a-pa">País</span></td><td class="v">011 4310-4100</td><td>Portal agp.pan-energy.com · 0800-888-6700</td><td class="v">DZ1</td><td class="est portal">Registro de proveedor</td></tr>
+    <tr><td class="emp">Pluspetrol</td><td>Upstream — Vaca Muerta</td><td>1/2</td><td><span class="amb a-pa">País · Neuquén</span></td><td class="v">0299 449-3300</td><td>Portal pluspetrol.net/es/proveedores</td><td class="v">DZ1</td><td class="est portal">Registro de proveedor</td></tr>
+    <tr><td class="emp">Tecpetrol (Techint)</td><td>Upstream</td><td>1/2</td><td><span class="amb a-pa">País</span></td><td class="v">011 4018-5900</td><td>Portal tecpetrol.com/es/proveedores</td><td class="v">DZ1</td><td class="est portal">Registro de proveedor</td></tr>
+    <tr><td class="emp">Minería litio</td><td>Salta / Jujuy — gas y polvo</td><td>clasif.</td><td><span class="amb a-pa">País</span></td><td></td><td>Por operador (Río Tinto, Ganfeng…)</td><td class="v">DZ2</td><td class="est relevar">A relevar</td></tr>
+    <tr><td class="emp">TGN · Camuzzi</td><td>Distribución de gas</td><td>1/2</td><td><span class="amb a-pa">País</span></td><td></td><td>tgn.com.ar / camuzzigas.com</td><td class="v">DZ1</td><td class="est relevar">A relevar</td></tr>
+  </table>
+
+  <div class="nota"><b>La jugada más rápida:</b> las plantas del polo de Bahía (Dow, Profertil, Mega, Unipar, TGS) ya le compran instrumentación a Emsica desde hace años — a esas <b>no hay que buscarlas en frío</b>, se les presenta el equipo nuevo a través del contacto que Emsica ya tiene. El research en frío de esta planilla rinde de verdad en lo que Emsica todavía NO atiende: Vaca Muerta, las refinerías de Buenos Aires y minería. Primer pedido a Jorge: pasame a cuáles de estas ya les venden.</div>
+
+  <div class="foot">
+    <div><b>Verificado</b> — línea telefónica pública confirmada.</div>
+    <div><b>Registro de proveedor</b> — hay que inscribirse en su portal (Emsica quizás ya está).</div>
+    <div><b>A relevar</b> — contacto directo a conseguir por teléfono o LinkedIn.</div>
+    <div><b>Contacto propio</b> — Matías ya tiene entrada.</div>
+  </div>
+</div>

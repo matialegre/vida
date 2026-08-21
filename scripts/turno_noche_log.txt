@@ -884,3 +884,1015 @@ Listo. Noche cerrada con una tarea, bien hecha.
 Todo pusheado: branch + puntero en `main` de galgas (`b717127`), e informe + bitácora del Director en MATI-HQ main (`2b6f029`). Estado limpio.
 ===== FIN mi� 29/07/2026  2:13:24,50 ===== 
 ===== TURNO NOCHE mi� 29/07/2026 22:00:01,44 ===== 
+Listo. Noche cerrada con una tarea, bien hecha.
+
+## Resumen
+
+**Tarea elegida:** hacer **drenable la cola de merge** — atacar el cuello #1 que los últimos ~10 nocturnos vienen marcando (*"ya no falta trabajo de noche, falta drenarlo de día"*), en vez de sumar el branch #35. Con los 4 repos saturados de análisis offline (**34 branches sin mergear**, galgas 6 noches seguidas, PLATA comercial completo), producir más código agranda el cuello; drenar lo achica.
+
+**Qué hice** (MATI-HQ main, tooling del cuartel — sin branch, como el precedente del 07-27-b):
+- Corregí un **bug real** en `tools/merge_queue_status.py`: reportaba "3 archivos en conflicto" donde había **1** (metía las líneas informativas de git `Auto-merging`/`CONFLICT` como si fueran archivos). Ahora corta en la línea en blanco → conteo real.
+- Extendí con **clasificación doc-vs-código** (`is_doc`/`collision_kind`, funciones puras testeadas): cada conflicto/colisión se etiqueta `[SOLO docs — trivial]` / `[codigo — revisar]` / `[doc+codigo]`.
+- Rollup accionable en la cabecera + salida ASCII-safe (la consola Windows es cp1252, reventaba con emojis).
+
+**Hallazgo que des-asusta la cola (evidencia git):** de 34 branches → **8 CONFLICTO y los 8 son SOLO `QUE_FALTA.md`** (0 tocan firmware); 14 REVISAR-STALE (10 solo-docs); 9 LIMPIO-ADITIVO. El "atasco" de galgas es **bitácora, no código** → se resuelve tomando ambos lados del `.md`. Solo unos pocos branches tocan código real y merecen a @verificador sentado.
+
+**Verificación (offline, sin hardware):** `python -m unittest tools.test_merge_queue_status` → **23/23 OK** (+11 tests nuevos, los 12 originales intactos); `python -X utf8 tools/merge_queue_status.py` corre <10 s sin error. `field_captures` de galgas ni se rozó (tarea 100% en MATI-HQ + git read-only).
+
+**Sin verificar por hardware:** nada — tarea 100% offline. Ninguna verificación pendiente.
+
+**Entregables:** `COLA_MERGE_STATUS_2026-07-29.md` (reporte fresco) + banner 07-29 en `COLA_MERGE_NOCTURNOS.md` con el orden de drenaje sugerido + bitácora del Director + `diario/nocturno-local-2026-07-29-b.md`. Todo pusheado a MATI-HQ main (`082d93f`). Dejé anotado para @cronista un drift menor no tocado (checklist de `dominios/comercial.md`). Estado limpio.
+===== FIN mi� 29/07/2026 22:12:28,22 ===== 
+===== TURNO NOCHE jue 30/07/2026  2:00:01,94 ===== 
+Listo. Noche cerrada. Resumen:
+
+## Qué hice
+**Tarea elegida:** pre-resolver los 8 conflictos solo-docs de la cola de merge — el paso que faltaba después de que las últimas noches ya la *clasificaran*. Con 34 branches nocturnos saturando los 4 repos, el cuello #1 es el **drenaje humano de día**, no producir más branches (habría sido el #35). Ataca ese cuello sin agrandarlo.
+
+**`tools/resolve_doc_conflicts.py`** (MATI-HQ main, stdlib, reutiliza los helpers ya testeados de `merge_queue_status.py`):
+- Para cada branch `nocturno/*` con **CONFLICTO 100% en docs** (los 8: 6 galgas + 2 frioseguro, todos por `QUE_FALTA.md`), reconstruye ours/base/theirs y los funde con **`git merge-file --union`** → deja el `.md` resuelto (toma ambos lados, sin marcadores) en `COLA_MERGE_RESOLUCIONES/<repo>/<branch>/` + los comandos exactos de drenaje.
+- Si un branch chocara en **código**, lo **saltea** (nunca auto-resuelve código; hoy 0 salteados).
+- **Read-only sobre los 4 repos** — no mergea, no pushea, no toca refs. Escribe solo en MATI-HQ.
+
+## Verificación (git real, sin hardware)
+- `python -m unittest tools.test_resolve_doc_conflicts` → **13/13 OK**; `test_merge_queue_status` → **23/23 OK** (el reuse no rompió nada).
+- 8 resoluciones escritas: **0 marcadores de conflicto**; cada una conserva **tanto** el avance de main (bullets 07-28-b/07-29) **como** la línea nueva del branch → no revierte nada (galgas 07-11: 38 líneas = main 37 + 1).
+- Los 4 repos quedaron **intactos** (`git status` = `main`, sin cambios).
+- **Nada pendiente de hardware** — tarea 100% offline.
+
+## Estado
+- Sin branch nocturno (tooling del cuartel → main directo, como 07-27-b/07-29-b).
+- Commit `dc6fe20` pusheado a `main`. Informe: `diario/nocturno-local-2026-07-30.md`; banner en `COLA_MERGE_NOCTURNOS.md`; bitácora del Director en `PORTFOLIO.md`.
+- Los `dominios/*` y `agentes/*` modificados que ya estaban sin commitear **no los toqué** (no son míos).
+
+Los 8 conflictos de la cola pasan de *merge a mano* a *revisar-y-copiar*. El único trabajo humano real que queda son los ~3 branches que tocan código.
+===== FIN jue 30/07/2026  2:07:41,47 ===== 
+===== TURNO NOCHE jue 30/07/2026 22:00:01,51 ===== 
+Listo. Turno cerrado.
+
+## Resumen — Nocturno local 2026-07-30-b (2do turno)
+
+**Tarea elegida:** auditar (rol **evaluador**, generator≠evaluator) las 8 auto-resoluciones que generó el 1er turno del día, en vez de sumar un branch #35 redundante. Motivo: revisé los 4 `QUE_FALTA.md` y todo lo valioso ya está en un branch o bloqueado por hardware — el cuello real es el drenaje, así que la mayor palanca era **des-arriesgarlo**, no producir más.
+
+**Bug encontrado (real):** de las 8 resoluciones del 07-30, **3 duplicaban un bullet** — galgas `07-29` (P0) y frioseguro `07-11-b` + `07-13` (P1). El `git merge-file --union` sumaba la anotación `EN BRANCH X` de main **más** la del propio branch cuando main ya lo documentaba (redacción distinta, sin marcador de conflicto → invisible al chequeo "0 marcadores" de anoche). Un humano drenando a ciegas commiteaba la bitácora con el bullet doble.
+
+**Fix (en el harness, no parche a mano):** en `tools/resolve_doc_conflicts.py` agregué las funciones puras `en_branch_refs` + `dedup_en_branch` (descartan la repetida, conservan la de main), cableadas a `union_merge_file`/`build_plan`/reporte.
+
+**Verificado (git real, offline):**
+- 8 resoluciones regeneradas → **0 duplicados**, **0 marcadores** de conflicto.
+- Las 3 subsumidas quedan **idénticas a main** (`diff` 07-29 = vacío); el valor real de esos branches (código/tests) entra igual, merge-a-limpio aparte.
+- Tests: `test_resolve_doc_conflicts` **13→20 OK**; `test_merge_queue_status` 23/23 (reuse intacto).
+- Los 4 repos, **read-only e intactos**.
+
+**Sin verificación pendiente por hardware** — tarea 100% git/offline.
+
+**Branch:** ninguno (tooling del cuartel → directo a MATI-HQ main, commit `34a13d8`, pusheado). Dejé **intactos** los cambios preexistentes del working tree que no eran míos (`agentes/*`, `dominios/*`, `scripts/turno_noche_log.txt`, `diseno3d.md`) — commiteé solo mis 9 archivos con `git add` explícito.
+
+Docs actualizados: `diario/nocturno-local-2026-07-30-b.md`, bitácora del Director en `PORTFOLIO.md`, `COLA_MERGE_RESOLUCIONES.md` (con notas 🧹) y banner de corrección en `COLA_MERGE_NOCTURNOS.md`.
+===== FIN jue 30/07/2026 22:11:10,44 ===== 
+===== TURNO NOCHE vie 31/07/2026  2:00:01,78 ===== 
+Listo. Noche cerrada con una tarea bien hecha.
+
+## Resumen
+
+**Tarea:** Red de seguridad para la lógica de **versionado OTA del dashboard de galgas** (P0 octubre / parada Dreyfus). Era lógica crítica —decide si una placa en campo baja o no una OTA— que vivía inline en `App.jsx` (1700 líneas) **sin un solo test**. Un fallo ahí = placa en loop de reflasheo o pegada en firmware viejo.
+
+**Qué hice (quirúrgico, cero cambio de comportamiento):**
+- Extraje `PP_PROFILES` + `compareSemver`/`isVersionNewer`/`getProfileSuffix`/`getMaxSilenceSec` a `web/src/lib/versioning.js` (fuente única, importada de vuelta en `App.jsx`).
+- Escribí `versioning.test.js` con el runner nativo de node — **18 tests, cero dependencias nuevas**.
+- **Hallazgo con evidencia (no corregido — generator≠evaluator):** el desempate por string de `compareSemver` hace que `"3.2.0-B-pmax"` parezca "newer" que `"3.2.0-A-pmax"` solo por `'B'>'A'`. El aislamiento A/B real depende del filtrado por device en el call-site, no del comparador → evidencia directa para **QUE_FALTA #5** ("OTA que distinga A/B"). Anotado para @backend + @firmware.
+
+**Verificación (offline, toda pasó):**
+```
+cd C:\Proyectos\galgas\web
+node --test src/lib/versioning.test.js   # 18/18 OK
+npm run build                            # vite OK, 395 modules
+```
+
+**Branch:** `nocturno/local-2026-07-31-ota-versioning-tests` (pusheado, 2 commits). QUE_FALTA #5 marcado `EN BRANCH – pendiente de merge`. Informe en `diario/nocturno-local-2026-07-31.md` + línea en la bitácora del Director del PORTFOLIO. MATI-HQ pusheado.
+
+**Sin verificar por hardware:** nada — era lógica pura + build. Los cambios sin commitear que ya estaban en `main` al arrancar (bitácoras de esquematico/pcb/diseno/firmware, diseno3d) los dejé **intactos**: no son míos.
+===== FIN vie 31/07/2026  2:08:26,40 ===== 
+===== TURNO NOCHE s�b 01/08/2026  2:00:04,19 ===== 
+===== TURNO NOCHE dom 02/08/2026 22:00:02,25 ===== 
+Noche cerrada. Una tarea, hecha y verificada.
+
+## Qué elegí y por qué
+Jerarquía PLATA primero, y las últimas 6 noches habían ido todas a galgas/cuartel. De los pendientes de **FrioSeguro** sin branch, casi todos son hardware/cloud o decisiones tuyas; el único de software puro verificable offline resultó ser también el más caro: **el camino de aviso**. El producto se cobra por *"el servicio avisa"* — la **decisión** de alertar ya tenía oráculo (`alert_model`, branch 07-18), pero la **entrega** no tenía ninguno. Y las 4 fuentes de alerta (temperatura, puerta, corte de luz, sobrecorriente) desembocan en **un solo gate global de 300 s** en `telegram.h:24` que nunca se había ejercitado.
+
+## Qué hice
+`tools/telegram_gate_model.py` (oráculo espejo 1:1, stdlib, sin red) + **18 tests** + `docs/telegram-gate-model.md`. El modelo distingue **entregado** (POST 2xx) de **marcado** ("ya avisé" en la máquina de estados) — cuando hay marcado sin entregado, el nodo no reintenta y el comerciante nunca se entera.
+
+**4 hallazgos con test, ninguno corregido** (generator≠evaluator, son cambios de firmware que se confirman en banco):
+- **H1** — `state` es global ⇒ `lastTelegramAlert=0` en cada boot ⇒ **ventana muda de 5 min tras CADA arranque**, justo después de un corte de luz / watchdog / OTA. El aviso de corte (~3 s) y el de puerta (120 s) se descartan y quedan marcados como enviados. La alerta de temperatura zafa por el borde, por casualidad.
+- **H2** — el gate es único para las 4 fuentes y el descarte **no se difiere, se pierde**: una puerta abierta silencia 5 min a la crítica; en la tormenta realista (corte → puerta → temperatura) de 4 eventos le llega **1** al cliente.
+- **H3** — el timestamp se actualiza sin mirar el código HTTP: un 429/500/TLS caído **cuenta como enviado** y bloquea al siguiente.
+- **H4** — los call-sites marcan `alertSent=true` fuera del `if` de internet/token ⇒ placa sin provisionar cree que avisó.
+
+## Verificación
+```
+cd C:\Proyectos\frioseguro
+git checkout nocturno/local-2026-08-02-telegram-gate-model
+python -m unittest tools.test_telegram_gate_model -v     # Ran 18 tests, OK
+```
+Sin verificar (banco): que H1/H3 se den en la placa real (rebootear con puerta abierta; forzar POST fallido). No compilé firmware — no lo toqué.
+
+**Branch:** `nocturno/local-2026-08-02-telegram-gate-model` (frioseguro, pusheado) + ítem **#19** nuevo en su QUE_FALTA. MATI-HQ: `diario/nocturno-local-2026-08-02.md` + bitácora del Director, pusheado.
+
+⚠️ Un aviso: MATI-HQ tenía **trabajo de día sin commitear** (`agentes/esquematico.md`, `agentes/pcb.md`, 6 `dominios/*.md`, más `agentes/diseno3d.md` y `dominios/diseno3d.md` sin trackear). No lo toqué — commitealo antes del próximo `git pull` o la rutina cloud choca.
+===== FIN dom 02/08/2026 22:09:26,63 ===== 
+===== TURNO NOCHE lun 03/08/2026  2:00:01,38 ===== 
+Noche cerrada. Una tarea, hecha entera.
+
+## Qué hice
+
+**Repo:** `C:\Proyectos\datalogger` (P0 — "terminarlo primero"). **Branch:** `nocturno/local-2026-08-03-registro-sd-contabilidad` (commit `e31820d`, pusheado).
+
+**Por qué esa tarea:** datalogger no se tocaba desde el 07-26 y es el único repo con código nuevo de día — `e611bc5`, la SD desacoplada en core 1 (`RegistroSD`). Cae exacto en el DoD del proyecto (*"loguear a SD sin gaps durante N horas"*). Cuidado con el ítem #5: ya hay **3 branches** de `sd_integrity`, pero los tres analizan el **CSV post-mortem** con la tarjeta en la PC — ninguno mira el camino **en la placa** que lo produce. Ese hueco tomé.
+
+**Qué escribí:** `tools/test_registro_sd.py` — 18 tests stdlib sobre el **código real** (no un espejo: corre el `_hilo()` verdadero de forma determinista), midiendo una ley de conservación: `pusheadas == en_archivo + descartes + en_cola + INVISIBLES`. Una muestra se puede perder en **3** lugares y el nodo ve **2**.
+
+## El hallazgo que importa
+
+**Con la SD muerta, el nodo se ve perfectamente sano.** `SDLogger.write_line` devuelve `False` en sus tres modos de falla y `_hilo` ya sacó la línea de la cola → la muestra desaparece sin que ningún contador la registre. Si la tarjeta se sale *después* del arranque (el `⚠️ SIN SD` se imprime una sola vez), el print de cada 5 s dice `gaps=0 cola=0 desc=0` mientras no escribe nada. Y el resumen LoRa —único canal en vivo— transmite `gaps=0` igual (H5).
+
+Otros 7 con test: excepción que se traga el resto del lote (H2), `cerrar()` que vuelve con el lote en vuelo justo antes de un `machine.reset()` (H3), colchón real de 1,80 s vs. los "2-3 s" del docstring (H6), y que atraso y descarte dejan rastros **opuestos** en el CSV (H8) — input directo para las tools de `sd_integrity`. **Ninguno corregido**: son cambios de firmware, generator ≠ evaluator. Fixes candidatos en `docs/registro-sd.md`.
+
+**Verificado:** `python -m unittest tools.test_registro_sd` → 18/18 OK · `python tools/test_misiones.py` → 20/20 (regresión intacta).
+**Sin verificar (banco):** el hilo real en core 1 — H3 es una carrera, el test prueba que la ventana existe, no cuán seguido se gana —, la latencia real de la FAT, la RAM real de la cola (41 KB de caracteres medidos, pero ~65-75 KB reales por overhead de `str` en MicroPython) y las N horas.
+
+**Dos cosas para vos:**
+- MATI-HQ **sigue con trabajo de día sin commitear** (los mismos archivos que anoche + `diseno3d.md` sin trackear). No los toqué. Commitealos o la rutina cloud choca en el próximo pull.
+- La cola de merge llegó a **35 branches**. El tooling de drenaje está listo hace una semana y sin usar.
+===== FIN lun 03/08/2026  2:10:59,21 ===== 
+===== TURNO NOCHE lun 03/08/2026 22:00:02,26 ===== 
+Listo. Resumen del turno:
+
+## Tarea: FrioSeguro #3 — migración SQL (🔴 bloqueante del primer abono, PLATA)
+
+El 1er turno de hoy fue a datalogger (octubre), así que este fue a PLATA — y al único 🔴 sin branch que es software puro. Es el ítem donde el repo **ya se quemó**: PostgREST no ignora una columna desconocida, rechaza el request entero y **pierde la fila** (el 2026-07-13 eso dejó el sistema con cero lecturas guardadas). La única defensa era acordarse.
+
+**`tools/check_schema_drift.py`** (stdlib, sin nube ni hardware) compara lo que el firmware escribe y lee (`doc["col"]=`, bodies JSON a mano, `select=`) contra los `.sql` canónicos del RUNBOOK.
+
+**8 hallazgos:**
+- **H1 (el grande)** — `wifi_commands`, `sim800_status` y `at_commands` **no existen en ningún `.sql` del repo**, y las usan firmware *y* dashboard. El cambio de WiFi remoto (la placa consulta cada 10 s), el panel SIM800 (sube 19 campos cada 30 s) y la terminal AT están muertos de los dos lados **con la UI ya escrita**. La línea minera depende de dos de ellas.
+- **H2** — `ota_updates` tiene `progress`, el firmware escribe `progress_pct`/`progress_bytes`/`updated_at` → la barra de progreso del OTA nunca avanza (el OTA sí funciona).
+- **H3** — `devices` sin `wifi_scan_results`/`wifi_scan_at`.
+- Fijado por test lo que **está bien**: `readings` intacta (29 columnas — el incidente del 07-13 realmente cerrado). Y `migration_resilience_v1.sql` es un falso amigo: apunta al proyecto viejo borrado.
+
+Escrita `supabase/migration_2026-08-03_schema_drift.sql` — append-only, idempotente, RLS, con el `UNIQUE(device_id)` que el upsert del SIM800 necesita. **No aplicada**: es cambio de nube.
+
+**Verificado:** 37/37 tests OK; el checker con la migración en la lista da **exit 0** (cierra el drift exacto); suites previas intactas (13 + 35).
+
+**Sin verificar (día):** contrastar contra la base viva — el checker mira el *repo*, no la nube (query en el doc); aplicar la migración; confirmar SIM800/WiFi remoto en placa. La migración se validó por parser, no ejecutándola contra un Postgres.
+
+**Branch:** `nocturno/local-2026-08-03-b-schema-drift` (frioseguro, `9c14b5f`) · MATI-HQ pusheado (`9f7768f`).
+
+Dos cosas para vos, Matías:
+1. **MATI-HQ sigue con trabajo de día sin commitear** (tercera noche): `agentes/{esquematico,pcb,diseno3d}.md`, `dominios/*`. No los toqué. Commitealos o la rutina cloud choca en el próximo pull.
+2. La cola va en **36 branches**. Este y el de anoche son de los pocos que tocan un 🔴 — si drenás poco, drená estos.
+===== FIN lun 03/08/2026 22:12:49,09 ===== 
+===== TURNO NOCHE mar 04/08/2026  2:00:01,41 ===== 
+Noche cerrada. Una tarea, bien hecha.
+
+## Qué elegí y por qué
+
+Galgas (P0 octubre) no se tocaba desde el 07-31 y sus ítems sin branch son todos hardware, nube o decisiones tuyas. El hueco de software puro era algo que el `QUE_FALTA` **no nombraba**: el **contrato de comandos**. Un comando remoto atraviesa cuatro listas escritas a mano en tres lenguajes (`CMD_META`+`defaultPayload` en `App.jsx`, `commands_cmd_check` en las migraciones, el dispatch `strcmp` de `ota_wm_pp.ino`) y nadie las comparaba.
+
+Lo tomé porque los modos de falla no son equivalentes: si el CHECK rechaza un cmd, el INSERT explota con `23514` y el operario avisa. Pero si el **firmware** no lo conoce, cae en el catch-all (`ota_wm_pp.ino:1556`) y hace `ackCommand(…,"ack","no implementado")` → la fila queda `status='ack'` y **el dashboard la pinta verde**.
+
+## Hallazgos (7, ninguno corregido — generator ≠ evaluator)
+
+- **H1** — 4 botones marcados `active` no existen en el firmware: `locate`, `set_log_level`, `pause_reports`, `resume_reports`. El caro es `pause_reports`: es el que apretás para callar un nodo durante una intervención en el REDLER. La UI dirá "pausado"; el nodo sigue posteando.
+- **H2** — `locate`/`identify` **invertidos** en la UI: el firmware implementa `identify` y lee `duration_ms`; el dashboard ofrece `locate` mandando `seconds`.
+- **H3** — el form de `ota` deja elegir versión y la rama nunca lee `pl["version"]`.
+- **H4** — el RX no consulta `/rest/v1/commands`: todo comando al RX queda `pending` para siempre (evidencia directa para el ítem #1, Task 08).
+
+**Fijado por test lo que está bien:** ningún botón es rechazado por el CHECK, ningún cmd de la placa es inalcanzable, y los 6 comandos de calibración + `set_profile` + `set_burst_samples` cierran de punta a punta.
+
+**Fix más barato del doc:** que el catch-all ackee `status='error'` en vez de `'ack'`. Una palabra, y los cuatro hallazgos mudos se vuelven ruidosos para siempre.
+
+## Verificación
+
+```
+cd C:\Proyectos\galgas
+git checkout nocturno/local-2026-08-04-contrato-comandos
+python tools/check_command_contract.py               # 7 hallazgos, exit 1
+python -m unittest tools.test_check_command_contract # Ran 57 tests, OK
+```
+
+Sin verificar (necesita nube/placa): el CHECK de la base **viva** (el checker mira el repo — la query está en `docs/command-contract.md`) y la demo de 2 minutos: mandarle `pause_reports` a A y ver la fila en `ack` mientras el nodo sigue posteando.
+
+Branch `nocturno/local-2026-08-04-contrato-comandos` (galgas, `a617960`) pusheado; galgas volvió a main limpio. MATI-HQ pusheado (`4abd66d`) con el informe + PORTFOLIO.
+
+⚠️ Cuarta noche seguida: **MATI-HQ tiene trabajo de día sin commitear** (`agentes/{esquematico,pcb,diseno3d}.md`, `dominios/*`, `scripts/turno_noche_log.txt`). No lo toqué. Commitealo o la rutina cloud va a chocar en el próximo `git pull`. La cola de merge va por 37 branches.
+===== FIN mar 04/08/2026  2:12:59,73 ===== 
+===== TURNO NOCHE mar 04/08/2026 22:00:02,28 ===== 
+Listo. Turno cerrado.
+
+## Qué hice
+
+**Repo:** `datalogger` (P0, "terminarlo primero"). **Branch:** `nocturno/local-2026-08-04-b-contrato-rv1` (`3c7523b`, pusheado).
+
+FrioSeguro sólo tiene 🔴 de hardware/compras/precio y cosechador está bloqueado por la compra, así que fui a datalogger. El hueco no era un ítem del `QUE_FALTA` — era **el contrato del frame RV1**: lo único que cruza los tres lenguajes del sistema, armado en 12 lugares y desarmado por 3 parsers, sin que nadie los comparara.
+
+Lo elegí porque el peor modo de falla es **mudo**: un campo de menos hace que `nodo.py:386` y el `parsePayload` del gateway tiren el frame sin contador, sin log y sin error, mientras el TX de LoRa devuelve OK.
+
+## Los hallazgos (26, no corregidos — generator ≠ evaluator)
+
+- **3 de las 4 misiones emiten 5 campos con src/dst invertidos** y el gateway exige 8 → se descartan enteras. Es el commit `da574c3` completo con 3 de 4 misiones sin canal en vivo. La SD salva el dato; lo que se pierde es mirar el nodo sin ir a buscar la tarjeta.
+- **El gateway manda los comandos con 7 campos** (le falta el `via` vacío) → el nodo los descarta. Eso es una **segunda causa, más simple y anterior**, del *"`eco on` deja el nodo inalcanzable"* del ítem #3, que estaba atribuido al sleep.
+- **El salto de repetidor (#6) no puede pasar** con tráfico de misiones: el relay corre después del parseo. Falla de contrato, no de alcance.
+- **La causa raíz es la doc**: dos docstrings omiten `via` — el del gateway se contradice seis líneas más abajo — y `MODOS_MISION.md:39` documenta el dialecto roto *afirmando compatibilidad*. La spec correcta estaba en `QUE_HACER.md:213` todo el tiempo.
+- **El test existente fija el dialecto roto**: 20/20 en verde protegiendo el defecto.
+
+Dos advertencias que puse en el doc: el fix del frame hace que **llegue, no que se entienda** (el gateway no tiene handler para los cuerpos `BAJA,…`/`DREY,…`), y `mision_dreyfus.py:20` afirma que `esp32_lora_rx.py` sube al cloud cuando sólo imprime por USB.
+
+**Verificado:** 56/56 tests nuevos OK, `test_misiones.py` 20/20 intacto, checker exit 1 con los 26 hallazgos fijados por `TestRepoReal`. **Sin verificar (banco):** que el descarte sea mudo en la placa — la demo de 10 minutos está escrita en el informe.
+
+## Dos cosas para vos
+
+1. **MATI-HQ sigue con trabajo de día sin commitear** (5ta noche): `agentes/{esquematico,pcb,diseno3d}.md` y 6 bitácoras de `dominios/`. No los toqué. Commitealos o la rutina cloud choca en el próximo pull.
+2. `C:\Proyectos\cosechador` está checkouteado en un branch nocturno, no en `main`. Estado previo, no lo cambié.
+
+Cola de merge: **41 branches**. El tooling de drenaje sigue listo y sin usar.
+===== FIN mar 04/08/2026 22:15:23,21 ===== 
+===== TURNO NOCHE mi� 05/08/2026  2:00:01,43 ===== 
+Listo. Turno cerrado.
+
+## Tarea: el contrato de configuración de FrioSeguro (P1 — PLATA)
+
+Rotación: FrioSeguro era el repo activo más viejo sin tocar, y la jerarquía lo pone empatado en la cima. Sus 🔴 sin branch son hardware/compras/decisiones de Matías, así que fui a un hueco que el `QUE_FALTA` no nombraba: un umbral se escribe por **4 vías**, se persiste en **1**, y se declara en **otras 2** — nadie las comparaba.
+
+**Branch:** `nocturno/local-2026-08-05-contrato-config` (commit `3d1d4da`, pusheado). frioseguro volvió a `main` limpio.
+
+**Entregado:** `tools/check_config_contract.py` (stdlib, read-only) + `tools/test_check_config_contract.py` (**85 tests, OK**) + `docs/config-contract.md` + ítem #19 en `QUE_FALTA`.
+
+**16 hallazgos** (7 error, 9 warn) sobre 18 campos y 64 escrituras. Los que importan:
+
+- **H1** — `supabaseRefreshDeviceName()` cambia 4 parámetros y **nunca llama `saveConfig()`**. El cliente baja su umbral en el dashboard, la placa lo usa, se reinicia, y vuelve al viejo — con el dashboard mostrando el que **no** se está usando. Ningún error visible. Fix candidato: una línea.
+- **H3** — el toggle "📱 Telegram" del dashboard **no viaja a la placa**. El cliente apaga las notificaciones y le siguen llegando.
+- **H2** — tres perillas muertas (`tempMax` es la "Temp máx alerta" del dashboard y `alerts.h` ni la mira). `doorOpenMaxSec` lo había cazado el branch 07-20 con otra herramienta: corroboración independiente, no duplicación.
+- **H6** — `RESET_CONFIG` deja `supabaseEnabled=false`: el equipo deja de reportar hasta el próximo reboot, que puede tardar semanas.
+
+Y lo que está sano, también fijado por test: los 18 campos persisten, ninguna clave NVS desalineada, el portal local y la serial sí guardan, y **`temp_critical` cierra de punta a punta**. El camino que se cobra está bien; lo roto es lo que se le montó alrededor.
+
+**Sin verificar (banco):** que H1 sea silencioso en la placa — leído del código, no observado. Demostración de 5 min anotada en el informe. Ningún fix aplicado (generator ≠ evaluator): son de firmware, SQL y UI.
+
+**MATI-HQ:** `diario/nocturno-local-2026-08-05.md` commiteado y pusheado (`6d37f4b`). ⚠️ Seguís con trabajo de día sin commitear (`agentes/`, `dominios/`, + los dos `diseno3d.md` sin trackear) — no lo toqué, pero por eso el `git pull --rebase` falló; commitealo o la rutina cloud choca.
+===== FIN mi� 05/08/2026  2:14:22,66 ===== 
+===== TURNO NOCHE mi� 05/08/2026 22:00:02,31 ===== 
+===== TURNO NOCHE jue 06/08/2026  2:00:01,44 ===== 
+Noche cerrada. Todo pusheado.
+
+## Lo que pasó
+
+Al abrir galgas encontré que **el turno anterior (08-05-b) se cortó a mitad**: el repo estaba en un branch con cero commits, con `tools/check_ota_identity.py` (700 líneas) sin trackear y sin informe en `diario/`. Ese trabajo estaba a un `git clean` de perderse. Verifiqué la herramienta contra las fuentes reales antes de adoptarla y la tarea de la noche fue **terminarla bien** en vez de empezar otra cosa.
+
+**Branch:** `nocturno/local-2026-08-06-identidad-ota` (galgas, commit `7a45f00`).
+
+## El problema que audita
+
+Un ESP32 sabe quién es en compile time — el preprocesador concatena `FW_VERSION` en una cadena que queda dentro del `.bin` y no puede mentir. Las cuatro etiquetas alrededor (dir de build, nombre de archivo, fila de `firmware_versions`, ruta en Storage) sí pueden, y `sync_firmware.ps1` deriva las dos últimas del **nombre de la carpeta sin abrir nunca el binario**.
+
+Duele más que un bug común porque **no se corrige por aire**: el guard de MAC duerme la placa 1 h en `setup()`, antes de que llegue a consultar OTA. Publicar después el binario bueno no la rescata — es cable USB en planta.
+
+## 3 errores / 45 warns (nada corregido, generator ≠ evaluator)
+
+- **H1** — `build/test_pnorm_v364/` dice `TEST-pnorm` y adentro tiene `3.6.4-A-psim`. Hoy no es publicable por tres caracteres (`pp_`); renombrar la carpeta alcanza para que la fila mienta.
+- **H2** — la etiqueta publicada no está atada al binario. Fix candidato barato: el script ya lee el archivo entero para el sha256.
+- **H4 (warn, pero cambia el plan)** — ninguna versión de B posterior a 3.3.1 está publicada. **El ítem #4 de `QUE_FALTA` (re-flashear B) tiene un paso previo que no estaba escrito: publicar.** Hoy B no se puede poner al día por aire aunque se quiera.
+- **H6** — hallazgo mío, escribiendo el doc: `esp_rx_receptor/config.h:13` hardcodea `FW_VERSION` como literal en vez de componerla. Para RX la premisa del checker no se sostiene — su identidad embebida es otra etiqueta humana. Lo agregué como chequeo con tests. Fix de una línea.
+
+Fijado por test y sano: ningún binario **publicable** está mislabeleado — el error caro no está pasando hoy.
+
+## Verificación
+
+`python -m unittest tools.test_check_ota_identity` → **128 tests, OK**. `python tools/check_ota_identity.py` → 3 error / 45 warn, exit 1. La regresión sobre el repo real ya demostró que funciona: al agregar H6, el test de totales falló solo y me obligó a actualizar el doc en el mismo commit.
+
+**Sin verificar (necesita nube):** la tabla viva, las RLS de `firmware_versions`, y una observación que dejé como pregunta y **no conté como hallazgo** — la query de OTA ordena por `released_at`, no por semver, lo que haría que un rollback no baje; está leído del código, no observado.
+
+## Dos cosas para vos
+
+- Queda un **branch local vacío** `nocturno/local-2026-08-05-b-identidad-ota` (0 commits, nunca pusheado). No lo borré por regla; su contenido ya está en el de hoy.
+- MATI-HQ sigue con **trabajo de día sin commitear** (séptima noche). No lo toqué. Commitealo o la rutina cloud choca en el próximo pull.
+
+Cola de merge: 43 branches (galgas 16, datalogger 13, frioseguro 13, cosechador 1).
+===== FIN jue 06/08/2026  2:13:02,91 ===== 
+===== TURNO NOCHE jue 06/08/2026 22:00:02,16 ===== 
+Turno cerrado. Resumen:
+
+**Tarea:** auditoría del **contrato de ingesta a la nube** del datalogger (P0) — el eslabón que ningún branch previo miraba. El branch del 08-04-b auditó nodo→gateway (frame RV1); éste empieza justo donde ese termina: gateway → `/api` (Vercel) → Supabase → dashboard. Cuatro artefactos, tres lenguajes, nadie los comparaba.
+
+**Entregado** — branch `nocturno/local-2026-08-06-b-contrato-nube` (commit `85dd9b8`, pusheado):
+- `tools/check_cloud_contract.py` — reconstruye el esqueleto JSON que emite el gateway (inlineando `streamFields` dentro de `buildApi`) y lo cruza con lo que el relay persiste, lo que el histórico consulta y lo que la página dibuja. Stdlib, read-only, exit 0/1/2.
+- `tools/test_check_cloud_contract.py` — **84 tests**, todos OK.
+- `docs/cloud-contract.md` + ítem #14 en `QUE_FALTA` y nota en el #10.
+
+**4 error / 17 warn.** Los que cambian algo:
+- **El INSERT a `ruview_readings` no mira la respuesta** y el catch es mudo — un rechazo de Supabase (RLS, key rotada, proyecto pausado) es indistinguible de un éxito. El histórico puede estar vacío hace meses con el dashboard en vivo impecable, porque el vivo no pasa por Supabase.
+- **La cola de comandos vive en `global` de una lambda de Vercel**: un `eco on` encolado en una instancia puede no existir para la que atiende al ESP, y la página igual dice "✓ llega por LoRa en unos seg". Pega directo en el ítem #3 (ECO-LoRa) — un comando perdido se lee como problema de radio.
+- **No hay DDL de la tabla en el repo** (galgas y frioseguro sí lo tienen versionado).
+- **`order=ts.asc&limit=10000`** recorta el extremo *nuevo*: con 3 nodos, el rango por defecto de 24 h ya trunca y el gráfico muestra datos viejos como actuales. Fix de una palabra.
+
+Nada corregido (generator ≠ evaluator); los tests de `TestRepoReal` fijan los 21 hallazgos. Vale decir que **los propios tests cazaron un falso negativo mío**: el scan de DDL encontraba `create table` dentro de mis fixtures y el checker se auto-absolvía del hallazgo más caro que tiene. Corregido, con regresión.
+
+**Sin verificar (necesita la nube):** todo está leído del código, no observado. La primera consulta de día es `select count(*), max(ts) from ruview_readings;` — decide si H1 ya pasó.
+
+Dos cosas para vos: apareció **trabajo de día nuevo sin commitear en frioseguro** (`REVIVAL_2026-08.md`, `kit_santacruz/`, `firmware_revival/` y un `.zip`) que no toqué, y MATI-HQ sigue con los cambios de día sin commitear de las siete noches anteriores — conviene commitearlos antes de que la rutina cloud choque en el próximo pull. Informe en `diario/nocturno-local-2026-08-06-b.md`, pusheado.
+===== FIN jue 06/08/2026 22:13:53,20 ===== 
+===== TURNO NOCHE vie 07/08/2026  2:00:01,70 ===== 
+Listo. Turno cerrado.
+
+## Lo que hice
+
+**Tarea:** auditoría estática de la **superficie expuesta del firmware REVIVAL** que va al reefer de Cerro Moro (Santa Cruz). Elegí frioseguro por rotación y me encontré con que el trabajo de día sin commitear que vengo reportando hace dos noches es una **operación de campo en curso**: firmware nuevo, kit completo y runbook para reflashear por Chrome Remote Desktop un equipo a 2000 km cuya única recuperación es un cable USB del lado de un operario no técnico.
+
+**La tesis:** el REVIVAL cambia una sola cosa —de qué red se cuelga el equipo— y eso cambia el modelo de amenaza de todo lo demás. Antes el ESP32 vivía en una LAN conocida y su API REST sin credencial era defendible. Ahora `wifi_open.h` lo conecta solo a la **red abierta de terceros con mayor RSSI** de un campamento minero. Y el REVIVAL sumó, en esa misma versión, los tres endpoints que reescriben el firmware.
+
+**Entregado** en `nocturno/local-2026-08-07-revival-superficie-lan` (commit `c5c492d`): `tools/check_revival_surface.py` + 69 tests (verificados por mutación: 4 mutaciones de los chequeos clave hacen fallar la suite) + `docs/revival-surface.md` + ítem #19 en QUE_FALTA.
+
+**Corrida real: 17 endpoints, 12 que cambian estado, 11 sin credencial → 14 error / 7 warn / 1 info.** Los tres que pesan:
+
+1. **`/api/ota/url` + `/api/ota/check` no piden nada** — cualquiera en la misma WiFi abierta le hace flashear un binario propio. El SHA-256 no defiende: sale del mismo manifiesto que provee el atacante, y la URL persiste en NVS.
+2. **`/update` responde `200 OK - rebooting` sin password ni archivo.** El chequeo existe y lee bien (lo verifiqué contra el `Parsing.cpp` del core 3.3.8 instalado), pero hace `return` dentro del callback de upload mientras el handler decide con `!Update.hasError()` — false cuando `Update` nunca arrancó. Reboot remoto repetible, más el flag de rollback contaminado → downgrade silencioso en el próximo brownout, una vez que el otro slot tenga app válida.
+3. **`checkInternet()` acepta `code == 200` en `generate_204`**, que es la firma exacta de un portal cautivo. El único chequeo capaz de detectarlo es el que lo certifica como bueno — y en ese sitio el portal cautivo es lo esperable, no lo raro. Fix de un carácter.
+
+Nada corregido (generator ≠ evaluator); los fixes son de firmware y van a banco. También queda fijado por test lo que está **bien**: el kit lleva las fuentes idénticas byte a byte, el rollback está cableado en el orden correcto, y el binario `TEST_ROTO` cuelga a los 60 s contra los 300 s de verificación — la prueba F4b ejerce el camino que dice ejercer.
+
+## Dos cosas para vos
+
+- **Commiteá `firmware_revival/` y `kit_santacruz/`**: es un firmware que va a producción y hoy vive solo en ese disco. La herramienta y los tests sí están versionados y son autocontenidos (sin el sketch, exit 3 con mensaje claro).
+- **H2 y H4 son fixes de pocas líneas que conviene aplicar antes de que el módulo vuelva al zócalo.** Después, cada corrección cuesta una ventana de OTA por una red abierta que puede no estar.
+
+Informe completo en `diario/nocturno-local-2026-08-07.md` (pusheado). Los 4 repos quedaron en `main` limpio salvo el branch de trabajo; no toqué ningún archivo de día.
+===== FIN vie 07/08/2026  2:14:15,46 ===== 
+===== TURNO NOCHE vie 07/08/2026 22:00:02,14 ===== 
+Turno cerrado. Resumen:
+
+**Tarea:** el contrato de schema de galgas — replay de las 15 migraciones de Supabase para reconstruir el schema efectivo, cruzado contra los dos consumidores que escriben y leen la base sin verse entre sí (firmware y dashboard). Elegida porque los ítems 🟡 sin branch del `QUE_FALTA` (#5 OTA por device, #6 bucket público, #8 migración pendiente) son todos la misma pregunta sin responder.
+
+**Branch:** `nocturno/local-2026-08-07-b-contrato-schema` (galgas, commit `90f583d`, pusheado).
+
+**Los tres errores:**
+1. El `grant update (local_ip, …)` de `devices` **contradice** el PATCH del RX, que manda 7 columnas fuera del grant. O el heartbeat falla entero —y con él `local_ip`, el descubrimiento sin mDNS del bloqueante #1— o el grant nunca restringió nada y `anon` reescribe toda la fila. Se decide con una consulta.
+2. `firmware_versions.device_id` existe pero `unique (device_type, version)` no lo incluye → subir la misma versión para A y B falla con 23505. **Es el ítem #5 completo, y el fix son dos líneas de SQL, no firmware.**
+3. El dashboard dibuja **ΔV** sobre `readings.delta_v`, que el firmware nunca manda: el guard `if (!isnan(r.delta_v))` nunca pasa porque el único valor que el campo recibe es `NAN`. El sampler dice que lo calcula «la Edge Function» — que no existe en el repo.
+
+Más 5 warn (`set_config` perdido al reescribir un CHECK entero; dos policies de insert sin condición; la policy de ack que no acota columnas pese a que su comentario dice que sí; el bucket `for all`) y 2 info.
+
+**Verificación:** 85 tests, OK. Los verifiqué **por mutación**: cinco cambios distintos al parser hacen fallar la suite. Ningún hallazgo corregido — generator ≠ evaluator.
+
+**Sin verificar (necesita la nube):** todo está leído del código. La herramienta audita lo que las migraciones **dicen**, no lo que está corrido en Supabase — y el ítem #8 dice que hay migración pendiente, así que pueden no coincidir. Está escrito como límite explícito en el informe y en el doc.
+
+**Dos cosas para vos, Matías:** el kit de Santa Cruz en `frioseguro` sigue sin commitear (cuarta noche; es firmware que sale a producción a 2000 km y hoy vive solo en este disco), y MATI-HQ sigue con trabajo de día sin commitear que va a chocar con la rutina cloud.
+===== FIN vie 07/08/2026 22:22:31,17 ===== 
+===== TURNO NOCHE s�b 08/08/2026  2:00:02,69 ===== 
+===== TURNO NOCHE s�b 08/08/2026 22:00:02,11 ===== 
+Listo. Noche cerrada.
+
+## Qué hice
+
+**Tarea:** auditoría de fidelidad del benchmark del datalogger — el **bloqueante #1 del DoD** ("MicroPython vs C en RP2350, LA decisión fundacional"). Ninguna de las 14 noches previas lo tocó porque necesita banco. Pero al abrir `benchmark/` encontré que el harness está completo **y nunca se corrió** (no existe `resultados.md`), así que nada había verificado todavía si mide lo que dice medir. Eso sí se responde de noche, y hay que responderlo *antes* de gastar la sesión de hardware.
+
+**Branch:** `nocturno/local-2026-08-08-fidelidad-benchmark` (datalogger, commit `b82f551`).
+
+## Resultado
+
+**El harness está sano; lo que está desalineado es lo que mide.**
+
+- **Paridad 5/6 limpia — se puede flashear tal cual.** Los 9 pines coinciden con `nodo.py`, los parámetros son idénticos entre los dos lados, el `#HDR` de 17 columnas cierra, y **todas las APIs que el bench llama existen en los drivers** (nada lo garantizaba: el bench nunca se ejecutó).
+- **Fidelidad: 3 error / 6 warn / 3 info.** El bench espeja `capture_burst()` y el DoD ("SD sin gaps N horas") habla de `tick()`. Todas las diferencias van en la dirección optimista: `read_raw` vs `read` (un dict por muestra → presión de GC, *justo el riesgo que el benchmark existe para medir*), pacing en µs vs ms (piso de jitter ±1 ms = 50 % del período a 500 Hz, contra un umbral de 5 %), bloque binario vs línea CSV, LoRa sin RX ni relay.
+
+**Lo más caro (B9):** `tick()` dispara la FFT automática cada 15 s y —según el comentario del propio `nodo.py`— **bloquea 1–3 s**. Son gaps garantizados y periódicos que ninguna fase produce: **`gaps = 0`, el binario del que cuelga todo el DoD, no se puede cumplir con esta arquitectura ni migrando a C.** No es un problema de runtime.
+
+Nada corregido (generator ≠ evaluator). `docs/benchmark-fidelity.md` propone correr el bench como está **y** agregar una fase `PROD` en la misma sesión de banco.
+
+**Verificación:** 49 tests OK, con seis mutaciones que hacen fallar la suite. Dos de ellas eran bugs reales que la primera corrida expuso: `calls()` devuelve un set y hacía que un control disparara hasta en un repo limpio, y `%%` mal contado rompía la medición del ancho de las líneas `#RES`.
+
+**Pendiente por falta de toolchain:** no compilé `bench_c` (no está el Pico SDK en esta máquina) — comando anotado en el informe.
+
+## Dos avisos que no son míos para arreglar
+
+- ⚠️ **Quinta noche:** `C:\Proyectos\frioseguro` sigue con el trabajo del REVIVAL **sin commitear**. Es firmware que va a un equipo a 2000 km esta semana y vive sólo en ese disco.
+- ⚠️ MATI-HQ sigue con archivos de día sin commitear (décima noche) — la rutina cloud va a chocar en el próximo `git pull`.
+
+Y una nota de prioridad: este branch **caduca**. Sirve antes de la sesión de banco, no después.
+===== FIN s�b 08/08/2026 22:17:06,27 ===== 
+===== TURNO NOCHE dom 09/08/2026  2:00:01,73 ===== 
+Noche cerrada. Resumen:
+
+## Tarea: el aislamiento entre clientes de FrioSeguro (P1 — PLATA)
+
+Por rotación tocaba frioseguro. Todo lo software-puro del `QUE_FALTA` ya tenía branch, así que fui a la pregunta que el documento **da por respondida sin haberla verificado**: la definición de "vendible" promete *"credenciales únicas por cliente"* y el ítem #4 la lista pendiente, pero nadie midió **qué cuesta no tenerla**. FrioSeguro se vende como abono a varios comercios **contra una sola base**: lo único que separa al comercio A del B es el RLS.
+
+**`tools/check_tenant_isolation.py`** (stdlib, read-only, sin nube ni hardware) replaya el SQL canónico en el orden del RUNBOOK de bootstrap, arma el modelo efectivo de **policies y grants**, y lo cruza con lo que el firmware y el dashboard realmente ejercen. **16 tablas, 37 policies → 18 error / 6 warn / 7 info.**
+
+Lo más caro, sin corregir (generator ≠ evaluator):
+
+- **H2** — `anon_update_ota` es `FOR UPDATE USING (true)` **sin `WITH CHECK`** (Postgres reusa el `USING` para la fila nueva): con la anon key pública se reescribe `ota_updates.file_url`, y el firmware baja de ahí **sin allowlist, sin firma y sin SHA** (`supabase.h:597`). Código arbitrario en el equipo del cliente en ≤30 s.
+- **H3** — el mismo UPDATE libre alcanza `temp_max`/`temp_critical`/`alert_delay_sec` (el servicio deja de avisar, que es lo que se cobra) y `subscription_status`.
+- **H4** — seis tablas de historial con `FOR ALL USING (true)`: incluye DELETE, y un cliente logueado ve el historial de los otros comercios. Es la fuga que sobrevive aunque el firmware deje de usar la anon key.
+- **H5** — dos operaciones que informan éxito y afectan 0 filas: el `DELETE` del device fantasma imprime "Fantasma eliminado" sin borrar nada, y el `PATCH readings` del botón SILENCE no tiene policy de UPDATE.
+
+**Fijado por test lo que está bien:** las 16 tablas tienen RLS, `user_profiles`/`user_device_access`/`payments` no tienen ninguna rama anon, y el dashboard manda el JWT del usuario, no la anon key.
+
+Escrita `supabase/migration_2026-08-09_tenant_isolation.sql` — **no aplicada** (es nube): baja el checker de 18 a 14 errores. Lo que queda es el ítem #4, y lo digo sin vueltas en el doc: mientras el firmware use la anon key, el RLS no puede distinguir una placa de otra.
+
+**Verificado:** `python -m unittest tools.test_check_tenant_isolation` → **71/71 OK**, con 4 mutaciones que hacen fallar la suite. **Sin verificar (día, nube):** la consulta a `pg_policies` de la base viva — el checker mira el repo, no producción.
+
+Branch `nocturno/local-2026-08-09-aislamiento-tenant` (`3fb5e33`) pusheado; MATI-HQ commiteado y pusheado (`aa58cb6`). Dos avisos que repito: el kit de Santa Cruz de frioseguro sigue **sin commitear** (sexta noche) y MATI-HQ arrastra trabajo de día sin commitear que le va a chocar a la rutina cloud.
+===== FIN dom 09/08/2026  2:21:36,10 ===== 
+===== TURNO NOCHE dom 09/08/2026 22:00:01,46 ===== 
+Turno cerrado. Todo pusheado.
+
+## Lo que hice
+
+**Repo:** `C:\Proyectos\galgas` (P0 — parada Dreyfus). **Branch:** `nocturno/local-2026-08-09-b-cadena-medicion` (`926b623`).
+
+Por rotación tocaba galgas. Los 17 branches previos auditan contratos de **forma** (qué columnas existen, qué comandos, qué binario es cuál). Faltaba el de **significado**: del ADC crudo al número que pinta una card de rojo, la cadena está escrita **cuatro veces en tres lenguajes** y nadie las había comparado.
+
+`tools/check_measurement_chain.py` (stdlib, read-only, sin nube ni hardware) → **4 error / 3 warn**:
+
+- **H4 — `v_pp` puede reportar la deriva térmica en vez de la vibración.** Los centinelas de `sampleBurst()` son `vmin=3.3f`/`vmax=0.0f` — el rango del ADC **crudo** — y la transformada `(v_raw-offset)*k` produce negativos por diseño. Un burst entero bajo el offset deja `vmax` en 0 y `v_pp = |deriva|`: 50 mV de deriva + 14 mV de vibración real → **se reporta 57 mV, alerta espuria** contra el umbral de 40. **En banco no se ve** (recién autoffseteada la señal cruza cero); aparece horas después, en planta. Y `v_min`/`v_max` se calculan y **no se postean**, así que desde la nube no hay con qué diagnosticarlo. Demostrado con un oráculo numérico, no afirmado.
+- **H3 — `in_alert` no mira la señal en el firmware publicado**: es `(PROFILE_NAME == "ALERTA")`, constante de compilación. El binario `*-palerta` reporta `true` siempre; los `*-pnorm`/`*-palways`, nunca. La familia modular sí lo deriva de `v_pp`. Misma columna, dos significados.
+- **H1** — la calibración de la familia modular es un dead store: se persiste, nadie la lee, el comando ackea éxito.
+- **H2/H5/H6/H7** — dos fórmulas distintas para el mismo `{offset_v,k}` · `cal_with_load` cambia las **unidades** de `v_pp` (precondición del ítem #2: comparar contra `field_captures` sólo vale con `k=1`) · los 6 botones de calibración no existen en la familia modular · dos namespaces de NVS que no se ven.
+
+**Verificado:** 69/69 tests OK, `TestRepoReal` fija los 7 hallazgos, y 4 mutaciones del checker hacen fallar la suite. **Nada corregido** — generator ≠ evaluator.
+
+**Para el día:** H4, H3 y H1 se confirman en el banco en 10 minutos **sin galga ni LiPo**, con el Serial abierto (comandos exactos en el informe). Los fixes de H4 son de una línea; H3 es una decisión de diseño que conviene tomar antes de octubre.
+
+⚠️ **Séptima noche que lo reporto:** `C:\Proyectos\frioseguro` sigue con el trabajo de día sin commitear (`firmware_revival/`, `kit_santacruz/`) — firmware para un equipo a 2000 km que vive sólo en este disco. Y MATI-HQ sigue con 16 archivos modificados sin commitear.
+===== FIN dom 09/08/2026 22:17:10,51 ===== 
+===== TURNO NOCHE lun 10/08/2026  2:00:01,56 ===== 
+Noche cerrada. Resumen:
+
+## Tarea: la cadena de medición de vibración del datalogger
+
+Por rotación tocaba datalogger (P0, "terminarlo primero"). Los 16 branches previos auditan **timing**, **contabilidad** y **forma**; ninguno auditaba **significado** — y el datalogger entrega *una frecuencia*.
+
+**El hallazgo grande: el registro de la SD está aliaseado.** `mpu6050.py` nunca escribe `CONFIG` (0x1A), así que el DLPF queda en su default de **260 Hz de ancho de banda**, y el nodo clásico —lo que corren P1/P2/P3— muestrea a **50 Hz**. Demostrado con un oráculo numérico: la misma máquina da pico en **66 Hz** muestreada a 1 kHz y en **16 Hz** a 50 Hz. Los defectos de rodamiento (3-10× rpm) caen siempre dentro de 0-25 Hz. Y un CSV aliaseado tiene largo correcto, `seq` contiguo y cero gaps: **pasa los tres branches de integridad de SD que ya existen**. Integridad no es validez.
+
+Dos consecuencias con dueño:
+- **No lo arregla ningún runtime** → anotado en el bloqueante #1. Si la sesión de banco se hace primero, se elige MicroPython vs C con un benchmark impecable sobre un canal que mide el alias.
+- La decisión de fondo es de @muestreador: ¿el canal continuo mide espectro (→ agregados a 1 kHz) o inclinación (→ DLPF a 5 Hz y dejar de llamarlo canal de vibración)?
+
+Del otro lado de la cadena: el gateway **calcula** si la ráfaga está completa y nunca lo lee, el dashboard grafica ráfagas incompletas y no las vuelve a dibujar, los chunks perdidos se rellenan con una rampa inventada que se lleva 12 % de amplitud, y las dos FFTs del sistema no son comparables entre sí — que es exactamente lo que Medidas Electrónicas 2 pide declarar.
+
+**Dos cosas que salieron de verificar, no de escribir:**
+- Escribiendo el informe encontré que las misiones **no usan** el driver compartido y sí configuran el DLPF. `lab` y `media` están bien filtradas (los valores correctos ya están en el repo); pero `mision_baja` deriva su fs de `cfg["mpu_hz"]` → filtra bien a sus 200 Hz nominales y mal a los 50 de los nodos reales. Rehice el control sobre las cinco rutas de muestreo.
+- Una mutación descubrió un hueco de la suite: confundir `fs/2 < BW` con `fs < BW` **no rompía ningún test**, porque con los valores reales del repo los dos criterios coinciden. Agregué el caso que los separa.
+
+**Verificado:** 82/82 tests, 7 mutaciones detectadas, `test_misiones` 20/20 intacto. Ningún hallazgo corregido (generator ≠ evaluator).
+
+**Branch:** `nocturno/local-2026-08-10-cadena-vibracion` (2 commits, pusheado). MATI-HQ commiteado y pusheado (`3276e78`); tu trabajo de día sin commitear **no lo toqué**.
+
+Dos cosas para vos: **frioseguro sigue con el firmware de Santa Cruz sin commitear (octava noche)** — va a un equipo a 2000 km y vive sólo en este disco. Y el `enlace\maquinas\*.estado.json` tiene `ultima_vez_viva` del 2026-07-07: hace un mes que ninguna máquina late.
+===== FIN lun 10/08/2026  2:38:11,42 ===== 
+===== TURNO NOCHE lun 10/08/2026 22:00:01,49 ===== 
+Listo. Resumen del turno:
+
+## Tarea elegida
+**FrioSeguro** (PLATA, tier 1 de la jerarquía). El 1er turno de hoy fue a datalogger. Todo lo software-puro del `QUE_FALTA` ya tenía branch, así que fui al tramo que ninguna de las cuatro auditorías previas del repo había tocado: las de 07-18 (decisión de alertar), 08-02 (entrega), 08-03-b (forma de los datos) y 08-09 (aislamiento) **empiezan cuando el número ya existe**. En FrioSeguro el número *es* el servicio: ¿de qué sonda física salió, y sigue siendo cierto?
+
+## Qué entregué
+`tools/check_temperature_chain.py` (stdlib, read-only, sin nube ni hardware) + 80 tests + `docs/temperature-chain.md`. Tres oráculos numéricos que demuestran los hallazgos en lugar de afirmarlos.
+
+**5 error / 6 warn / 2 info.** Los tres centrales:
+
+- **La alerta se decide sobre el promedio de las dos sondas** contra un solo umbral, y la sonda 2 viene habilitada de fábrica. Zona ciega medida de 10 °C — y su ancho es `crítico − sonda_sana`, o sea que cuanto mejor anda un freezer, más se puede descongelar el otro sin que suene nada. Es el escenario que se cobra.
+- **`sensor_probes` está en la base y en el dashboard, y el firmware no la escribe nunca** (la única mención es un comentario). Los umbrales por sonda que el cliente configura no llegan a la placa, y `GUIA_INSTALACION.md:365` pide como paso del checklist verificar algo que no puede pasar nunca.
+- **La identidad de una sonda es su orden en el bus, no su ROM** (`getTempCByIndex`, cero `getAddress`): cambiar una sonda quemada puede intercambiar `temp1`/`temp2` según qué ROM venga en la bolsa del repuesto.
+
+Ningún fix aplicado (generator ≠ evaluator); orden de arreglo en el doc.
+
+## Verificación
+80/80 tests OK, y **7 mutaciones hacen fallar la suite**. Dos cosas que corregí en mi propio trabajo, no en el repo: el checker leía la fórmula del promedio de la rama de *simulación*, y el oráculo del orden de bus afirmaba un swap que con esos ROM no ocurría — lo vi mirando la salida. Una mutación (`sum → max`) pasó limpia y descubrió un test que faltaba: segunda noche seguida que pasa.
+
+Sin verificar: todo sale de leer código, no de una placa. No compilé firmware ni corrí `npm run build` (no toqué código de placa ni de dashboard). Quedan cuatro comprobaciones de banco de ~10 min con el Serial, sin instrumental, anotadas en el informe.
+
+## Branch y estado
+`nocturno/local-2026-08-10-b-cadena-temperatura` (frioseguro, `6099803`, pusheado) con ítems #19/#20/#21 nuevos en su `QUE_FALTA`. MATI-HQ commiteado y pusheado (`566fd8b`). Los 4 repos volvieron a su estado previo.
+
+**Dos avisos que necesitan tu mano:** `frioseguro` sigue con el trabajo de día sin commitear por novena noche (`firmware_revival/`, `kit_santacruz/` — firmware que va a un equipo a 2000 km y vive sólo en este disco), y `datalogger` tiene trabajo nuevo sin commitear que no estaba anoche (`firmwares/nodo-gimap/`, `tools/rx_gimap.py` y sus tests). No toqué ninguno.
+
+Un solapamiento que conviene mirar cuando drenes la cola: **la identidad de sonda (T2/T5) y el ítem #4 (credencial única por dispositivo) se resuelven en el mismo reflasheo** que ya está pendiente por la rotación de claves.
+===== FIN lun 10/08/2026 22:19:53,25 ===== 
+===== TURNO NOCHE mar 11/08/2026  2:00:01,58 ===== 
+Listo. Resumen del turno:
+
+## Tarea: la cadena de entrega de galgas
+
+**Branch:** `nocturno/local-2026-08-11-cadena-entrega` (`5413c8f`, pusheado)
+
+**Por qué esa.** Por rotación tocaba galgas. La auditoría del 08-09-b sigue el número desde el ADC hasta que es correcto **en la RAM del emisor** — y ahí termina. De ahí en adelante nadie había mirado nada: ¿llega? ¿llega una sola vez, y con qué hora? y si no llega, ¿alguien se entera? Es la precondición de los ítems #1 y #11 del QUE_FALTA y de la mitad del DoD de octubre que dice, textual, *"con fallback local"* — que no existe.
+
+**Qué hice.** `tools/check_delivery_chain.py` (stdlib, solo lectura, sin nube ni hardware, no toca `field_captures`), que modela los cuatro tramos leyendo el código real de las dos familias de emisor, el RX, las 15 migraciones y las dos vistas del dashboard. Más `docs/delivery-chain.md` y **69 tests** en 7 capas, con control negativo (repo sano = cero hallazgos; cada defecto inyectado enciende solo lo suyo).
+
+Dos **oráculos numéricos**, porque afirmar no alcanzaba:
+- `--demo-queue` replica la cola del RX con sus parámetros reales: **un corte de 5 min de Supabase se lleva 12 lecturas que el emisor da por entregadas**. Las 41 rechazadas con 503 son las buenas — el 503 es honesto, la cola es lo que produce la mentira.
+- `--demo-silence`: **`palerta` tiene la ventana ciega más ancha (7.5× el período)**, justo el perfil que corre cuando hay una alerta.
+
+**9 hallazgos (4 error, 4 warn), ninguno corregido.** Los tres que más pegan antes de octubre: **D7** — el `FW_VERSION` modular no matchea el regex de perfil del dashboard, así que un emisor sano se ve *permanentemente OFFLINE* en las dos vistas, y es la familia que se flashea para la parada. **D2** — ninguna familia persiste la lectura que no pudo entregar. **D1** — el RX contesta `200` y forwardea después; el firmware es consciente y lo dice en su propio comentario, lo que no dice es el costo.
+
+**Verificado acá:** `py_compile`, 69 tests en verde (2.9 s), auditor con exit 2 sobre el repo real, los dos oráculos imprimiendo. No se tocó una línea de firmware, `web/` ni SQL — el branch agrega tres archivos, así que no hay build de dashboard que correr. **Sin verificar (necesita hardware):** los 12 de la cola salen de un modelo, no de un RX midiendo, y la duplicación de D3 es posible según el código pero falta ver la fila duplicada real.
+
+`QUE_FALTA.md` de galgas apuntado en los ítems #1, #9 y #11 (commit en main) e informe en `diario/nocturno-local-2026-08-11.md`, ambos pusheados. Dejé intactos los archivos que ya estaban modificados en MATI-HQ al arrancar — no eran míos.
+===== FIN mar 11/08/2026  2:18:52,67 ===== 
+===== TURNO NOCHE mar 11/08/2026 22:00:01,52 ===== 
+Listo. Todo pusheado, trabajo de día intacto.
+
+## Noche 2026-08-11-b — cosechador
+
+**Elegí cosechador** (1 solo branch nocturno, del 07-18 — el repo más fresco por lejos), y dentro de él, el único análisis que **todavía puede cambiar una compra**: la Fase 1 sigue abierta, D3 y D8 no se soldaron.
+
+**El hallazgo:** el modelo de energía del 07-18 publicó **77,2 días** de autonomía contando **una sola** de las cuatro cargas permanentes del banco. Las otras tres salen de las decisiones D3 y D8 del propio repo:
+
+| carga | de dónde | µA @3,3 V |
+|---|---|---|
+| fuga del banco de supercaps | D3 (Maxwell BCAP0010) | **18,33** |
+| red de balanceo pasivo | D3 (4× 1 MΩ) | 3,30 |
+| divisor del ADC | D8 (1 MΩ + 1 MΩ) | 1,65 |
+| sleep del ATmega | paper, Tabla 5 | 0,75 |
+
+**El consumidor contado era el más chico de los cuatro. La autonomía en reposo es de 2,6–6,7 días, no 77.** Para un detector de incendios, eso significa que el nodo está apagado durante el fin de semana largo y la temporada baja.
+
+Y el segundo, que sale del mismo cambio de unidades (modelar la fuga como resistencia, 180 kΩ/celda): **el balanceo de 1 MΩ es 5,6× más débil que la fuga que tiene que corregir.** Con dispersión 10× entre celdas quedan **33 mV** de margen sobre los 2,7 V nominales; con 20× se pasa — el modo de falla que la propia D3 marca como "⚠️ QUEMA". D3 rechazó los 100 kΩ por consumo, pero son 33 µA contra 958 µA de harvest (3,4 %): **el trade real es margen de sobretensión vs. días parada, y nunca se planteó así.**
+
+También queda acotado el **duty mínimo de vibración en 0,8–2,1 %** (12–31 min/día) — el ítem que el 07-18 dejó abierto.
+
+**6 hallazgos (3 error · 1 warn · 2 info), ninguno corregido.** Todos con dueño asignado.
+
+**Verificación:** 79 tests en verde. El ancla es cruzada — monté los dos branches juntos en un temporal y el modelo nuevo reproduce los 77,2 días del viejo (79/79, cero skips); el test se activa solo cuando ambos se mergeen. 6 mutaciones, todas muertas. Control negativo: con celdas ideales la autonomía vuelve a 77 días. Sin toolchains ni descargas.
+
+Dos cosas que conviene que sepas:
+- **Un oráculo me corrigió a mí**: había escrito que el atajo `Q/I` era optimista; es ~7 % *conservador*. El error del 07-18 no estuvo en la matemática, estuvo en las tres cargas que no entraron a la suma.
+- **Moví cosechador de branch**: estaba checkouteado en el del 07-18; lo pasé a `main` para sacar el nuevo de ahí. Ningún commit perdido. Y agregué un `.gitignore` que va a conflictuar trivialmente con el del 07-18 al mergear.
+
+**Branch:** `nocturno/local-2026-08-11-b-presupuesto-standby` (`d2ad9bf`) · **Informe:** `diario/nocturno-local-2026-08-11-b.md` (`fb1f808`, pusheado).
+
+Lo que sigue reportado sin tocar: **frioseguro** (décima noche con `firmware_revival/` y el kit de Santa Cruz sin commitear, viviendo sólo en este disco), **datalogger** (nodo GIMAP sin commitear) y **MATI-HQ** (trabajo de día sin commitear — la rutina cloud va a chocar en el próximo pull). La cola de merge está en 53 branches; **los 2 de cosechador son los más baratos de drenar** (sin firmware, sin nube, sin dashboard) y los únicos cuyo hallazgo todavía llega a tiempo para una compra.
+===== FIN mar 11/08/2026 22:17:35,84 ===== 
+===== TURNO NOCHE mi� 12/08/2026 22:00:01,73 ===== 
+Noche cerrada. Resumen:
+
+## Tarea: la cadena de instalación de FrioSeguro
+
+**Por qué:** tocaba frioseguro por rotación + jerarquía PLATA (18-ago a 6 días). Los cinco auditores previos del repo (`alert_model`, `telegram_gate`, `schema_drift`, `tenant_isolation`, `temperature_chain`) empiezan todos **cuando el equipo ya está instalado**. El tramo de antes —de la caja al primer dato— nunca se auditó, y es el que separa "tengo 5 PCBs" de "tengo 3 abonos". Además se puede auditar sin hardware: "instalable en <2 horas" es una afirmación sobre un procedimiento, y el procedimiento está escrito.
+
+**Branch:** `nocturno/local-2026-08-12-cadena-instalacion` (frioseguro, `a289d7b`, pusheado).
+**Informe:** `diario/nocturno-local-2026-08-12.md` (MATI-HQ `bd12480`, pusheado).
+
+**Resultado — 6 error · 4 warn · 2 info.** De los 8 pasos del runbook: **6 bloqueados, 1 con fricción, 1 ejecutable**, y el primer freno está en el PASO 1.
+
+Los tres que importan:
+- **I12** — el único runbook del repo instala **otro despliegue** (los 5 reefers de Santa Cruz). Para el producto que se vende antes del 18-ago no hay procedimiento escrito. Los otros 11 hallazgos son la distancia entre el documento que hay y el que hace falta.
+- **I3** — las 6 queries de verificación filtran por `device_id LIKE 'REEFER_%_SCZ'` y el firmware usa la MAC: **0 filas siempre**. Y el troubleshooting lee 0 filas como *"ese ESP32 no conectó WiFi → volver al PASO 3"*. El procedimiento manda a repetir para siempre un paso que ya salió bien.
+- **I6** — las 5 placas publican el mismo SSID y se registran con el mismo nombre; su única identidad (la MAC) sólo se lee por USB, cuando la caja ya está montada. El checklist pide "MACs anotadas" y ningún paso las obtiene. Arreglo de una línea, y entra en el reflasheo que ya está pendiente por la rotación de claves.
+
+**Verificado:** `py_compile`, **90 tests OK** (1,1 s), control negativo (repo sano no enciende nada; cada defecto inyectado enciende sólo su código) y **7 mutaciones, todas mueren**. Sin toolchains ni descargas: cero riesgo de timeout. No se tocó firmware, dashboard ni SQL.
+
+**Sin verificar (necesita ojos/banco):** que WiFiManager no muestre la MAC en el portal (30 s con una placa prendida) y las <2 horas reales, que se cronometran el día del piloto. Ningún fix aplicado.
+
+**Para la mañana:** sigue sin commitear el trabajo de día en frioseguro (`kit_santacruz/`, `firmware_revival/` — 11.ª noche que lo reporto; vive sólo en este disco), en datalogger (`nodo-gimap/`) y en MATI-HQ. La cola de merge está en 54 branches.
+===== FIN mi� 12/08/2026 22:37:10,47 ===== 
+===== TURNO NOCHE jue 13/08/2026  2:00:01,91 ===== 
+Listo. Turno cerrado.
+
+## Nocturno 2026-08-13 — datalogger
+
+**Tarea:** auditar **la cadena de puesta en marcha sin cable** — del botón BOOTSEL al dato. Era el único tramo del repo sin auditar (los 16 branches previos empiezan con el nodo ya corriendo la misión correcta) y es el código más nuevo: selector web, WiFi manager en runtime y el fix de `flash_node.ps1`, todo de la última semana.
+
+**El hallazgo caro:** el paso 1 del procedimiento escrito —*"mantené BOOTSEL apretado mientras lo enchufás"*— es el gesto que pone la placa en el **bootloader UF2**: disco `RP2350`, MicroPython no corre, sin LED, sin AP, sin medición. El propio repo lo documenta así en cuatro páginas… porque ahí es el procedimiento de **flasheo**. La ventana de 3 s de `rp2.bootsel_button()` funciona, pero hay que apretar *después* del arranque y eso no lo dice ningún documento.
+
+Segundo: elegir **LAB** en cualquiera de los tres nodos flasheados termina 20 s después en el **nodo clásico** (los configs no traen credenciales WiFi → `RuntimeError` → `except` en `main.py`), y la única pantalla que el operario puede mirar sigue diciendo "Misión actual: LAB".
+
+**Entregado** en `nocturno/local-2026-08-13-cadena-puesta-en-marcha` (`0399124`, pusheado):
+- `tools/check_commissioning_chain.py` — 12 hallazgos (5 error / 5 warn / 2 info), ninguno corregido
+- dos oráculos: `--demo-campo` (7 pasos: 2 ejecutable / 1 fricción / 4 bloqueado, primer freno en el paso 1) y `--demo-mision`
+- 94 tests con control negativo (repo sano no enciende nada; cada defecto inyectado enciende uno solo) — **8/8 mutantes mueren**
+- `docs/commissioning-chain.md` + ítem #10b en `QUE_FALTA.md`
+
+**Para vos, mañana:** C1 se confirma en 20 segundos —enchufar un Pico con BOOTSEL apretado y ver si monta el disco `RP2350` o si aparece `PICO-P1`—. Y ojo con **C8**: `baja`/`media` leen BOOTSEL una vez por muestra con el escritor de SD en el core 1; conviene acotarlo a 100 ms *antes* del benchmark MicroPython-vs-C, o parte del jitter que midas va a ser del botón.
+
+Verificación pendiente por hardware: todo sale de leer el repo; ningún número salió de una placa. datalogger volvió a `main` limpio; el trabajo de día sin commitear (datalogger, frioseguro, MATI-HQ) sigue intacto y sin commitear — duodécima noche que lo reporto para frioseguro.
+===== FIN jue 13/08/2026  2:20:54,54 ===== 
+===== TURNO NOCHE jue 13/08/2026 22:00:01,74 ===== 
+Listo. Turno cerrado.
+
+## Lo que hice
+
+**Repo:** `C:\Proyectos\galgas` (P0 — parada Dreyfus, octubre)
+**Branch:** `nocturno/local-2026-08-13-b-puesta-en-marcha-campo` (`b4de791`, pusheado)
+**Informe:** `diario/nocturno-local-2026-08-13-b.md` (MATI-HQ pusheado, `5599b96`)
+
+**La tarea:** auditar la **cadena de puesta en marcha en campo** — el tramo que arranca *antes* de todo lo ya auditado. Las seis auditorías previas de galgas empiezan con el nodo ya andando; nadie miró cómo llega a estar andando. Y en octubre hay que instalar tres equipos en una parada con ventana fija, con un documento que nunca se cruzó contra el firmware.
+
+**El hallazgo estructural:** el RX ya resolvió la puesta en marcha —LED que parpadea mientras el portal está abierto, botón que fuerza el portal, red del cliente hardcodeada con self-learn a NVS— y **A y B no heredaron ninguna de las tres**. Son A y B los que van atornillados al eje; el RX vive en el tablero. `DEPLOYMENT_DREYFUS.md`, la hoja que ve el cliente, describe el RX y lo presenta como el comportamiento de los tres.
+
+**13 hallazgos: 5 error · 5 warn · 3 info.** Los dos más filosos, ambos silenciosos:
+
+- **F3+F4** — `factory_reset` es el remedio documentado para borrar el WiFi y es lo único que no borra (`wifiResetCreds()` existe y no la llama nadie). Sí borra la calibración de la galga y deja el nodo en perfil de banco: wake cada 60 s, sin corte por batería.
+- **F5** — `AHORRO_MAX` no existe en el firmware modular; cae a `usb_bench` y se ackea OK. Pedís máximo ahorro, obtenés máximo consumo, en verde en el dashboard.
+
+De los 8 pasos del procedimiento: **5 ejecutables, 2 con fricción, 1 bloqueado** — el paso 2, "esperar mirando el LED".
+
+**Verificado acá:** 79 tests en verde (1,9 s), control negativo con repo sintético sano + un defecto inyectado por código, y 9 mutaciones del checker que hacen fallar la suite. Sin builds ni descargas: cero riesgo de timeout. Ningún fix aplicado (generator ≠ evaluator).
+
+**La verificación de mayor valor, un minuto con la placa:** provisionar por el portal, mandar `factory_reset` y ver si el boot siguiente abre el AP o se reconecta solo. Si esa premisa cayera, F3 se cae entero — F4 no depende de ella.
+
+Sigue sin commitear el trabajo de día en `frioseguro` (decimotercera noche que lo reporto: firmware que va a un equipo a 2000 km y vive solo en este disco), en `datalogger` y en MATI-HQ.
+===== FIN jue 13/08/2026 22:19:10,28 ===== 
+===== TURNO NOCHE vie 14/08/2026  2:00:01,92 ===== 
+Listo. Resumen del turno:
+
+## Tarea: la cadena de alarma del cosechador
+
+**Branch:** `nocturno/local-2026-08-14-cadena-alarma` (pusheado, `6740014`) · repo `C:\Proyectos\cosechador`, que volvió a `main` limpio.
+**Informe:** `diario/nocturno-local-2026-08-14.md` en MATI-HQ (pusheado, `8532b05`).
+
+**Por qué esa.** Por rotación tocaba cosechador (última noche 08-11-b). Los tres análisis previos del repo miran la **energía del emisor**; nadie recorrió nunca la cadena que justifica el proyecto —hay fuego, ¿alguien en la cabina se entera?—. Y sigue siendo el único repo donde un análisis todavía cambia una compra: nada está comprado.
+
+**Resultado: de los 8 eslabones, 2 ejecutables / 2 con fricción / 4 ROTOS**, y los cuatro rotos comparten un modo de falla: el sistema se ve igual funcionando que muerto. Tres números, sacados de los propios documentos del repo:
+
+- **48 % de la autonomía declarada se gasta con el detector encendido y ciego** — el sensor de llama pide 3-5 V (D2), la ventana llega a 2,7 V.
+- **El receptor dura 3,6 días, no 11.** Los "11" son los de la LiPo de 8000 mAh que D10 **rechazó por excesiva** (`8000/30 = 11,1`).
+- **El buzzer de 5 V nunca ve 5 V**: en los dos caminos de alimentación documentados el rail no pasa de 4,2 V, y no hay ni un dB de volumen entre las métricas.
+
+**Qué hay en el branch:** `analisis/alarm_chain.py` (stdlib, solo lectura — **lee** los números que el repo declara y los cruza, con `archivo:línea` de cada uno, así que los hallazgos se apagan solos al corregir el documento), tres oráculos (`--demo-cadena`, `--demo-ventana`, `--demo-receptor`), 87 tests, y `docs/cadena-alarma.md`. **9 hallazgos: 4 error · 2 warn · 3 info. Ninguno corregido** (generator ≠ evaluator).
+
+**Verificación:** 87 tests en verde (0,65 s), control negativo real (repo sano no enciende nada; cada defecto inyectado enciende uno solo), y **13 mutaciones, las 13 cazadas**. La primera pasada dejó una viva —un filtro que era código muerto—: lo saqué y reescribí su test. Sin toolchains ni descargas, cero riesgo de timeout.
+
+**Sin verificar:** todo sale de leer documentos, no de medir. A1 se apoya en el "3-5 V" que D2 le atribuye a un módulo **sin SKU ni datasheet** — si el módulo real arranca desde 2,7 V, A1 se cae (A2/A3/A4 no dependen de eso). A3 y A6 tienen una premisa externa cada uno, marcada.
+
+**Dos avisos que se repiten:** frioseguro sigue con firmware sin commitear que vive sólo en este disco (decimocuarta noche), y MATI-HQ arrastra trabajo de día sin commitear. El latido de ENLACE está parado hace 7 días. No toqué nada de eso.
+===== FIN vie 14/08/2026  2:21:17,49 ===== 
+===== TURNO NOCHE vie 14/08/2026 22:00:01,75 ===== 
+Turno cerrado.
+
+## Lo que hice
+
+**Repo:** `frioseguro` (P1 — PLATA, faltan 4 días para el 18-ago).
+**Branch:** `nocturno/local-2026-08-14-b-cadena-continuidad` (`6028370`, pusheado).
+
+La pregunta que ninguna de las seis auditorías previas del repo respondía: **se corta la luz a las 3 AM en el comercio — la heladera se apaga y el monitor se apaga con la misma llave. ¿Alguien se entera?** Las seis anteriores arrancan todas con el equipo encendido y conectado.
+
+**8 eslabones: 0 ejecutables · 3 con fricción · 5 ROTOS**, y los cinco comparten causa: *el único que podría avisar de la falla es el que falló.*
+
+Tres números leídos del código:
+- **`devices.is_online` se escribe 3 veces en TRUE y 0 en FALSE.** El único FALSE del sistema es el `DEFAULT` de la columna. Un equipo que reportó una vez y murió queda verde para siempre, y ningún cron mira `last_seen_at`.
+- **Un corte de 6 h son 2160 lecturas perdidas sin registro.** No hay buffer y el timer de sync se rearma *antes* de mirar si hay internet.
+- **`ac_power` nunca se envía:** viaja bajo `#ifdef POWER_MONITOR_H`, que es el include guard del propio header, y el sketch no lo incluye. La detección del corte está escrita entera —debounce, SMS, Telegram— y **compila vacía, en silencio**.
+
+Aparte: **`ESCENARIOS_CUBIERTOS.md` declara 34/34 ✅ contra `firmware_v2/src/`, un árbol que no existe** (faltan 8 de 14 archivos citados; los 7 escenarios de CONECTIVIDAD se apoyan en `connectivity_manager.h` y `offline_buffer.h`). Le avisé a @comercial que no lo use como material de venta hasta cerrarlo.
+
+**Entregables:** `tools/check_continuity_chain.py` (stdlib, parsea y cita `archivo:línea` — corregida la fuente, el hallazgo se apaga solo), 3 oráculos (`--demo-apagon`, `--demo-latch`, `--demo-hueco`), 103 tests, `docs/continuity-chain.md`.
+
+## Verificación
+
+103 tests OK en 8,6 s; control negativo real; **mutación 15/15** (la primera pasada dejó 3 vivas — en las tres el guard era correcto y el test flojo; los arreglé probando el contrato, no la mutación). Andamio de mutación en `/tmp`, borrado, no commiteado. **Ningún fix aplicado** (generator ≠ evaluator), ni siquiera R5 que es una línea.
+
+**Pendiente de día (1 minuto):** confirmar contra el Supabase real que nadie agregó a mano un cron/trigger que apague `is_online` — `SELECT jobname, schedule FROM cron.job;`. Si existe, R1 y R7 se caen.
+
+## Lo que te dejo sobre la mesa
+
+El fix más importante **no toca firmware ni hardware**: un cron cada 15 min que haga `INSERT` en `alerts` cuando `seconds_since_seen` —que la vista `v_devices_status` **ya calcula**— pase un umbral. Reusa el push que ya está desplegado. Es de lo poco del repo que podés cerrar solo, de día, sin banco y sin comprar nada.
+
+Y una pregunta que el software no puede contestar: **¿el kit lleva respaldo de energía?** De eso dependen los otros siete eslabones. Aunque la respuesta sea "no", conviene escribirla — cambia lo que el producto puede prometer.
+
+⚠️ Decimoquinta noche que reporto `frioseguro` con trabajo de día **sin commitear** (`firmware_revival/`, `kit_santacruz/`, el `.zip`). Esta vez le pegó al análisis: `ota_update.h` sólo existe ahí, así que en un clone limpio R4 contaría 9 faltantes en vez de 8. Sigue viviendo sólo en este disco. Igual `datalogger` y MATI-HQ. Y el latido de ENLACE está parado hace 7 días.
+===== FIN vie 14/08/2026 22:29:31,22 ===== 
+===== TURNO NOCHE s�b 15/08/2026  2:00:01,97 ===== 
+Listo. Turno cerrado.
+
+## Lo que hice — datalogger, la cadena de recuperación (de la SD al informe)
+
+Por rotación tocaba datalogger. Los 17 branches previos del repo auditan el nodo **andando** o **llegando a andar**; nadie había mirado el tramo que arranca cuando el nodo se apaga: *el operario vuelve con la SD, ¿eso llega a un informe?* Es exactamente lo que el 🟢 #13 quiere vender y lo que hay que entregar en octubre.
+
+**De los 8 eslabones: 0 ejecutables, 3 con fricción, 5 ROTOS.** Causa común: **el archivo no se autodescribe** — qué nodo, qué momento, qué misión, qué tasa, qué unidades y cuánto se perdió viven en el nodo, y el nodo se apaga.
+
+Tres números leídos del propio código:
+
+- **El CSV de campaña no lo lee la única herramienta de análisis del repo.** `import_sd_csv` no conoce `t_ms,seq,ax,…`, cae a la rama del sniffer y toma los **milisegundos como segundos**: una vibración de 66 Hz sale por **0,066 Hz**. El único consumidor que lo lee bien es el `/plot` que corre **en la placa**.
+- **El nombre del archivo es el uptime y se abre en modo `"w"`.** Dos arranques que abran su primer archivo en el mismo segundo generan los mismos nombres y el segundo **trunca** al primero — y el selector termina en reset, así que dos arranques es lo normal.
+- **No hay reloj en todo el firmware del nodo** (ni `ntptime` ni `machine.RTC`). Ningún CSV dice de qué día es.
+
+**10 hallazgos (5 error · 3 warn · 2 info), ninguno corregido** — generator ≠ evaluator. El arreglo más barato y el que más cambia (D2+D3: nombre + sello de tiempo) es de día, sin banco y sin tocar el lazo de muestreo.
+
+## Verificado acá
+- **126 tests en verde** (4,5 s), `test_misiones` intacto en 20/20, control negativo real (repo sano → cero hallazgos) y un defecto inyectado por vez → exactamente su código.
+- **15 mutaciones, las 15 matadas.** Una encontró un bug real en mi extractor: contaba la `def maybe_start_net` como si fuera la llamada. El andamio quedó fuera del repo.
+- Branch `nocturno/local-2026-08-15-cadena-recuperacion` pusheado (`b0d2477`); datalogger volvió a `main` limpio. Informe en `diario/nocturno-local-2026-08-15.md`, MATI-HQ pusheado.
+
+## Sin verificar (hardware)
+Todo sale de leer el repo. La comprobación de mayor valor cuesta un minuto de día: **poner la SD de un nodo que ya midió en la PC y mirar los nombres de `/sd/logs`** — confirma o tumba D2. D3 y D6 tienen premisas de MicroPython (ancho de `ticks_ms`, `send` parcial) que se cierran con la placa en la mano.
+
+⚠️ Decimosexta noche que lo reporto: **`frioseguro` sigue con `firmware_revival/` y `kit_santacruz/` sin commitear** — firmware para un equipo a 2000 km que vive sólo en este disco. Y MATI-HQ sigue con `agentes/`, `dominios/` y `enlace/` sin commitear; la rutina cloud va a chocar en el próximo pull. El latido de ENLACE está parado hace 8 días.
+===== FIN s�b 15/08/2026  2:19:03,00 ===== 
+===== TURNO NOCHE s�b 15/08/2026 22:00:01,79 ===== 
+Listo. Turno cerrado.
+
+## Qué hice
+
+**Repo:** `C:\Proyectos\galgas` (P0, parada Dreyfus de octubre) — tocaba por rotación.
+**Branch:** `nocturno/local-2026-08-15-b-cadena-aviso` (`d354f7b`, pusheado).
+**Informe:** `diario/nocturno-local-2026-08-15-b.md` en MATI-HQ (`534b049`, pusheado).
+
+**La pregunta que elegí** — la única que las siete auditorías previas del repo no contestan, porque todas terminan en la pantalla: *la galga se sale de rango a las 3 de la mañana, ¿quién se entera y qué queda de eso mañana?*
+
+**De los 8 eslabones del aviso: 2 ejecutables, 1 con fricción, 5 ROTOS.** Los dos sanos son justo medir y entregar, que es lo que el repo ya había auditado.
+
+Tres hechos del código:
+
+- **Ningún firmware emite un evento de alerta.** 24 `emitEvent()` en el repo (OTA, boots, calibración), cero de alerta; los dos emisores modulares no emiten ninguno de ningún tipo. La tabla `events`, el vocabulario que declara el schema, el índice parcial y el Realtime del dashboard ya existen — falta escribir la fila.
+- **El único aviso físico de la planta está escrito, compila y no recibe datos.** LCD + LED + buzzer del RX se alimentan sólo del POST de la lectura; el RX no consulta `readings` ni se suscribe a nada, y el emisor modular pide el gateway a una función cortocircuitada en `#if 1`. Con la familia monolítica funciona; con la modular —la de octubre— queda mudo con la nube en rojo.
+- **De una alerta de 6 h quedan 0 filas de `events`** y 390 lecturas que ninguna consulta filtra.
+
+**Entregado:** `tools/check_alert_chain.py` (stdlib, read-only, 4 oráculos), `tools/test_check_alert_chain.py` (**128 tests, en verde en 4,3 s**) y `docs/alert-chain.md`. Control negativo con repo sintético sano + un defecto inyectado por vez. **Verificación por mutación: 16/16 muertas** — la primera pasada dejó 3 vivas (una mutación inerte y dos tests flojos que agregué).
+
+**Sin verificar:** todo sale de leer el repo, no de disparar una alerta. A2 depende de una premisa que no está escrita en ningún lado — cuál de las dos familias se instala en octubre. Ningún hallazgo corregido (generator ≠ evaluator). La verificación más barata y de mayor valor es de día: preguntarle a `events` cuántas filas de alerta tiene.
+
+**Para vos, a la mañana:** el fix más importante son dos líneas de firmware (A1), y el `QUE_FALTA` #1 miente — el RX ya no es heartbeat-only, lo que le falta no es el panel sino su fuente de datos. Sigue sin commitear el trabajo de día en frioseguro (17ª noche que lo reporto), datalogger y MATI-HQ.
+===== FIN s�b 15/08/2026 22:26:50,81 ===== 
+===== TURNO NOCHE dom 16/08/2026  2:00:01,97 ===== 
+Noche cerrada. Todo pusheado.
+
+## Qué hice
+
+**Repo:** `C:\Proyectos\cosechador` (rotación — última visita 08-14).
+**Branch:** `nocturno/local-2026-08-16-cadena-medicion` (`e7aea9e`, pusheado). cosechador quedó en `main` limpio.
+
+**Tarea:** auditar la **cadena de medición** — el eje que sostiene la palabra "replicación" del DoD y la convergencia con Medidas Electrónicas 2. Los tres análisis previos del repo miran el sistema por dentro (energía que entra, energía que se pierde parado, aviso de alarma); ninguno preguntó *con qué instrumento, en qué punto y contra qué referencia* se produce el número que va del otro lado del signo igual.
+
+**Resultado: de las 5 métricas objetivo, 0 medibles / 2 con reservas / 3 no medibles** con lo que el repo declara hoy — y las dos que el DoD cita textualmente (carga y sleep) están entre las no medibles. 11 hallazgos (5 error · 3 warn · 3 info), ninguno corregido.
+
+Los tres números:
+- **El amperímetro se pone donde no están las cargas**: la métrica de sleep declara tres consumidores; el único procedimiento escrito lo pone en la rama del Pro Mini. Ve 1 de 3.
+- **Los "8,69 h" del paper no son un tiempo medido**: son `3 V / 0,345 V/h`, la extrapolación lineal ×17,4 de un ensayo de 30 min que subió 172 mV. Con el modelo de potencia constante detrás de un buck, el mismo dato da 151 h — y el objetivo "≤ 12 h" aprueba con un modelo y reprueba con el otro.
+- **El objetivo de energía por TX (≤ 1 mJ) es más chico que la estimación de diseño del propio repo (1,3 mJ)**: reprobado en el papel, antes de comprar.
+
+**Dos hallazgos agregan ítems al carrito** (nada está comprado todavía): un shunt calibrado — el DMM no cubre el rango dinámico del propio ensayo, 25× el fondo de escala y 500 mV de caída — y una forma de excitar el piezo a amplitud conocida con acelerómetro, sin la cual la comparación contra el paper no existe (cosa que `setup-completo.md:312` **ya admite** y el DoD nunca registró).
+
+## Verificación
+
+- 146 tests en verde (3,7 s), sin descargas ni toolchains.
+- Control negativo: repo sintético sano no enciende nada; cada defecto inyectado enciende exactamente su código.
+- **18 mutaciones, las 18 matan la suite.** La primera pasada dejó una viva y era un test flojo mío — el test del arte ASCII asertaba sobre el archivo equivocado, así que no podía fallar nunca. Reescrito.
+- Tres bugs propios que salieron en el camino, todos con test: un paso de markdown envuelto en dos líneas (M1 reportaba "0 de 3" en vez de "1 de 3" — exagerado, no perdido), el diagrama de bloques en columnas ASCII que hacía leer la corriente del vecino, y el nombre de una métrica contenido en otra, que hacía **desaparecer M8 en silencio**.
+- Corregí mi propio titular de M2: había escrito que el DMM "no resuelve" microamperes, y es falso — resolución le sobra. Lo que no puede es el rango dinámico del ensayo. El oráculo ahora imprime "alcanza" en esa línea aunque debilite el hallazgo.
+
+**Sin verificar por hardware:** todo sale de leer documentos, no de medir. La premisa más floja es el shunt/fondo de escala del rango µA de M2 — se cierra de día leyendo el manual del multímetro que ya está en el cajón.
+
+**Informe:** `diario/nocturno-local-2026-08-16.md` (MATI-HQ pusheado, `aa56d7d`). Cola de merge: 61 branches (cosechador 4, siguen siendo los más baratos y los únicos que aún cambian una compra).
+
+**Sigue pendiente, tres avisos que ya llevan semanas:** frioseguro (18ª noche) y datalogger con trabajo de día sin commitear, MATI-HQ igual, y el latido de ENLACE parado hace 9 días. No toqué nada de eso.
+===== FIN dom 16/08/2026  2:27:19,90 ===== 
+===== TURNO NOCHE dom 16/08/2026 22:00:01,86 ===== 
+Listo. Ambos repos pusheados, tu trabajo de día sin tocar.
+
+## Turno nocturno 2026-08-16-b — FrioSeguro, la cadena del tiempo
+
+**Tarea:** `QUE_FALTA` #9 (*"validar NTP"*) — el único 🟡 sin branch con una mitad de software real. Por rotación tocaba frioseguro, y la jerarquía manda PLATA.
+
+**Lo que encontré:** FrioSeguro **no tiene ni un solo timestamp de origen**.
+
+- El firmware que se vende (`firmware_modular/`) **no tiene reloj**: cero `configTime()`, cero NTP. El equipo no sabe qué hora es.
+- Los 7 campos que *parecen* fechados por el equipo (`last_seen_at`, `applied_at`, `downloaded_at`, `executed_at`, `updated_at`) los fecha **el servidor**: dicen cuándo llegó el POST, no cuándo pasó la cosa.
+- Coinciden mientras hay internet. Se separan **justo cuando hay corte** — el único escenario contra el que se vende el abono.
+
+Corolario: **#9 no se puede hacer como está escrito.** No se valida en hardware algo que no está en el código.
+
+El hallazgo que explica por qué esto sobrevivió siete auditorías es `ESTADO_ACTUAL.md:28`: afirma que `last_seen_at` lleva *"timestamp NTP real"* y nombra `supabaseUpdateDeviceStatus()`, **que no existe** en el firmware que se compila. Mientras el doc diga eso, el problema es invisible.
+
+**7 hallazgos (3 error · 3 warn · 1 info), ninguno corregido** — generator ≠ evaluator.
+
+### Un error mío que vale que sepas
+
+Mi primera versión decía que Postgres **rechaza** el literal `"now()"` y que el heartbeat fallaba entero con 400. Hallazgo grande, y **falso**. Lo desmintió tu propio repo: el commit `8bdc579` dejó `ota_updates` en `'applied'`, y ese mismo PATCH manda `applied_at="now()"` — si se rechazara, la fila entera habría vuelto 400. El tokenizador de Postgres saltea la puntuación desconocida y resuelve `now`. Reescribí el hallazgo a lo que sí se sostiene y dejé un test dedicado para que la corrección no se pierda.
+
+La mutación también encontró dos guardas redundantes en mi código, **una de las cuales causaba un falso negativo**. Se fueron.
+
+**Verificado:** 64 tests OK (3,4 s), control negativo (repo sano no enciende nada), 14/14 mutaciones matan la suite. Sin toolchains ni descargas.
+
+**Sin verificar:** la única premisa externa se cierra en 10 segundos de día — correr `SELECT 'now()'::timestamptz;` en el SQL editor (no hay `psql` ni Docker acá). T4 y T5 son de UI: van a @tester con un device reportando.
+
+**Branch:** `nocturno/local-2026-08-16-b-cadena-tiempo` (`ec92bdf`). Informe en `diario/nocturno-local-2026-08-16-b.md`.
+
+### Dos cosas que te quiero marcar
+
+1. **`firmware_revival/` sigue sin commitear y *sí tiene el NTP puesto*.** O sea: la versión que resuelve parte de T2 vive sólo en este disco, y va a un equipo a 2000 km. Es la decimonovena noche que lo reporto.
+2. **El latido de ENLACE está parado hace 9 días** (`ultima_vez_viva` = 2026-08-07). No lo toqué porque los scripts son trabajo de día sin commitear.
+
+La cola de merge va por **62 branches**.
+===== FIN dom 16/08/2026 22:23:26,74 ===== 
+===== TURNO NOCHE lun 17/08/2026  2:00:02,13 ===== 
+Listo. Una tarea, hecha completa.
+
+## Qué hice
+
+**Repo:** `C:\Proyectos\datalogger` (P0 por rotación — el turno más viejo era éste).
+**Branch:** `nocturno/local-2026-08-17-cadena-bateria` (2 commits, pusheado).
+
+Auditoría de **la cadena de la batería**: el DoD pide *"N horas sin gaps"* y *"consumo MEDIDO, no estimado"* — las dos dependen de saber cuánta batería le queda al nodo. Las 7 auditorías previas del repo siguen el dato de vibración; ninguna siguió el otro número que viaja por los mismos cables: `vbat`.
+
+**De los 9 eslabones: 1 OK, 2 con fricción, 6 ROTOS.** 14 hallazgos.
+
+Los tres números:
+
+- **Un nombre de columna separa 8 horas de datos de la respuesta.** El nodo escribe `…,tempC,vbat`; `import_sd_csv` busca `("ax","ay","az","gz","vb")` y rellena con ceros lo que no encuentra. La batería de una campaña entera se carga como ceros → `battery_projection` devuelve *"pocas muestras"*. Dos letras.
+- **El ETA sobrestima +836 % justo cuando importa.** Ajusta una recta sobre la meseta de la LiPo: a 32 h de una descarga modelada de 40 h proyecta 74,8 h restantes contra 8 h reales.
+- **El firmware de producción no distingue batería de USB.** En banco siempre lee el riel del USB (~4,7 V), `pct` se satura en 100 % → **el camino de `bat_low` no se puede haber probado nunca**. Y al final `bat_low` no dispara ninguna acción.
+
+## Entregable
+
+`tools/check_battery_chain.py` (lee el repo, cita `archivo:línea`, 5 modos `--demo`) · `tools/test_check_battery_chain.py` (**70 tests**) · `docs/battery-chain.md` · `QUE_FALTA.md` actualizado.
+
+**Ningún fix aplicado** — cero líneas de firmware/análisis/dashboard tocadas.
+
+## Verificado corriendo
+70/70 tests, `py_compile`, los 5 demos, exit code 3, JSON válido, y un test que confirma que **toda cita `archivo:línea` apunta a una línea que existe**. Encontré dos bugs en mi propio checker durante los tests (afirmaba hallazgos en vez de verificarlos) y los corregí.
+
+**Sin verificar por hardware:** cuál pin es el correcto para el ADC de VSYS (BAT-02) — el hallazgo dice que *el repo se contradice a sí mismo*, no cuál versión tiene razón; el rizado y la calibración necesitan osciloscopio y tester.
+
+**Un detalle que decidís vos:** `firmwares/nodo-gimap/` está en tu árbol pero **no versionado** — y es justo el driver que hace bien las tres cosas que el de producción hace mal. No lo commiteé.
+
+**El arreglo #1 es de una línea** (agregar `"vbat"` a la lista de columnas) y desbloquea el 🔴 #4 del QUE_FALTA sobre datos que ya existen.
+
+Informe en `diario/nocturno-local-2026-08-17.md`, MATI-HQ pusheado.
+===== FIN lun 17/08/2026  2:16:47,22 ===== 
+===== TURNO NOCHE lun 17/08/2026 22:00:01,81 ===== 
+Listo. Resumen de la noche:
+
+## Tarea elegida
+**galgas** (P0, parada Dreyfus de octubre) — rotación le tocaba, y de los 4 bloqueantes de su `QUE_FALTA` era el único cerrable entero **sin hardware**.
+
+Pero el criterio de fondo fue otro: galgas tenía **diez branches nocturnos sin mergear y todos eran análisis**. El del 08-15-b dejó un hallazgo #1 que no pedía más estudio, sólo código: *ningún firmware emitía un evento de alerta*, aunque la tabla `events`, el vocabulario `alert_start`/`alert_end`, el índice parcial y el Realtime del dashboard existían desde la primera migración. Un episodio de 6 h dejaba ~390 filas en `readings` y **cero** en `events`.
+
+## Qué hice
+- `supabasePostEvent()` en `firmware/shared/supabase_client.{h,cpp}`.
+- Emisión de `alert_start`/`alert_end` en los dos emisores, **uno por transición, no por lectura**, encolado en RTC slow memory para que sobreviva el deep sleep y se reintente (10 wakes) — perder una lectura cuesta una muestra; perder el `alert_start` borra el episodio entero.
+- El `metadata` lleva `boot_count` y `retries` porque el emisor no tiene reloj y `events.ts` lo pone Postgres.
+
+**Al implementarlo apareció drift que ninguna auditoría había visto:** `mapTag()` del `PlantaView` no conoce `alert_start`/`alert_end` — sólo nombres legacy del mockup. Una alerta real caía al `return 'boot'` y **el feed de planta la mostraba en gris con icono de OK**. Emitir el evento sin ese fix habría producido filas correctas e invisibles. También: las vistas comparaban `severity === 'warn'`, valor que el CHECK del schema no permite.
+
+## Verificación
+Compilan A, B y RX con esp32 core 3.3.8 (ya estaba instalado): **+2976 B de flash** contra baseline medido antes de tocar nada, **0 B de RAM**. `web/ npm run build` OK.
+
+**Sin verificar (necesita banco):** que la fila llegue vía la policy anon, el reintento sin red, y el feed en pantalla. Y ojo: el `HOLD_SEC` faltante del self-trigger (branch del 07-29) ahora **también escribe `alert_start` espurios** — ese fix es previo a planta.
+
+- Branch: `nocturno/local-2026-08-17-b-eventos-alerta` (`48870a3`, `e181252`), pusheado.
+- `QUE_FALTA.md` de galgas actualizado; informe en `diario/nocturno-local-2026-08-17-b.md`, MATI-HQ pusheado.
+
+Dejé **sin tocar** los 16 archivos modificados y 4 sin trackear que ya estaban en el working tree de MATI-HQ (`agentes/`, `dominios/`, `enlace/`, `propuestas/MAIL_SAE_PPS.md`) — trabajo tuyo en curso. Sólo commiteé el informe.
+===== FIN lun 17/08/2026 22:25:14,07 ===== 
+===== TURNO NOCHE mar 18/08/2026  2:00:01,99 ===== 
+Listo. Resumen de la noche:
+
+**Tarea elegida:** el ítem 18 del `QUE_FALTA` de **FrioSeguro** (PLATA, prioridad #1) — cerrar el hallazgo de la decisión de alerta que el branch del 07-18 dejó diagnosticado con test pero sin corregir.
+
+Descarté cosechador (a quien le tocaba por rotación) y lo dejé escrito en el informe: es P2, está bloqueado por la compra, no tiene una línea de código y ya acumula cuatro análisis. Un quinto habría sido cantidad.
+
+**El bug, más grande de lo que decía el hallazgo original:** `highTempSec` no medía tiempo *observado* sobre el crítico, medía tiempo de reloj entre dos evaluaciones — y **tres** ramas con `return` temprano abren ese hueco (defrost, cooldown y `!sensorData.valid`; la tercera no estaba en el hallazgo de julio). Con los defaults de producción (`defrostCooldownSec = 1800` contra `DEFAULT_ALERT_DELAY_SEC = 300`) entraban 1800 s de golpe en un contador de umbral 300: **alerta falsa en cada ciclo de descongelamiento**, sobre justamente lo que se le cobra al comerciante. El hallazgo de julio lo llamaba "latente"; con los números reales no lo es.
+
+**El fix** distingue dos huecos: la suspensión deliberada termina el episodio (reinicia el acumulador real, no sólo su espejo en `state`, y re-ancla el reloj), y la pérdida accidental de muestras descarta el hueco sin borrar un episodio en curso.
+
+**Verificado sin hardware:** 20/20 tests (eran 12), `arduino-cli compile` OK con **+20 B de flash y 0 de RAM** medidos contra baseline, y **mutación** — revertir cada mitad del fix rompe 3 tests por lado.
+
+**Pendiente de banco:** que un ciclo real de defrost ya no alerte, y que una alerta legítima post-defrost sí salga. Media hora con una placa WiFi.
+
+**Branch:** `nocturno/local-2026-08-18-fix-alert-delay-defrost` (`0ae4b27`, sale de `07-18-alert-model` — hay que mergear ése primero). Informe en `diario/nocturno-local-2026-08-18.md`, MATI-HQ pusheado.
+
+Dos cosas para tu revisión de día:
+- **`firmware_modular` compila al 98 % de la partición por defecto** (quedan ~22 kB). No es de este branch, pero la próxima feature de firmware no entra.
+- **FrioSeguro tiene 13 branches sin mergear** y es el proyecto de PLATA; dos ya pasaron por @verificador con los fixes aplicados. El cuello de botella ya no es encontrar cosas.
+
+No toqué tus cambios sin commitear ni en MATI-HQ ni en frioseguro — el commit lista los 5 archivos uno por uno. Por eso el `git pull --rebase` de cierre no corrió; el push igual quedó en sync con origin.
+===== FIN mar 18/08/2026  2:11:40,75 ===== 
+===== TURNO NOCHE mar 18/08/2026 22:00:01,48 ===== 
+Listo. Turno cerrado.
+
+## Lo que hice
+
+**Repo:** `datalogger` (P0). **Branch:** `nocturno/local-2026-08-18-b-lector-campana` (`63ad41a`, pusheado). Sale de `nocturno/local-2026-08-17-cadena-bateria` — hay que mergear ese primero.
+
+**El hallazgo:** dos auditorías previas encontraron el mismo defecto sin enterarse una de la otra. D1 de la cadena de recuperación (08-15, *"66 Hz aparece en 0,066 Hz"*) y BAT-08 de la cadena de batería (08-17, *"la batería de la campaña se carga como ceros"*) son una sola función de 20 líneas: `import_sd_csv` conocía dos formatos de CSV y el de **campaña** —el que produce el DoD, `t_ms,seq,ax,...,vbat`— no era ninguno de los dos. Caía a la rama del sniffer, que asume segundos y unidades físicas.
+
+**Por qué no fue "una línea":** el orden de arreglo del 08-17 decía *"agregar `vbat` a la lista, una línea"*. Al escribirlo apareció que esa línea sola era **peor que el bug**: la serie de batería habría existido con el eje de tiempo 1000× mal, o sea una autonomía mil veces equivocada con cara de respuesta correcta. El bug al menos decía "pocas muestras".
+
+**Qué cambió:** tabla `FORMATOS`/`ALIAS` en vez del booleano `raw_mode`; header desconocido se declara en vez de suponer en silencio; fila cortada se descarta y se cuenta (antes volteaba el import entero — 8 h perdidas por los últimos 12 bytes). Más `/api/ds_battery`, que es lo que hace que el arreglo sirva: proyectar autonomía sobre un CSV de la SD, no sólo sobre lo que el sniffer escuchó en vivo. Cierra BAT-08, BAT-09, BAT-14 y D1.
+
+**Verificado sin hardware:** 97/97 tests (25 nuevos + 72 del checker, eran 70), `py_compile`, checker de 14 → 11 hallazgos y 6 → 5 eslabones rotos, y **4 mutaciones del arreglo que hacen fallar la suite las 4**.
+
+**Pendiente de hardware:** leer un CSV **real** de una SD (mis archivos de prueba los generé yo con el header que dice `nodo.py`; uno de verdad puede traer `ticks_ms` envuelto, dos arranques mezclados, o una misión Dreyfus que reusa las columnas `ax,ay,az`). Y abrir la página en un navegador.
+
+Informe completo en `diario/nocturno-local-2026-08-18-b.md`, `QUE_FALTA.md` actualizado, MATI-HQ pusheado. No toqué tus 16 archivos modificados ni los sin trackear, en ninguno de los dos repos.
+===== FIN mar 18/08/2026 22:12:30,20 ===== 
+===== TURNO NOCHE mi� 19/08/2026  2:00:01,64 ===== 
+Listo. Una tarea, cerrada y medida.
+
+## Qué elegí y por qué
+
+Tocaba `galgas` por rotación (P0, parada de octubre), y adentro había un candidato mejor que otra auditoría: **el agujero que abrió mi propio branch de anteanoche**. El 08-17-b hizo que los emisores escriban `alert_start` en `events` — y dejó anotado que faltaba el fix del `HOLD_SEC` "porque hoy un dropout espurio también escribe un `alert_start`". Emitir eventos sin arreglar el disparador es la secuencia equivocada: le diste voz al detector antes de fijarte si grita solo.
+
+## El hallazgo
+
+**El hold no faltaba. Estaba desconectado.** `Thresholds.hold_sec` se inicializa en 1,5 s, se persiste en NVS y se puede cambiar en caliente por `CMD_SET_THRESHOLDS` — y ninguna decisión lo leía. El `.ino` incluso cargaba `th` y no lo usaba. No se perdió una constante en la migración a v3: sobrevivió la perilla entera, sin cable.
+
+## Resultado
+
+**Alertas espurias en operación normal: 6 → 0**, medido sobre las 12 capturas Dreyfus reales. La rotura genuina sigue disparando (5 ventanas). Dos guardas: filtro de dropouts antes de los agregados (una muestra en 0.0 V daba `v_pp` 37× el umbral) y confirmación con un segundo burst **en el mismo wake** — exigir dos wakes habría costado 600 s de latencia frente a una rotura real.
+
+Lo que apareció al medir corrigió el diseño: mi primera versión tenía una regla de más ("si se descarta >25 % del burst, publicar crudo"), y esa regla era justamente la que fabricaba las 3 espurias que quedaban. Los 3 casos eran bloques de 190-405 muestras en 0.0 V que aparecen **igual** en la captura de rotura real y en una normal — no distinguen nada. Menos código y mejor resultado.
+
+## Verificación
+
+23 tests OK; mutación: sin guard fallan 4, sin hold 1, guard que tape el riel total 1. Compilan A y B (core 3.3.8), +1712 B flash. Una mutación **sobrevivió al primer intento** — el test que la debía matar era verdadero por accidente, y al reescribirlo me corrigió una creencia mía: el camino de "no quedan muestras válidas" cubre el riel *ruidoso*, no el *plano*. Un riel plano tiene `v_pp = 0` y no lo veía nadie, tampoco el v3. Queda documentado con test, no arreglado: el detector que faltaría es sobre `v_mean` y es una decisión de umbral tuya.
+
+## Dos cosas para vos
+
+- **Orden de merge**: `08-17-b-eventos-alerta` **y después** éste. Mergear sólo el primero deja `alert_start` críticos con el detector que grita solo — el peor de los tres estados.
+- **Flash al 94 %** (quedan 70 KB). No es de este branch, la base ya estaba así, pero la OTA es la vía de actualización en planta. Lo dejé como ítem 9b del `QUE_FALTA`.
+
+Sin verificar por hardware: que el ADC v3 real produzca el mismo tipo de dropout que estas capturas (son del pipeline legacy), el rango `(0.30, 3.20) V` contra el INA333 real, y una alerta punta a punta contando filas de `events`.
+
+Branch `nocturno/local-2026-08-19-guard-self-trigger` pusheado; informe en `diario/nocturno-local-2026-08-19.md`. No toqué los 16 modificados + 4 sin trackear que ya estaban en MATI-HQ — es trabajo tuyo en curso.
+===== FIN mi� 19/08/2026  2:27:41,58 ===== 
+===== TURNO NOCHE mi� 19/08/2026 22:00:01,54 ===== 
+Listo. Una tarea, terminada y verificada.
+
+## Qué hice
+
+**Repo:** `C:\Proyectos\frioseguro` (PLATA, prioridad #1)
+**Branch:** `nocturno/local-2026-08-19-b-fuente-frescura` — pusheado, **sale de `main`, no depende de ningún otro branch**.
+
+Tomé T4 y T5, los dos hallazgos de `@frontend` que el branch `08-16-b-cadena-tiempo` había dejado nombrados con la nota *«son dos líneas y son lo único que el cliente ve»*.
+
+**Eran más de dos líneas.** La resta `ahora − fecha` estaba escrita **cinco veces** en cinco archivos (`AdminPanel.fmtRelative`, `DevicesAdminTable.fmtRelative` —copia literal—, `App.getReadingAge`, el inline de la tarjeta de puerta, y `supabaseClient.computeIsOnline`), y las cinco fallaban en la **misma dirección peligrosa** ante una fecha futura o inválida: decían *fresco*. `computeIsOnline` con `age` negativo deja un equipo muerto **en verde para siempre**. Un sexto hueco, de CSS: `Sin datos` se pintaba con la regla base, que es verde.
+
+Y las fechas futuras no son hipotéticas: las estampa el reloj del **servidor**, la resta se hace contra el del **navegador** del comercio. Una PC atrasada deja el panel entero clavado en verde sin que se rompa nada.
+
+Ahora hay una sola resta (`web-dashboard/src/lib/freshness.js`) con la regla *cuando no se puede afirmar que el dato es fresco, se dice que no se sabe*. El caso normal no cambia — mismas cadenas, mismos umbrales, mismo umbral de online. **Neto −40 líneas.**
+
+## Verificado corriendo
+
+- `node --test src/lib/freshness.test.js` → **16/16 OK**
+- `npm run build` (vite) → OK
+- `npx eslint src/` → **exactamente** los 31 errores/7 warnings preexistentes de `main`, comparados archivo por archivo contra baseline con `git stash`. Cero nuevos.
+- **Mutación:** 5 mutaciones, las 5 muertas (7/2/3/2/1 tests).
+
+**Sin verificar (necesita ojos):** nadie lo vio en pantalla — el copy de los tres estados nuevos es de @diseno y la pasada visual es de @tester, 10 min con un device reportando.
+
+## Dos cosas que quiero que veas
+
+1. **El worktree de frioseguro había quedado parado en el branch de anoche**, así que mi branch nació apilado sobre el firmware. Lo rebasé sobre `main` — mergear "el fix del dashboard" habría arrastrado en silencio un cambio de `alerts.h` sin probar en banco. Sin `push --force`; el único ref que borré fue el mío, de cinco minutos antes.
+2. **`C:\Proyectos\frioseguro` tiene el revival de Cerro Moro entero sin commitear** (`firmware_revival/`, `kit_santacruz/`, `backup_supabase/`, el BOOTSTRAP de hoy). No lo toqué y verifiqué que los 9 ítems siguen intactos después de mis cambios de branch — pero vive **sólo en ese disco**.
+
+Informe completo en `diario/nocturno-local-2026-08-19-b.md`, entrada en el `QUE_FALTA` #10, MATI-HQ pusheado. Tus 16 modificados del cuartel siguen sin tocar.
+===== FIN mi� 19/08/2026 22:12:29,70 ===== 
+===== TURNO NOCHE jue 20/08/2026  2:00:01,47 ===== 
+Failed to authenticate: OAuth session expired and could not be refreshed
+===== FIN jue 20/08/2026  2:00:09,57 ===== 
+===== TURNO NOCHE jue 20/08/2026 22:00:01,62 ===== 
+Noche cerrada. Resumen:
+
+**Tarea:** BAT-07 de la cadena de la batería en `datalogger` — el paso #2 que la auditoría del 08-17 dejó nombrado, y el complemento del lector del 08-18-b.
+
+**El defecto:** `eco.py` leía la batería una vez por ráfaga y la mandaba **sólo por WiFi**; el CSV que queda en la SD no la llevaba. Campaña sin cobertura → la tensión de esas horas no existía en ningún lado.
+
+**Segundo defecto, que no estaba en ninguna auditoría:** el archivo se llama `e%03d_%d.csv` = índice + uptime, y **los dos arrancan en cero en cada arranque** → dos arranques producen los mismos nombres y el segundo abre `"w"` sobre el primero. Una campaña que se reiniciaba se borraba sola. Determinista, no una carrera.
+
+**Lo que hice distinto de lo que pedía la auditoría:** pedía agregar una columna `vb`. No lo hice: la ráfaga muestrea a ~1 kHz y el `f.write` está dentro del lazo crítico — una columna constante son decenas de miles de formateos de float por archivo, pagando jitter (el número que mide el bloqueante #1 del DoD) por un dato que no cambia dentro de la ráfaga. La batería va en la metadata (`up_s=` + `vb_ini=` en el header, `vb_fin=` en la línea de cierre); `vb_ini` se mide **antes** de muestrear porque el último archivo de una campaña es el que queda cortado. Del lado del laboratorio: `read_eco_meta` (sin parsear las filas), `eco_battery_series` (corta el segmento cuando el nodo se reinicia, en vez de inventar el hueco) y `/api/eco_battery?dir=`.
+
+**Verificado sin hardware:** 124/124 tests (26 nuevos + 73 del checker + 25 del lector); 7 mutaciones, las 7 matan al menos un test; endpoint probado punta a punta con el test client de Flask (campaña sintética 4,10→3,60 V en 6 h → `eta_h 7.2`). La cadena bajó de 5 eslabones rotos a 4.
+
+**Sin verificar:** que un Pico 2 W real escriba/lea estos archivos, y que `time.time()` en esa build de MicroPython dé segundos desde el boot (si diera 0 siempre, la falla es ruidosa: un segmento por archivo).
+
+**Branch:** `nocturno/local-2026-08-20-rafaga-bateria` (`ff2ae28`, pusheado). Sale del 08-18-b — el orden de merge es 08-17 → 08-18-b → 08-20. Informe en `diario/nocturno-local-2026-08-20.md`, MATI-HQ pusheado.
+
+Dos cosas para tu día: `C:\Proyectos\datalogger` tiene trabajo del 08-10 sin commitear (`firmwares/nodo-gimap/` es la evidencia de BAT-01/BAT-02 y no está versionado), y el latido de DESKTOP-RK8DH7C sigue parado desde el 08-07.
+===== FIN jue 20/08/2026 22:16:38,73 ===== 
+===== TURNO NOCHE vie 21/08/2026  2:00:01,62 ===== 
+Listo. Noche cerrada.
+
+## Qué hice
+
+**Repo:** `C:\Proyectos\galgas` (P0 — parada Dreyfus, octubre)
+**Branch:** `nocturno/local-2026-08-21-presupuesto-silencio` (`0e90168`, pusheado, **sale de `main`, no depende de nadie**)
+
+**El bug:** el emisor modular que se flashea para octubre (`0.8.1-A-otatest`) se veía **OFFLINE en el dashboard, siempre, aunque estuviera perfecto**. La cuenta de "cuánto silencio es normal" estaba escrita en **4 lugares** que no se conocían, y 3 de los 4 la adivinaban con un regex sobre el string de versión (`/-(p[a-z]+)$/`). Esa versión no matchea → cae al fallback de 300 s → que es **más corto que su período real de 600 s**.
+
+Era D7 + D5, dos hallazgos que la auditoría del 08-11 dejó escritos con nombre y evidencia, y que nadie había implementado en diez días.
+
+**Lo que la auditoría no había visto:** eran 4 copias (no 2), 3 regex distintos (`FirmwareView` usaba `\w`), una constante muerta (`TIMEOUT_S`), el RX con 60 s de presupuesto para un heartbeat de 30 s (dos exactos, sin margen), y la card sin `stage` que decía **`OFFLINE` pintada de verde** (texto `|| 'OFFLINE'`, clase `|| 'normal'`) — el mismo patrón que el `Sin datos` verde de FrioSeguro de anteanoche.
+
+**El arreglo:** `web/src/lib/silence.js`, una sola cuenta. El período sale de lo que el **device reporta** (`metadata.period_s` / `sleep_s` / `mode`) y sólo como último recurso del sufijo de versión — porque la versión es una etiqueta de compilación y `set_period_s`, `set_mode` y el propio self-trigger (600 s → 10 s) cambian el período sin tocarla. Tres estados: `ok` / `silent` / `unknown`, para no mentir en ninguna de las dos direcciones. Firmware: `meta["period_s"]` en los dos emisores, **+24 B de flash medidos, 0 de RAM**.
+
+**Verificado corriendo:** 30/30 tests, `npm run build` OK, compilan A y B, y **8 mutaciones — ninguna sobrevivió**.
+
+**Sin verificar (banco):** que un ESP32 real escriba `period_s`; la capacidad del `StaticJsonDocument<320>` (si desbordara, trunca en silencio); y la "ventana de un reporte" — el POST sale antes de `updateAlertState()`, así que en una transición de modo el período reportado queda viejo por un reporte. Ese último **decidí no arreglarlo**: mover esa llamada cambia también `alert_streak` y `r.stage`, y es una máquina de estados de firmware de producción. Queda anotado en el código y con dueño (@firmware).
+
+**Informe:** `diario/nocturno-local-2026-08-21.md` + `QUE_FALTA.md` de galgas actualizado. MATI-HQ pusheado (`6105116`).
+
+Dos cosas de higiene: `galgas` tiene la carpeta `hardware/` **sin commitear** (no la toqué) y MATI-HQ sigue con los 16 modificados de siempre.
+===== FIN vie 21/08/2026  2:20:08,79 ===== 

@@ -1,0 +1,260 @@
+# Bitácora @diseno3d — diseño mecánico 3D
+
+## 2026-08-19 (c) — STITCH: rediseño de la cara porque DABA MIEDO
+
+**El disparador**: Matías vio el render armado y dijo *"es terrorífico, da miedo
+posta, parece un diablito"*. Para un juguete de una nena de 7 años eso es un
+fallo de primer orden — más grave que cualquier cota. Se frenó todo y se
+rehízo la forma.
+
+**Referencia**: se bajó el SVG oficial de Stitch de Wikipedia
+(`Stitch_(Lilo_&_Stitch).svg`, 960 px) y se comparó lado a lado con el render.
+No se tocó una línea antes de tener la referencia al lado.
+
+**Diagnóstico — por qué leía como un diablito** (5 causas, en orden de peso):
+1. **Orejas = cuernos.** Medían 91 mm, nacían de la CORONILLA, iban rectas
+   hacia arriba y afuera y terminaban en una bola de r=4, o sea EN PUNTA.
+   Llegaban a ±132 mm. Dos apéndices largos, finos y puntiagudos saliendo
+   para arriba de la cabeza: cuernos de manual.
+2. **Cabeza con forma de corazón invertido.** `cabeza_bolas` tenía las bolas
+   grandes (r=52) a z=248 y los "pómulos" a z=250, todo ARRIBA: de frente daba
+   un trapecio ancho arriba y afinado abajo = silueta de cara de diablo.
+   Stitch es exactamente al revés: ancho abajo (mejillas), redondo arriba.
+3. **Ojos rojos rectangulares.** En el visor las placas Heltec estaban
+   pintadas naranja rojizo (#c94f2f) y se veían POR DENTRO de los ojos: dos
+   rectángulos rojos encendidos en dos cuencas negras.
+4. **Nariz en punta y del mismo azul.** Un triangulito que no se leía como
+   nariz sino como hocico afilado.
+5. **Cinturón táctico.** La visera de sensores pintada de negro con los
+   módulos IR en verde cruzaba el pecho como una bandolera.
+Secundarios: brazos finos y largos (patas de araña), escalón de "collar" en el
+hombro (el torso era MÁS ANCHO que la falda de la cabeza) y sonrisa de 3 mm.
+
+**Qué se cambió** (todo en `parametros.scad` salvo lo indicado):
+- `cabeza_bolas` reescrita: ancho máximo 140 mm a z=236 (tercio medio-bajo) y
+  coronilla en domo. Perfil documentado en el archivo. Además la falda de la
+  cabeza pasó a 96 mm y el hombro del torso se achicó de 120 a 90: **la cabeza
+  ahora vuela sobre el torso y tapa la junta — desapareció el cuello.**
+- `mejilla_bolas` (nuevas): dos bollos que SOBRESALEN del panel plano. La
+  jerarquía de profundidad nariz(65) > hocico(61) > ojos(57) > mejillas(54) >
+  panel(46) es lo que devuelve la silueta redonda con un panel plano detrás.
+- Orejas: 35 % más cortas, punta r=4 → r=8.5 (redonda), la cadena se curva,
+  y la raíz bajó de la coronilla al COSTADO de la cabeza (x=67, z=250).
+  **La condición que importa no es el ancho: es que la oreja no asome por
+  encima de la coronilla y no termine en punta.** Punta a z=268 contra 298 de
+  la coronilla. Ancho total 238 mm (antes 264) — sigue siendo la cota más
+  grande y está bien: las orejas de Stitch son enormes.
+- Ojos: `ojo_bola_r` 30 → 36 y saliente 10 → 11 ⇒ el ojo se ve de 47 mm (antes
+  40) y, de yapa, el espesor en los postes sube de 4,4 a 6,5 mm (**más grande
+  Y más fuerte**). Separados 50: quedan a 3 mm uno de otro. La apertura pasó
+  de rectángulo redondeado a ÓVALO (el radio de esquina = la mitad del alto):
+  un rectángulo iluminado lee como pantalla, un óvalo lee como ojo.
+- **`nariz.scad` (pieza nueva, filamento NEGRO)**: en FDM no hay dos colores en
+  una pieza. Son 10 g de plástico y es lo que más parecido compra por gramo.
+  Encaja con un truco lindo: el MISMO sólido es la pieza (d=0) y el hueco que
+  se le resta a la cabeza (d=tol), así no queda ni una luz; y como es un
+  prisma con la silueta de la nariz que arranca en un plano, rebana el hocico
+  y la nariz apoya en una plataforma PLANA (imprimible y medible).
+- Boca: r 26 → 30 y grosor 3 → 5,5.
+- Brazos más cortos y gordos; `pata_rr` 12 → 16.
+- Visor: hardware **apagado por defecto** (lo primero que se ve es el muñeco,
+  no las placas), Heltec gris oscuro en vez de rojo, visera azul, y un grupo
+  nuevo **"pantallas encendidas"** para ver cómo queda con los ojos prendidos.
+
+**Tres bugs de ingeniería que salieron de este rediseño** (los tres los cazó el
+conteo de volúmenes de CGAL, que es el test unitario del CSG):
+1. **La boca pasó a ser un donut.** Con el hocico nuevo (76 mm, 15 de saliente)
+   el anillo ENTERO del toro quedaba dentro de la piel y tallaba un círculo
+   completo alrededor del morro en vez de una sonrisa. Antes funcionaba "de
+   casualidad" porque el hocico era chico y el resto del anillo pasaba por el
+   aire. Ahora el toro se recorta explícitamente por debajo de su centro.
+   **Lección: no depender de que la geometría se desvanezca sola.**
+2. **El poste de la nariz quedó flotando.** `cabeza_frente` salía en 2 cuerpos:
+   la cabeza y un cilindro suelto. El hocico es una cáscara de 2,4 mm; el
+   alojamiento de la nariz la atravesaba entera y el poste nacía en el aire,
+   adentro del hueco del morro. Se agregó `nariz_taco()`, que se le resta a la
+   CAVIDAD para dejar carne maciza detrás de la nariz.
+3. **Cada oreja salía en 2 pedazos** (4 volúmenes en vez de 2). `espiga_macho`
+   se construye desde el origen local hacia adentro; al reubicar la oreja el
+   origen quedó un pelo DENTRO de la piel, así que la espiga vivía entera
+   adentro de la cabeza y no tocaba el cuerpo de la oreja. Se agregó
+   `oreja_espiga_off = 5`: la espiga cruza la piel (5 mm soldados a la oreja,
+   8 mm metidos en la mortaja). Como macho y hembra usan el MISMO transform,
+   `cabeza_atras` se acomodó sola.
+
+**Herramienta nueva: `3d\preview_forma.scad`.** Dibuja solo las envolventes
+exteriores (sin cavidades ni tornillos) y contesta en 30 s la única pregunta
+que importa al principio: ¿parece Stitch o parece un diablito? Un render de
+verificación completo tarda 3 minutos y la forma se decide en 10 iteraciones.
+**OJO — trampa que costó una iteración entera:** el preview de OpenSCAD
+(OpenCSG) miente con CSG anidado profundo: mostraba una mancha negra enorme
+tapando media cara que NO existía en la geometría. Hay que usar `--render`
+(CGAL) para juzgar forma. El PNG sale en gris, pero es la verdad.
+
+**Verificación** (Playwright + Chromium headless, SwiftShader): sin errores de
+página, consola limpia, **24 mallas / 47.682 triángulos**, 47.730 triángulos
+dibujados en 26 draw calls con todo prendido, 46.166 en 21 con solo carcasa,
+48 con "nada" (solo el disco de sombra), 510 frames animados y 36-39 % de
+píxeles no-fondo en las 4 vistas. Los 17 STL se re-exportaron con CALIDAD=1 y
+**todos dan 1 cuerpo sólido** (2 para los pares). Cotas nuevas: alto **298 mm**,
+ancho **238 mm**, fondo **230 mm**.
+
+**El filtro que importa**: se miró la cara ampliada y la respuesta honesta es
+que sí, una nena de 7 la abraza. Ojos grandes y redondos, nariz de botón
+negra, sonrisa ancha, mejillas, orejas romas hacia atrás. Cero cuernos, cero
+colmillos, cero cejas enojadas, cero rectángulos rojos.
+
+**Lo que queda pendiente de estética** (no da miedo, pero es lo menos peluche):
+la **visera de sensores** sigue siendo una banda de 124 mm que cruza el pecho
+y de perfil sobresale como una bandeja. Es funcional (los IR necesitan ver).
+Próxima iteración: hundirla en el torso o partirla en dos parches chicos.
+También quedó sin hacer el **interior de oreja rosa** (pieza fina que se
+pegaría en un rebaje de la cara frontal de la oreja): es lo que falta para el
+golpe de color de la referencia.
+
+## 2026-08-19 (b) — STITCH: visor 3D del muñeco ARMADO
+
+**Problema**: los STL de `3d\stl\` están en ORIENTACIÓN DE IMPRESIÓN (acostados,
+rotados). Sirven para el slicer, no para mostrarle a Matías cómo queda el bicho.
+
+**Hecho**:
+- `3d\armado_pieza.scad` (nuevo, NO se imprime): exportador que renderiza UNA
+  pieza —o un grupo de hardware— **en su posición del conjunto**, elegida con
+  `-D "PIEZA=\"torso_frente\""`. Mismas coordenadas que `stitch_completo.scad`
+  (z=0 = piso, +Y = adelante), sin la rotación de impresión. 15 nombres válidos.
+- `3d\stl_armado\` (nuevo): 15 STL, uno por pieza/grupo, ya posicionados.
+  ~22 min de CGAL con `CALIDAD=1`; se renderizaron de a 3 en paralelo.
+- `C:\Proyectos\stitch-ainho\VISTA3D_IMPRESO.html` (2,9 MB, autocontenido):
+  Three.js 0.147 por CDN + parser propio de STL binario; los 21 objetos van
+  embebidos en base64 (abre de doble click por `file://`, sin servidor).
+  Órbita con el mouse, zoom con la rueda, pan con botón derecho, 4 vistas
+  (Frente/Perfil/3-4/Arriba), prender-apagar pieza por pieza, "solo carcasa" /
+  "solo hardware", **explosión gradual con slider** y aristas opcionales.
+  Cada fila del panel muestra la cota real de la pieza (bbox en mm), su rango
+  de z en el muñeco y su cantidad de triángulos; abajo, alto/ancho/fondo total.
+- Las piezas simétricas que vienen de a dos en un mismo STL (orejas, brazos,
+  patas, marcos de ojo, cunas, Heltec) se **parten en el generador por el signo
+  de X del centroide** de cada triángulo: así se prenden y explotan por
+  separado sin tener que renderizar el doble de STL.
+
+**Cotas reales medidas sobre el STL armado** (esto es lo que hay que creerle,
+no los comentarios): alto **296 mm** (objetivo 300; los 4 mm son la faceta de
+las esferas), ancho **264 mm**, fondo **230 mm**.
+
+**HALLAZGO — el ancho documentado está mal.** `parametros.scad` dice que con
+orejas el ancho da 177 mm y `pata_carcasa.scad` afirma que la cota más grande
+del robot son los 214 mm de las patas. Medido sobre el STL: las **orejas
+llegan a x = ±132 → 264 mm**, contra 220 de las patas y 202 de las ruedas.
+**La cota más grande del bicho son las orejas, no las patas.** Hay que
+corregir los dos comentarios y, si 264 molesta para pasar por algún lado,
+bajar `oreja_rot` (hoy `[0,-18,-49]`).
+
+**Verificación (Playwright + Chromium headless con SwiftShader)**: sin errores
+de página, consola limpia, `DIAG.mallas = 21`, `DIAG.tris = 43.334`. Con todo
+visible el render reporta **43.382 triángulos en 23 draw calls**; con "solo
+carcasa" baja a 41.818 en 18; con "nada", 48 (solo el disco de sombra) — o sea
+que el toggle mueve geometría de verdad. Análisis de píxeles del canvas: 36-39 %
+de píxeles distintos del fondo en las 4 vistas (nada de pantalla negra), y 755
+frames animados. Capturas: vista de frente, 3/4, explotada y solo-carcasa.
+Se corrigieron dos cosas encontradas en esa verificación: la vista "Frente"
+mostraba la nuca (el +Y de OpenSCAD cae en −Z del mundo Three.js) y el sol
+iluminaba a contraluz.
+
+**Próximo paso**: sigue siendo el de abajo (medir `chasis_z`, `heltec`,
+`heltec_off` con calibre e imprimir `marco_ojo` + `soporte_heltec` de prueba).
+Si se cambia una cota, hay que re-exportar `stl_armado\` para que el visor deje
+de mentir: `openscad -o stl_armado\<p>.stl -D "PIEZA=\"<p>\"" armado_pieza.scad`.
+
+## 2026-08-19 — Carcasa STITCH para Ainho (entrega completa)
+
+**Hecho** (repo `C:\Proyectos\stitch-ainho\3d\`): 12 piezas imprimibles +
+`parametros.scad` (única fuente de cotas) + `comun.scad` (módulos) +
+`stitch_completo.scad` (conjunto de verificación) + `README.md`.
+Robot de 300 mm sobre el chasis Smart Car 2WD, cabeza de 135 × 122 × 108.
+
+**Técnica que se usó y conviene reusar**: los cuerpos orgánicos son
+`hull()` de esferas. Como `hull(esferas r en c) = conv(c) ⊕ B(r)`, restarle
+el mismo espesor a TODAS las esferas da el offset interior EXACTO → pared de
+espesor constante sin `minkowski()` (que tardaría horas). Ídem cajas
+redondeadas (dims −2t, radio −t). Toda la cáscara sale de ahí.
+
+**Tres hallazgos de ingeniería (no cosmética)**:
+1. **Las Heltec no entran detrás de una cara redonda.** Se mapeó numéricamente
+   el hueco disponible en toda la huella de la placa (26 × 51) y en la esquina
+   abajo-afuera faltaban 9,6 mm. Se demostró que ninguna inclinación lo
+   arregla (una recta no puede ser tangente en la pantalla y quedar detrás de
+   la superficie en los dos extremos). Solución: **la cara es un panel PLANO**
+   recortado con caja redondeada (r=25 para fundirlo en la cabeza). Bonus: así
+   los dos marcos de ojo y las dos cunas salen piezas idénticas, y Stitch tiene
+   la cara chata igual.
+2. **El labio de junta estaba flotando.** Por definición va `tol` más adentro
+   que la pared, o sea que no toca su propia mitad: se caía en la impresora.
+   Se le agregó un ARRANQUE del lado y>0 que entra 0,5 mm en la pared.
+   Evidencia: `Simple: no` → `Simple: yes` en el render de `torso_frente`.
+3. **La pata no puede cerrar por abajo.** Centro de rueda a 32,5 del piso,
+   pata a 5 → 27,5 mm de radio, pero necesita 35,5 para no rozar la goma.
+   27,5 < 35,5 ⇒ imposible. Es un capuchón abierto cortado plano en z=5.
+
+**Tres más que salieron del render de verificación** (por eso se hace):
+4. `marco_ojo` daba **7 volúmenes** = cada marco en 3 pedazos sueltos. Los
+   postes arrancaban en `ojo_y0+12`, o sea en el aire: como al marco se le
+   resta la cabeza, lo único que le queda es el casquete que sobresale. El
+   poste tiene que nacer en `ojo_y0 + sqrt(r²−(sep/2)²)`. Ahora da 3 (= 2
+   cuerpos). **El conteo de volúmenes de CGAL es el test unitario del CSG.**
+5. La **raíz redonda de la oreja** (⌀30) se clavaba 23 mm dentro de la cabeza:
+   la oreja no podía asentar. Se le talla la raíz con `cabeza_ext(tol)` en su
+   marco local (misma técnica que el marco de ojo). Y la dirección de la oreja
+   se derivó pidiendo punta < 300 mm de alto y ancho total < el de las ruedas.
+6. La **pata terminaba en el chasis (55)** y dejaba la corona de la goma al
+   aire pegada al borde fijo de la tapa: punto de pellizco con la rueda
+   girando. Sube a 71 y encapsula la rueda.
+
+**Regla de orientación que ordenó todo el diseño**: cada mitad se imprime con
+el plano de corte contra la cama, y por eso ninguna pieza puede tener
+salientes que crucen ese plano — salvo el labio, que al ser anillo continuo se
+imprime primero y sostiene el resto. De ahí salieron los tornillos de unión
+RADIALES (avellanados, al ras) en vez de torres axiales. **Cero soportes en
+las 12 piezas.**
+
+**Medidas que faltan (calibre, bloquean la versión definitiva)**: `chasis_z`
+(altura de la madera sobre el piso — es la que más mueve todo), `heltec` y
+`heltec_off` (borde→centro de pantalla), `heltec_pantalla`, `chasis_x/y`,
+`rueda_sep_ext`, patrón de agujeros del chasis, `parlante_d`,
+`hcsr04_ojo_sep`, `porta_pilas`, `pico`, `pulsera_muneca_d`. Lista completa al
+final del README.
+
+**Próximo paso**: medir `chasis_z`, `heltec` y `heltec_off`, poner los valores
+reales y tirar SOLO `marco_ojo` + `soporte_heltec` (~4 h) para probar el ojo
+contra una Heltec real. Si el ojo cierra, cierra el resto: recién ahí las
+60 h de las cáscaras.
+
+## 2026-07-30 — Monturas LASER-PCB (primera entrega completa)
+
+**Hecho** (repo `C:\Proyectos\laser-pcb\mecanica\`):
+- `laser_mount.scad` — montura del módulo láser en 3 partes: placa al carro
+  con ranuras de foco ±10 mm y escala grabada, cuna en U que abraza el bloque
+  de aluminio (33/40 mm paramétrico, no depende del patrón de agujeros de la
+  marca), tapa frontal. Haz vertical por construcción, fan libre.
+- `torno_mount.scad` — cuerpo trasero macizo + tapa; variantes motor 775
+  (Ø42, abrazadera doble sep. 26 mm) y cuello Dremel (Ø19, collar único).
+- `porta_placa.scad` — base con esquina (0,0) grabada, topes en L y 2 levas
+  excéntricas M3; variantes 100×70 y 160×100.
+- `interlock_pantalla.scad` — escuadra ranurada para acrílico 3 mm + variante
+  con torre para microswitch V-15 (interlock físico).
+- **OpenSCAD 2021.01 instalado vía winget** (no estaba). 12 STL renderizados
+  en `mecanica\stl\`, todos verificados sólido único (CGAL Volumes=2) y con
+  bounding box reportado en `PIEZAS.md`.
+- Bug encontrado y corregido en render: orejas de la tapa del torno tocaban
+  el semi-anillo solo en tangente → 5 cuerpos sueltos; se solaparon con el
+  anillo (evidencia: Volumes 6→2).
+- Documentación completa en `mecanica\PIEZAS.md` (qué es cada pieza, cómo se
+  imprime, ferretería M3, advertencia acrílico ≠ filtro de 450 nm).
+
+**Medidas que faltan (calibre, bloquean versión definitiva)**: agujeros del
+carro (sep + M3/M4), lado del módulo láser (33/40), Ø motor 775, Ø cuello
+Dremel, espesor placa de cobre, agujeros de la cama, espesor acrílico.
+Lista completa al final de `PIEZAS.md`.
+
+**Próximo paso**: cuando se defina la impresora → medir carro, poner valores
+reales en los 4 .scad, re-renderizar (`openscad -D ...`, comandos en cada
+archivo) e imprimir primero la placa del carro como pieza de prueba de agujeros.

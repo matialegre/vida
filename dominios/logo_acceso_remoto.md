@@ -84,3 +84,41 @@ Matías pidió bajar el programa del PLC. Hallazgos DEFINITIVOS (vía Config onl
 
 **Para bajar el programa limpio (si existe)**: Archivo→Nuevo eligiendo modelo **0BA7.ES4**, luego Herramientas→Transferir→LOGO!→PC (sin mismatch). Si vuelve vacío → confirmado: no hay programa, se puede programar libremente.
 - Evidencia: `Desktop\LOGO_0BA7-ES4_identificado.png`.
+
+---
+
+## 🌐 2026-08-06 — @comms: RED REAL MEDIDA + GUÍA COMPLETA
+
+**Entregable**: `dominios\LOGO_RED_GUIA.html` (autocontenido, 2 diagramas SVG, tabla de direccionamiento, comandos copiables, checklist en 5 bloques). Verificado: tags balanceados (0 errores), renderizado con Edge headless (14729 px, sin roturas).
+
+### Mediciones (PC de escritorio DESKTOP-RK8DH7C, Ethernet, sin GUI)
+| Dato | Valor |
+|---|---|
+| PC | `192.168.0.232/24`, gw + DHCP server `192.168.0.1`, DNS `181.30.140.197/.132`, sufijo `fibertel.com.ar` |
+| **Qué es 192.168.0.1** | **CABLEMODEM DOCSIS de Fibertel** — HTTP 302 a `Docsis_system.php`, `Server: lighttpd`, `X-Powered-By: PHP/5.3.2`. Puertos 80/443/53 abiertos. **NO es el TP-LINK** |
+| IP pública | `181.231.144.34` (ifconfig.me == api.ipify.org) |
+| Traceroute 8.8.8.8 | 1: `192.168.0.1` · 2: mudo · 3: mudo · 4: `181.106.12.160` |
+| 192.168.1.1 / 192.168.100.1 / 10.0.0.1 | **ninguna responde** |
+| Barrido /24 | vivos: `.1` (gw), `.46` (TTL64, 443 abierto), `.232` (PC), `.254` (TTL64) |
+| Puerto 102 (ISO-TSAP) | **cerrado en todos** |
+| ARP | .1 86:17:ef · .46 3c:64:cf · .49 a8:ca:77 · .93 d0:57:94 (Sagemcom) · .254 00:50:f1 (Intel) |
+
+### Conclusiones
+1. **El router principal es el cablemodem Fibertel** (`192.168.0.1`), que hace NAT+DHCP. El TP-LINK es el SEGUNDO router → ahí nace el doble NAT. La PC de escritorio está enchufada directo al modem del ISP.
+2. **NINGÚN LOGO conectado hoy** — `192.168.0.2` (donde estaba el 0BA7 el 14-jul) no responde, y el puerto 102 está cerrado en todos los hosts vivos. La Etapa 1 hay que rehacerla con los equipos alimentados.
+3. **CGNAT: no confirmado ni descartado** desde acá. Los 2 saltos mudos son compatibles con doble NAT y/o CGNAT. Test definitivo (2 min, en el navegador): `http://192.168.0.1` → estado/WAN → si la IP WAN es `181.231.144.34` hay IP pública; si está entre `100.64.x` y `100.127.x` es CGNAT. **Da igual para la solución elegida.**
+4. **El pool DHCP reparte bajo** (se vio un `.46`) → las IP fijas van en `.2`–`.6` y hay que subir el pool a `.10` en el modem.
+
+### Decisiones tomadas (revierten el plan del 14-jul, sección E)
+- **Port forwarding + DDNS: DESCARTADO.** Con CGNAT probable es imposible; con doble NAT es frágil; y exponer el web server de un PLC es inaceptable.
+- **RECOMENDADO: Tailscale free (plan Personal) con subnet router** en una PC siempre prendida: `tailscale up --advertise-routes=192.168.0.0/24 --accept-dns=false` + aprobar la ruta en la consola + `--accept-routes` en los clientes. Atraviesa CGNAT y doble NAT sin abrir un solo puerto. ZeroTier = plan B (requiere NAT/proxy ARP a mano en Windows). Chrome Remote Desktop = complemento, no solución (no da acceso de red a los PLC).
+- **Doble NAT se arregla poniendo el TP-LINK en modo AP**: IP LAN `192.168.0.5`, DHCP OFF, cable **LAN-LAN** (WAN vacío). Ojo: el TP-LINK de fábrica suele venir en `192.168.0.1` = choque con el cablemodem → cambiarle la IP ANTES de cablearlos.
+
+### Direccionamiento final propuesto
+`.1` cablemodem · `.2` LOGO 0BA7.ES4 · `.3` LOGO 0BA8 · `.4` TDE · `.5` TP-LINK (AP) · `.6` PC dedicada Tailscale · `.7-.9` reservadas · pool DHCP desde `.10`.
+
+### PENDIENTE (en orden, del checklist de la guía)
+1. Bloque 0: entrar al cablemodem, anotar rango DHCP y la IP WAN (test de CGNAT); poner el TP-LINK en AP.
+2. Bloque 1: energizar los LOGO y fijarles IP por teclado (menú Red); los 3 pings tienen que responder.
+3. Bloque 2: backup con modelo **0BA7.ES4** exacto; programa de humo I1→Q1 con evidencia en video.
+4. Bloque 4: Tailscale + prueba de aceptación (celular en datos móviles) + prueba de recuperación (reboot de la PC dedicada).

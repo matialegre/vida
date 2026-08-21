@@ -1,0 +1,168 @@
+<meta charset="utf-8">
+<title>Emsica — Smart-Ex 03 (A)</title>
+<style>
+  @page { size: A4; margin: 0; }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  :root{
+    --grafito:#12161b; --grafito2:#1c232b; --papel:#ffffff;
+    --tinta:#141a1f; --gris:#5a6570; --linea:#dde3e8;
+    --ambar:#f5a800; --ambar-d:#a06d00; --crema:#fbf5e8;
+  }
+  html,body{ background:#e9edf1; }
+  body{ font-family:"Segoe UI",system-ui,Arial,sans-serif; color:var(--tinta); line-height:1.5; -webkit-font-smoothing:antialiased; }
+  .disp{ font-family:"Bahnschrift","DIN Alternate","Segoe UI Semibold",system-ui,sans-serif; }
+  .hoja{ width:210mm; min-height:297mm; margin:0 auto; background:var(--papel); display:flex; flex-direction:column; }
+
+  /* identidad */
+  .idbar{ display:flex; justify-content:space-between; align-items:center; padding:6.5mm 13mm 5mm; }
+  .marca{ display:flex; align-items:center; gap:10px; }
+  .marca .glifo{ width:33px; height:33px; background:var(--tinta); color:#fff; display:grid; place-items:center; font-weight:800; font-size:21px; font-family:"Bahnschrift",sans-serif; transform:skewX(-8deg); }
+  .marca .txt b{ font-size:18px; letter-spacing:1.6px; font-family:"Bahnschrift",sans-serif; }
+  .marca .txt span{ display:block; font-size:8px; color:var(--gris); letter-spacing:.5px; text-transform:uppercase; }
+  .idbar .dist{ text-align:right; font-size:8.5px; color:var(--gris); text-transform:uppercase; letter-spacing:1.2px; }
+  .idbar .dist b{ display:block; color:var(--tinta); font-size:11px; letter-spacing:.5px; }
+
+  /* hero */
+  .hero{ background:var(--grafito); color:#eef1f4; padding:13mm 13mm 11mm; position:relative; display:flex; gap:12px; align-items:center; overflow:hidden; }
+  .hero::before{ content:""; position:absolute; inset:0; background:repeating-linear-gradient(-45deg, rgba(245,168,0,.055) 0 13px, transparent 13px 28px); }
+  .hero::after{ content:""; position:absolute; right:-60px; top:-60px; width:260px; height:260px; border:1px solid rgba(245,168,0,.15); border-radius:50%; }
+  .hero .col{ flex:1; position:relative; z-index:1; }
+  .eyebrow{ display:inline-block; font-size:9.5px; letter-spacing:2.6px; text-transform:uppercase; color:var(--grafito); background:var(--ambar); padding:4px 11px; font-weight:700; font-family:"Bahnschrift",sans-serif; }
+  .hero h1{ font-size:56px; letter-spacing:-.6px; line-height:.95; margin:13px 0 8px; color:#fff; }
+  .hero h1 small{ font-size:20px; vertical-align:super; color:var(--ambar); letter-spacing:0; }
+  .hero .claim{ font-size:17px; color:#cfd5db; max-width:112mm; line-height:1.42; }
+  .hero .claim b{ color:#fff; }
+  .hero .marc{ margin-top:11px; font-family:"Bahnschrift",sans-serif; letter-spacing:1.2px; font-size:10.5px; color:#8b95a0; text-transform:uppercase; }
+  .fono{ position:relative; z-index:1; flex:0 0 40mm; display:grid; place-items:center; }
+
+  /* franja seguridad (la estrella) */
+  .safety{ background:var(--ambar); color:var(--grafito); padding:5mm 13mm; display:flex; align-items:center; gap:14px; }
+  .safety svg{ width:30px; height:30px; flex:0 0 30px; }
+  .safety .t b{ font-family:"Bahnschrift",sans-serif; font-size:15.5px; letter-spacing:.2px; display:block; }
+  .safety .t span{ font-size:11px; }
+
+  /* razones */
+  .razones{ display:grid; grid-template-columns:1fr 1fr 1fr; gap:0; }
+  .r{ padding:6.5mm 6mm; border-right:1px solid var(--linea); }
+  .r:last-child{ border-right:0; }
+  .r .ic{ width:28px; height:28px; margin-bottom:8px; }
+  .r h3{ font-size:13px; font-family:"Bahnschrift",sans-serif; letter-spacing:.2px; margin-bottom:4px; line-height:1.15; }
+  .r h3 .hl{ color:var(--ambar-d); }
+  .r p{ font-size:10.5px; color:var(--gris); line-height:1.45; }
+
+  /* versiones */
+  .vers{ display:flex; border-top:1px solid var(--linea); }
+  .v{ flex:1; padding:5mm 13mm; }
+  .v:first-child{ border-right:1px solid var(--linea); background:var(--crema); }
+  .v .tag{ font-family:"Bahnschrift",sans-serif; font-size:10.5px; letter-spacing:1.5px; text-transform:uppercase; color:var(--ambar-d); font-weight:700; }
+  .v h4{ font-size:14.5px; margin:2px 0 5px; font-family:"Bahnschrift",sans-serif; }
+  .v .zona{ font-family:"Consolas",monospace; font-size:10px; color:var(--tinta); background:#eef1f4; padding:2px 7px; display:inline-block; border-radius:3px; }
+  .v p{ font-size:10px; color:var(--gris); margin-top:6px; line-height:1.4; }
+
+  /* specs + certs */
+  .base{ padding:5.5mm 13mm 3mm; border-top:1px solid var(--linea); }
+  .base .st{ font-family:"Bahnschrift",sans-serif; font-size:10.5px; letter-spacing:2.5px; text-transform:uppercase; color:var(--gris); margin-bottom:7px; }
+  .sgrid{ display:grid; grid-template-columns:1fr 1fr 1fr; gap:3px 20px; }
+  .srow{ display:flex; justify-content:space-between; gap:8px; font-size:10px; padding:2.5px 0; border-bottom:1px dotted var(--linea); }
+  .srow span{ color:var(--gris); } .srow b{ font-weight:600; text-align:right; }
+  .chips{ display:flex; flex-wrap:wrap; gap:5px; margin-top:9px; }
+  .chip{ font-family:"Bahnschrift",sans-serif; font-size:9px; letter-spacing:.7px; border:1.4px solid var(--tinta); padding:2.5px 8px; text-transform:uppercase; }
+  .chip.ex{ background:var(--ambar); border-color:var(--ambar); }
+
+  /* cta */
+  .cta{ margin-top:auto; background:var(--grafito); color:#fff; padding:6.5mm 13mm; display:flex; justify-content:space-between; align-items:center; gap:16px; }
+  .cta .l h2{ font-family:"Bahnschrift",sans-serif; font-size:23px; letter-spacing:.2px; color:var(--ambar); }
+  .cta .l p{ font-size:11px; color:#c8ced5; margin-top:2px; max-width:92mm; }
+  .cta .r{ text-align:right; font-size:11px; line-height:1.6; }
+  .cta .r .em{ font-family:"Bahnschrift",sans-serif; font-size:15px; letter-spacing:1px; color:#fff; }
+  .cta .r b{ color:#fff; } .cta .r span{ color:#9aa4ae; }
+  .fin{ font-size:7.5px; color:var(--gris); text-align:center; padding:2.5mm 13mm; letter-spacing:.2px; }
+</style>
+
+<div class="hoja">
+  <div class="idbar">
+    <div class="marca"><div class="glifo">S</div><div class="txt"><b>EMSICA S.R.L.</b><span>Instrumentación y control automático · desde 1981</span></div></div>
+    <div class="dist">Distribuidor en Argentina<b>PEPPERL+FUCHS · ECOM</b></div>
+  </div>
+
+  <div class="hero">
+    <div class="col">
+      <span class="eyebrow">Protección contra explosiones · ATEX / IECEx</span>
+      <h1 class="disp">Smart-Ex&nbsp;03<small>®</small></h1>
+      <div class="claim">El smartphone Android que entra a la <b>Zona&nbsp;1</b> sin ser fuente de ignición — y reemplaza el handy, la cámara y el escáner en un solo equipo certificado.</div>
+      <div class="marc">Pepperl+Fuchs · plataforma ECOM</div>
+    </div>
+    <div class="fono">
+      <svg width="112" height="210" viewBox="0 0 112 210" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <rect x="4" y="4" width="104" height="202" rx="16" fill="#0a0d11" stroke="#39424c" stroke-width="2"/>
+        <rect x="12" y="20" width="88" height="156" rx="5" fill="#0e1a16"/>
+        <g opacity="0.9"><circle cx="56" cy="90" r="29" fill="none" stroke="#1f6f4d" stroke-width="1.1"/><circle cx="56" cy="90" r="19" fill="none" stroke="#2f8f5b" stroke-width="1.2"/><circle cx="56" cy="90" r="9" fill="#2f8f5b" opacity="0.45"/></g>
+        <rect x="30" y="184" width="52" height="15" rx="7.5" fill="#f5a800"/>
+        <text x="56" y="194.5" font-family="Bahnschrift,sans-serif" font-size="7.5" fill="#12161b" text-anchor="middle" font-weight="700">S.O.S. / LWP</text>
+        <g transform="translate(74,148)"><polygon points="0,-14 12,-7 12,7 0,14 -12,7 -12,-7" fill="#f5a800" stroke="#12161b" stroke-width="1.5"/><text x="0" y="5" font-family="Bahnschrift,sans-serif" font-size="12.5" fill="#12161b" text-anchor="middle" font-weight="800">Ex</text></g>
+      </svg>
+    </div>
+  </div>
+
+  <div class="safety">
+    <svg viewBox="0 0 24 24" fill="none" stroke="#12161b" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a5 5 0 0 1 5 5v3a5 5 0 0 1-10 0V7a5 5 0 0 1 5-5z"/><path d="M5 20h14M12 15v5"/><circle cx="12" cy="8" r="1.2" fill="#12161b"/></svg>
+    <div class="t"><b>Cuida al que trabaja solo.</b><span>Botón de alarma y detección de hombre caído (LWP): si el operario está solo y sufre un incidente, el equipo avisa automáticamente.</span></div>
+  </div>
+
+  <div class="razones">
+    <div class="r">
+      <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="#a06d00" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12h4l2-7 4 14 2-7h6"/></svg>
+      <h3 class="disp">Certificado para <span class="hl">atmósfera explosiva</span></h3>
+      <p>ATEX, IECEx, UKCA y NEC/CEC. Protección Ex&nbsp;ia para Zona&nbsp;1/21. Entra a la planta legalmente, sin permiso de trabajo en caliente.</p>
+    </div>
+    <div class="r">
+      <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="#a06d00" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2 4 6v6c0 5 3.5 8 8 10 4.5-2 8-5 8-10V6z"/><path d="M9 12l2 2 4-4"/></svg>
+      <h3 class="disp">A prueba de <span class="hl">planta</span></h3>
+      <p>IP68, norma militar MIL-STD-810H, de −20 a 60&nbsp;°C y pantalla que se opera <b>con guantes puestos</b>. Batería de 4400&nbsp;mAh para el turno completo.</p>
+    </div>
+    <div class="r">
+      <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="#a06d00" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="14" rx="2"/><path d="M8 20h8M12 18v2M7 9h6M7 12h4"/></svg>
+      <h3 class="disp">Android 15 que <span class="hl">IT administra</span></h3>
+      <p>Enterprise, con seguridad hasta 2030. 5G, WiFi&nbsp;6E, NFC y cámara para escaneo: permisos de trabajo, checklists e inspecciones, todo digital.</p>
+    </div>
+  </div>
+
+  <div class="vers">
+    <div class="v">
+      <div class="tag">Versión DZ1</div>
+      <h4 class="disp">Para las zonas más peligrosas</h4>
+      <span class="zona">Zona 1 / 21 · Ex ia IIC T4</span>
+      <p>Donde puede haber gas explosivo en operación normal: interior de unidades de proceso, purga de tanques, muestreo.</p>
+    </div>
+    <div class="v">
+      <div class="tag">Versión DZ2</div>
+      <h4 class="disp">Para el resto de la planta</h4>
+      <span class="zona">Zona 2 / 22 · Ex ic IIC T4</span>
+      <p>Donde la atmósfera aparece sólo ante una falla: perímetros, playas de tanques, laboratorio y silos de granos (polvo).</p>
+    </div>
+  </div>
+
+  <div class="base">
+    <div class="st">Ficha técnica</div>
+    <div class="sgrid">
+      <div class="srow"><span>Sistema</span><b>Android 15 Enterprise</b></div>
+      <div class="srow"><span>Procesador</span><b>Snapdragon QCM6490</b></div>
+      <div class="srow"><span>Memoria</span><b>8 GB · 128 GB</b></div>
+      <div class="srow"><span>Pantalla</span><b>6" Gorilla Glass</b></div>
+      <div class="srow"><span>Cámara</span><b>13 MP + 5 MP</b></div>
+      <div class="srow"><span>Conectividad</span><b>5G · WiFi 6E · NFC</b></div>
+      <div class="srow"><span>Batería</span><b>4400 mAh · USB-C</b></div>
+      <div class="srow"><span>Protección</span><b>IP68 · MIL-STD-810H</b></div>
+      <div class="srow"><span>Peso</span><b>400 g</b></div>
+    </div>
+    <div class="chips">
+      <span class="chip ex">ATEX</span><span class="chip ex">IECEx</span><span class="chip">UKCA</span><span class="chip">NEC / CEC</span><span class="chip">CE</span><span class="chip">Common Criteria</span><span class="chip">Android Enterprise</span>
+    </div>
+  </div>
+
+  <div class="cta">
+    <div class="l"><h2 class="disp">Pedí tu cotización</h2><p>Te asesoramos qué versión corresponde según la clasificación de áreas de tu planta y coordinamos la demostración en sitio.</p></div>
+    <div class="r"><div class="em">EMSICA S.R.L.</div><span>Jorge Piñeiro — Gerente Comercial</span><br><b>+54 291 4562159</b> · <span>Blandengues 680, Bahía Blanca</span><br><b>jorge.pineiro@emsica.com.ar</b> · <span>www.emsica.com.ar</span></div>
+  </div>
+  <div class="fin">Smart-Ex® es marca registrada de Pepperl+Fuchs / ECOM. Datos tomados de la hoja técnica; especificaciones sujetas a cambios del fabricante. Emsica S.R.L. — instrumentación, calibración y control automático.</div>
+</div>

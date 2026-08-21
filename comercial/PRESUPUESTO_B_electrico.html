@@ -1,0 +1,33 @@
+<!DOCTYPE html><html lang="es"><head><meta charset="utf-8"><title>Presupuesto B — instalación eléctrica</title><style>
+@page { size: A4; margin: 16mm 15mm; }
+*{box-sizing:border-box}
+body{margin:0;color:#16232f;background:#fff;font:11pt/1.55 "Segoe UI",system-ui,Arial,sans-serif}
+.hoja{max-width:190mm;margin:0 auto}
+.tapa{display:flex;justify-content:space-between;align-items:flex-start;
+  border-bottom:3px solid #1d5b8f;padding-bottom:12px;margin-bottom:16px}
+.marca{font-size:11pt;font-weight:800;letter-spacing:3.5px;color:#1d5b8f;margin-bottom:3px}
+.tapa h1{margin:0;font-size:20pt;letter-spacing:-.4px}
+.tapa .sub{color:#5b6b7a;font-size:11pt;margin-top:3px}
+.tapa .quien{text-align:right;font-size:9.5pt;color:#5b6b7a;line-height:1.5}
+.tapa .quien b{color:#16232f;font-size:11.5pt}
+h3{font-size:10.5pt;margin:16px 0 5px;color:#1d5b8f;page-break-after:avoid}
+p{margin:7px 0}
+table{width:100%;border-collapse:collapse;margin:7px 0;font-size:10pt;page-break-inside:avoid}
+td{border:1px solid #d6dee6;padding:7px 10px;vertical-align:top}
+td.n{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap;width:26%}
+tr.sub td{background:#f6f2ec;font-weight:700}
+tr.gran td{background:#1d5b8f;color:#fff;font-weight:700;font-size:13pt}
+.lista{columns:2;column-gap:24px;margin:6px 0 10px;font-size:10pt}
+.lista div{break-inside:avoid;padding:2px 0 2px 14px;position:relative}
+.lista div:before{content:"·";position:absolute;left:3px;color:#1d5b8f;font-weight:700}
+.ficha{background:#f7fafc;border:1px solid #d6dee6;border-radius:6px;padding:10px 14px;
+  margin:10px 0;font-size:10pt;columns:2;column-gap:20px}
+.ficha div{break-inside:avoid;padding:1px 0}
+.nota{background:#f9f4ec;border-left:4px solid #1d5b8f;padding:10px 14px;margin:11px 0;
+  font-size:10pt;page-break-inside:avoid}
+.aviso{background:#fdf0f0;border-left:4px solid #c62828;padding:10px 14px;margin:11px 0;
+  font-size:10pt;page-break-inside:avoid}
+ul{margin:5px 0;padding-left:19px} li{margin:3px 0}
+.pie{margin-top:24px;border-top:1px solid #d6dee6;padding-top:9px;font-size:9pt;color:#5b6b7a}
+.pie b{color:#1d5b8f}
+</style></head><body><div class="hoja"><div class="tapa"><div><div class="marca">TWISTED TRANSISTOR</div><h1>Protecciones eléctricas</h1><div class="sub">Revisión del tablero y adecuación de las protecciones</div></div><div class="quien"><b>Presupuesto B</b><br>Matías Alegre<br>Electrónica industrial<br>Bahía Blanca<br>19 de agosto de 2026 · validez 15 días</div></div><p><b>Para:</b> Villatoro — at. Fernando</p><p>Verificación del estado de los contactores y dimensionamiento de la protección termomagnética y del diferencial <b>según la corriente real medida</b> en la máquina.</p><div class="nota">Este presupuesto es <b>independiente</b> del equipo electrónico y se ejecuta <b>solo si el relevamiento lo justifica</b>. Si el tablero está en condiciones, se informa y no se hace nada más.</div><h3>Qué se revisa y por qué</h3><ul><li><b>Contactores:</b> los contactos se pican y la bobina se debilita con los años. Uno que pega mal calienta y termina soldándose — el motor queda en marcha sin poder pararlo desde la botonera.</li><li><b>Térmica:</b> tiene que aguantar el pico de encendido sin cortar, pero proteger de verdad ante un cortocircuito.</li><li><b>Diferencial:</b> es lo que protege a la persona.</li><li><b>Puesta a tierra:</b> es lo que hace que el diferencial funcione. Sin medirla, no se sabe si está.</li></ul><h3>Materiales</h3><div class="lista"><div>Interruptor termomagnético bipolar</div><div>Interruptor diferencial de 300 mA, tipo selectivo</div><div>Guardamotor regulable, ajustado a la corriente medida</div><div>Portafusible seccionable y fusibles cerámicos</div><div>Puesta a tierra: jabalina, toma y cable</div><div>Riel DIN, borneras y prensacables</div></div><table><tr class="sub"><td>Materiales</td><td class="n">$ 286.777</td></tr></table><h3>Trabajos</h3><table><tr><td>Relevamiento del tablero y medición de corriente</td><td class="n">$ 85.000</td></tr><tr><td>Cálculo y dimensionamiento de las protecciones</td><td class="n">$ 70.000</td></tr><tr><td>Montaje y cableado</td><td class="n">$ 120.000</td></tr><tr><td>Medición de puesta a tierra</td><td class="n">$ 45.000</td></tr><tr><td>Esquema unifilar y etiquetado</td><td class="n">$ 55.000</td></tr><tr class="sub"><td>Subtotal trabajos</td><td class="n">$ 375.000</td></tr></table><table><tr class="gran"><td>TOTAL</td><td class="n">$ 661.777</td></tr></table><h3>Adicionales, solo si el relevamiento los pide</h3><div class="lista"><div>Gabinete de tablero IP65</div><div>Contactor tripolar de reemplazo</div><div>Botonera de marcha/parada con hongo de emergencia</div><div>Luces piloto de señalización</div><div>Diferencial de 30 mA para los circuitos auxiliares</div></div><table><tr><td>No incluidos en el total</td><td class="n">$ 209.788</td></tr></table><div class="nota">Si el gabinete, el contactor y la botonera actuales están en condiciones, no se cambian y no se cobran.</div><div class="aviso"><b>Sobre el diferencial:</b> un variador manda a tierra corrientes de fuga con componente continua. Un diferencial común no la detecta y, peor, esa continua puede dejarlo ciego también para las fallas normales — queda puesto y no protege. Por eso va uno de <b>tipo selectivo</b> y no el más barato de góndola.</div><h3>Condiciones</h3><ul><li>El relevamiento se puede contratar solo: si el tablero está bien, ahí termina.</li><li>Anticipo del 50 % para materiales; el saldo contra entrega.</li><li>Se entrega esquema unifilar, etiquetado y planilla con los valores medidos.</li></ul><div class="pie"><b>Twisted Transistor</b> — electrónica industrial · Bahía Blanca</div></div></body></html>

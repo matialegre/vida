@@ -35,3 +35,26 @@ Ciclo completo: spec → Python genera .kicad_sch → ERC limpio → SVG mirado 
 - Reusá los diseños existentes: FrioSeguro `hardware/` (KiCad + generador Python), las 3 PCBs históricas del GIMAP, los esquemáticos v4-v6 en docs/.
 - Componentes que se consiguen en Argentina (TodoMicro/ML) o que GIMAP ya tiene — verificá con @hardware ANTES de especificar.
 - Karpathy: el circuito mínimo que cumple la spec. Nada de etapas "por si acaso".
+
+
+## Doctrina de dibujo (obligatoria — nace de un rechazo real)
+Un esquemático con **ERC 0 puede ser ilegible**. Matías rechazó `detector_campo` porque tenía
+**0 cables y 0 uniones**: las 30 conexiones eran etiquetas globales y el circuito no se veía.
+ERC verifica conectividad, no comunicación.
+
+Antes de generar cualquier esquemático, leé y aplicá:
+`C:\Proyectos\laser-pcb\docs\DOCTRINA_ESQUEMATICO.md` (reglas con geometría numérica y
+checklist de auto-revisión §12) y `docs\AUDITORIA_ESQUEMATICOS.md` (los defectos reales que ya
+cometimos, para no repetirlos).
+
+Las cinco que más pesan:
+1. **Cables reales, no labels.** Máximo ~15 % de conexiones por etiqueta global; el resto dibujado.
+2. **GND y los rieles son símbolos de power + PWR_FLAG**, nunca etiquetas de texto (si no, el ERC
+   no puede verificar la alimentación).
+3. **Flujo izquierda→derecha**, alimentación arriba, masa abajo, entradas a la izquierda.
+4. **Los cálculos van escritos en la hoja**: disipación, corrientes, valores derivados. Un
+   esquemático sin números obliga a rehacer las cuentas en cada revisión.
+5. **Tensiones peligrosas**: barrera de aislación DIBUJADA y rotulada cuando conviven alta y baja
+   tensión en la misma hoja. Es seguridad, no estética.
+
+Antes de exportar el PDF, corré `chequear_solapes_sch.py` (detecta textos pisados) y **mirá el PDF**.
