@@ -55,3 +55,43 @@ Doc de dominio + bitacora. El agente lo lee al arrancar y lo actualiza al cerrar
     espera** de P6 (@verificador sobre la rev B), P8 y P9. Nada commiteado.
 
 - 2026-07-08 [BRIEFING GIMAP] — leer ../BRIEFING_EQUIPO_GIMAP.md y los 4 docs (PARTE_GIMAP, PRESUPUESTO_ENERGIA, PROTOCOLO_CALIBRACION, INGENIERIA_NODO_1ANO). Para vos: placa emisor bajo consumo (gateo puente + supercap cerca del LoRa para el pulso, sin boost) + placa receptor ESP32+LoRa 220V. Convergencia UTN Diseño y Manufactura/Tecnología.
+
+## 2026-08-21 — Layout del nodo de galga: placement completo, DRC 0
+
+**Entregable:** `C:\Proyectos\galgas\hardware\kicad\nodo_galga_v3.kicad_pcb` (abrir con KiCad 10)
+generado por `generar_pcb.py` — el placement vive como DATO en la tabla `PLACEMENT`
+del script: mover un bloque es cambiar una coordenada y regenerar, no arrastrar
+45 huellas a mano y perder el criterio.
+
+**Estado medido (no declarado):**
+- 45 de 45 componentes colocados, todos con su referencia y valor.
+- **DRC: 0 violaciones** (`kicad-cli pcb drc --severity-error`, reporte en `drc.rpt`).
+- 108 pads sin conectar = **NADA está ruteado todavía**. Es lo esperado: falta el ruteo.
+- Placa 100 × 70 mm, 4 agujeros M3, plano de masa en B.Cu.
+
+**Placement por bloques** (flujo izq→der, sin volver atrás):
+`J1 galga → TVS → puente+shunt-cal → filtro RC → ADS1220 → ATmega → RA-02 (antena al borde derecho)`,
+con la cadena de alimentación en la franja inferior (BT1 ocupa x 2..60; el resto a su derecha).
+
+**Tres bugs propios encontrados y corregidos** (valen para el próximo layout por script):
+1. **Rotación 180°**: intercambiar ejes sólo sirve para 90/270. Con 180 la caja queda
+   del lado equivocado del origen → una bornera "adentro" con pads FUERA del borde.
+   Ahora se rotan las 4 esquinas de verdad.
+2. **Origen ≠ centro**: el portapilas se extiende 55 mm hacia un lado desde su origen.
+   Colocar "por origen" es a ciegas → ahora se coloca por CENTRO del bounding box.
+3. **KiCad 10 usa `(property "Reference" ...)`**, no `(fp_text reference ...)`. Apuntar
+   al formato viejo dejaba las 45 huellas como `REF**` y la placa ilegible.
+   (Además: el bounding box debe ser la UNIÓN de courtyard y pads — hay huellas
+   cuyos pads sobresalen del courtyard.)
+
+**Sujeto a P8/P9** (anotado en la capa Cmts.User del propio board): CSC (supercap) y D4
+llevan footprint tentativo; si cambia el componente, cambia la huella.
+
+**Pendiente para @esquematico:** el símbolo del RA-02 en `galgas.kicad_sym` tiene numeración
+de pines que NO coincide con el módulo físico (si se asigna el footprint Ra-01 oficial tal cual,
+**3V3 cae en un pad de GND**). Se resolvió con `galgas.pretty/RA-02.kicad_mod` renumerado para
+calzar con el símbolo, pero conviene arreglarlo en el símbolo.
+
+**Próximo paso:** rutear. Prioridad: (1) analógico — S+/S− cortas y lejos de digital, Kelvin
+de REFP1 entre R1 y R2, **E−/REFN NO al plano de masa** (va sólo al pin AIN3); (2) alimentación;
+(3) digital y RF con keepout de antena.

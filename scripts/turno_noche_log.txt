@@ -1896,3 +1896,4 @@ Era D7 + D5, dos hallazgos que la auditoría del 08-11 dejó escritos con nombre
 
 Dos cosas de higiene: `galgas` tiene la carpeta `hardware/` **sin commitear** (no la toqué) y MATI-HQ sigue con los 16 modificados de siempre.
 ===== FIN vie 21/08/2026  2:20:08,79 ===== 
+===== TURNO NOCHE vie 21/08/2026 22:00:01,67 ===== 

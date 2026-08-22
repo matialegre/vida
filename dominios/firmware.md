@@ -18,6 +18,13 @@ Doc de dominio + bitácora. El agente lo lee al arrancar y lo actualiza al cerra
 | ESP32-S3 DevKit "Stitch" | stitch-ainho | 1.0.0 (COMPILADA, no flasheada) | 2026-08-21 | primer flasheo tiene que ser POR CABLE (partición default con OTA); recién ahí sirve el OTA |
 
 ## Bitácora
+
+- 2026-08-21 (turno noche) - **FrioSeguro: el uptime daba la vuelta a los 49,7 dias y se publicaba con dos definiciones distintas** (worker nocturno local). Branch `nocturno/local-2026-08-21-b-cuanto-hace-que-esta-prendido` (`53f8f2c`, sale de `main`), cierra **T6** del `08-16-b-cadena-tiempo`.
+  - `millis()` es `uint32_t` en el core ESP32: vuelve a cero a los **49,7 dias**. `uptime_sec` se publicaba en **4 sitios** con **2 cuentas distintas**: `millis()/1000` (desde el boot) en `supabase.h:213` y `:288`, y `(millis()-state.uptime)/1000` (desde el **setup**) en el `.ino:300` y `web_api.h:70`. Las dos dan la vuelta -> a los 60 dias el panel informaba 10. Y difieren entre si por lo que tarda el arranque: **la fila de Supabase y la pagina local del propio equipo nunca decian lo mismo**.
+  - Ahora `firmware_modular/uptime.h` con `uptimeSec()`/`uptimeMin()` sobre **`esp_timer_get_time()`** (nativo del core, `int64_t` de us desde el boot, no da la vuelta). Se descarto el contador de rollover a mano (`if (now<last) high++`) porque exige ser llamado cada <49,7 dias o pierde una vuelta en silencio. Se **elimino `SystemState.uptime`**, el campo que sostenia la 2a definicion.
+  - **Evidencia:** `arduino-cli compile` OK contra el baseline de `main` (1288696 B): **+132 B de flash** (124 son caracteres del JS embebido en `html_ui.h`; el C++ pesa ~+8 B) y **-8 B de RAM**.
+  - **Dos avisos para @firmware:** (1) el sketch esta al **98 % del flash** (1288828/1310720) — cualquier cosa que se agregue choca con ese techo; (2) **`serial_api.h` no esta `#include`-ado en ningun lado, no se compila** — es codigo muerto, y el informe del 08-18 apunta a el para forzar defrost en la verificacion de hardware (el camino que si funciona es `web_api.h:221`). O se incluye o se borra.
+  - **Falta (banco):** placa flasheada, `curl http://<ip>/api/status` y confirmar que el uptime coincide con la fila de Supabase (antes diferian). Doc: `frioseguro/docs/uptime.md`; informe: `diario/nocturno-local-2026-08-21-b.md`.
 - 2026-07-07 — Agente creado por Claude Fable. Próximo paso sugerido: Task 08 del RX (es el bloqueante más grande para octubre).
 
 - 2026-07-08 [BRIEFING GIMAP] — leer ../BRIEFING_EQUIPO_GIMAP.md y los 4 docs (PARTE_GIMAP, PRESUPUESTO_ENERGIA, PROTOCOLO_CALIBRACION, INGENIERIA_NODO_1ANO). Para vos: emisores NO ESP32 (ATmega/STM32L bare-metal, sleep µA real); receptor SÍ ESP32; retomar TX = ventana RX Class A + reed/imán; VERIFICAR sleep con INA219.
