@@ -1897,3 +1897,55 @@ Era D7 + D5, dos hallazgos que la auditoría del 08-11 dejó escritos con nombre
 Dos cosas de higiene: `galgas` tiene la carpeta `hardware/` **sin commitear** (no la toqué) y MATI-HQ sigue con los 16 modificados de siempre.
 ===== FIN vie 21/08/2026  2:20:08,79 ===== 
 ===== TURNO NOCHE vie 21/08/2026 22:00:01,67 ===== 
+Buzón ENLACE vacío. Turno cerrado.
+
+## Turno noche 2026-08-21-b — hecho
+
+**Repo:** `frioseguro` (PLATA, prioridad #1; por rotación era el más viejo de los cuatro).
+**Branch:** `nocturno/local-2026-08-21-b-cuanto-hace-que-esta-prendido` (`53f8f2c`, sale de `main` limpio, pusheado).
+
+### La tarea: T6 del `08-16-b-cadena-tiempo`
+*«El equipo más estable del parque es el que peor se ve.»* Eran **dos capas**, no una:
+
+1. **El número.** `millis()` es `uint32_t` → da la vuelta a los **49,7 días**. `uptime_sec` se publicaba en **cuatro** sitios con **dos cuentas distintas** (`millis()/1000` desde el boot en `supabase.h`; `(millis()-state.uptime)/1000` desde el *setup* en el `.ino` y `web_api.h`). Las dos dan la vuelta —a los 60 días el panel informaba 10— y **además difieren entre sí**, así que la fila de Supabase y la página local del propio equipo nunca decían lo mismo.
+2. **El texto.** Tres formateadores, **ninguno con unidad de días**: 60 días se veían `1440:00:00` en la vista del comercio. Y los tres arrancaban con `if (!sec)`, así que **un equipo recién arrancado (`0`) se mostraba igual que uno sin dato** — al revés de lo útil.
+
+Ahora: `firmware_modular/uptime.h` sobre `esp_timer_get_time()` (nativo del core, `int64_t`, no da la vuelta; se eliminó `SystemState.uptime`) y `web-dashboard/src/lib/uptime.js` como única forma de decirlo, con la misma regla que el `freshness.js` de anteanoche.
+
+### Verificado sin hardware
+12/12 tests (`node --test`) · `npm run build` OK · eslint **cero problemas nuevos** (`src/lib/` limpio; los dos `.jsx` con los mismos 4+4 que `main`) · `arduino-cli compile` OK: **+132 B de flash** (124 son caracteres del JS embebido; el C++ ~+8 B) y **−8 B de RAM** · **paridad ESP↔dashboard: 17.332 valores de 0 a 200 días, 0 divergencias** · 6 mutantes, los 6 caen.
+
+### Pendiente / necesita ojos
+- **Copy visible que cambia:** la vista del comercio pasa de `HH:MM:SS` a `2d 3h` → **@diseno** aprueba, **@tester** lo mira con un device.
+- **Hardware:** placa flasheada, `curl /api/status`, confirmar que coincide con la fila de Supabase.
+- **Dos avisos para @firmware:** el sketch está al **98 % del flash**; y **`serial_api.h` no está `#include`-ado en ningún lado** — es código muerto, y el informe del 08-18 apunta a él para forzar defrost en su verificación de hardware (el camino que sí funciona es `web_api.h:221`).
+
+### Estado
+`MATI-HQ` pusheado (`112626b`): informe `diario/nocturno-local-2026-08-21-b.md`, `QUE_FALTA.md` de frioseguro (ítem 10) y bitácoras de `@firmware` y `@frontend`. No toqué nada de lo que tenés sin commitear en frioseguro. Dos cosas que sí conviene que sepas: el commit **arrastra los `dominios/` del turno de día** (comercial, diseño, frontend, pcb) porque mi entrada va dentro de dos de esos archivos; y **`scripts/turno_noche_log.txt` no lo pude escribir** — el `.bat` del turno lo tiene con lock exclusivo (`Permission denied`).
+===== FIN vie 21/08/2026 22:23:15,66 ===== 
+===== TURNO NOCHE s�b 22/08/2026  2:00:01,66 ===== 
+Listo. Turno terminado.
+
+## Qué hice
+
+**Tarea elegida:** `datalogger` (P0, "terminarlo antes de Dreyfus") — **BAT-05 / BAT-06** de `docs/battery-chain.md`, que era el paso #4 del orden que la propia auditoría del 08-17 dejó escrito y el primero de la lista que se puede hacer y verificar **sin hardware**.
+
+**El defecto, en una línea:** el nodo marcaba `bat_low` en **3,20 V**, o sea **por debajo** del corte de 3,30 V con el que `power-budget.md` cuenta los mAh utilizables. El aviso llegaba después del daño. Y encima había **4 curvas** volt→porcentaje con **10 puntos de spread** sobre la misma celda: el "queda 20 %" caía entre 3,40 y 3,50 V según a quién le preguntaras, justo en el codo de la LiPo.
+
+**El arreglo:** `celda.py` — una curva (7 tramos, la única no-lineal que había, re-anclada al corte) y dos umbrales, `V_AVISO=3,50` y `V_CORTE=3,30`. Arriba de 3,40 V da exactamente lo mismo que antes.
+
+Lo que hacía que esto no fuera un fix de una línea: los cuatro consumidores están en **tres runtimes** y **ninguno puede importar** el archivo (MicroPython flashea una sola carpeta; el gateway calcula en el JS embebido en el `.ino`). Por eso `tools/sync_celda.py` copia y genera, y el checker reporta el drift como **BAT-15** — sin ese seguro, "una sola fuente de verdad" dura hasta el próximo cambio.
+
+**Verificado:** 141 tests verdes (14 nuevos en `test_celda.py`, 76 en el checker, 26 eco, 25 lector), `sync_celda.py --check` en cero, y el JS del gateway evaluado con node contra la curva de Python. El eslabón 5 de la cadena pasa de **ROTO a OK**; 8 hallazgos donde había 10.
+
+**Efecto lateral que conviene que mires:** el ETA ahora extrapola hasta 3,30 V y no 3,00 V, así que **da menos horas** (7,2 → 3,6 h en el test de campaña). Es más honesto, no peor — antes contaba como disponible una franja donde el nodo debería estar apagado.
+
+## Sin verificar
+- El sketch del ESP32 **no se compiló** (no hay toolchain acá; bajarlo era clavar la noche). El cambio está dentro del `<script>` del HTML embebido, o sea una string literal para el compilador — ningún símbolo C++ cambió. El comando quedó anotado en el informe.
+- ⚠️ `firmwares/nodo-gimap/bateria.py` **no viaja en el branch**: esa carpeta no está versionada (tiene `secrets.py`). El cambio quedó aplicado en el disco de esta PC.
+- Cuatro carpetas snapshot por puerto COM siguen con la curva vieja; no las toqué, pero `sync_celda.py` las lista en cada corrida para que el drift sea visible.
+
+**Branch:** `nocturno/local-2026-08-22-una-sola-curva` (`2a126b9`) — sale de `08-20-rafaga-bateria`, mergear la cadena en orden desde `08-17-cadena-bateria`.
+**MATI-HQ:** `29bf59f` — informe en `diario/nocturno-local-2026-08-22.md` + bitácora de `@energia`. `scripts/turno_noche_log.txt` sigue con lock del `.bat` del turno, no lo toqué.
+===== FIN s�b 22/08/2026  2:21:35,19 ===== 
+===== TURNO NOCHE s�b 22/08/2026 22:00:01,53 ===== 
