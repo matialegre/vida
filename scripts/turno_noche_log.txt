@@ -1949,3 +1949,32 @@ Lo que hacía que esto no fuera un fix de una línea: los cuatro consumidores es
 **MATI-HQ:** `29bf59f` — informe en `diario/nocturno-local-2026-08-22.md` + bitácora de `@energia`. `scripts/turno_noche_log.txt` sigue con lock del `.bat` del turno, no lo toqué.
 ===== FIN s�b 22/08/2026  2:21:35,19 ===== 
 ===== TURNO NOCHE s�b 22/08/2026 22:00:01,53 ===== 
+Turno cerrado. Una tarea, terminada y verificada hasta donde se puede sin hardware.
+
+## Qué elegí y por qué
+
+`C:\Proyectos\galgas` (P0, octubre) — hallazgos **D2 + D3** de la auditoría del 08-11, que estaban anotados y nadie había implementado. Los hice juntos porque son la misma tarea: no se puede agregar un reintento sin idempotencia (la cola sería una fábrica de duplicados) ni tiene sentido la idempotencia si la medición ni se guarda.
+
+**El problema:** el emisor tenía un intento por medición y ninguna forma de saber si ese intento había entrado. Sin WiFi volvía a dormir *sin siquiera calcular el reading*; un POST fallido se logueaba y chau. Y si Supabase commiteaba pero se perdía la respuesta, el reintento insertaba una segunda fila que nada en el schema impedía.
+
+**Hallazgo de paso:** el POST corría con el timeout de fábrica de HTTPClient — 5000 ms, porque nadie llamó nunca a `setTimeout()` — contra un handshake TLS que *este mismo repo* documenta en 5-10 s (`gateway_discovery.h`). El emisor se cortaba solo antes de que el servidor contestara.
+
+## Qué quedó
+
+- `shared/reading_backlog.h` — cola de 12 mediciones en RTC slow memory (~768 B), drena 3 por wake y solo si la entrega de ese wake funcionó. 2 h de corte cubiertas en `MODE_NORMAL`. No cubre corte de energía, y eso está escrito en el header.
+- `reading_uid` (`<device>-<run_id>-<boot_count>`) + UNIQUE + `ON CONFLICT DO NOTHING`. El `run_id` es `esp_random()` por corte de energía: sin ese salt, `boot_count` volviendo a 0 hacía que la fila nueva se descartara **en silencio**.
+- Migration `20260822000000`, auditor `tools/check_reading_idempotency.py`, 35 tests, `docs/reading-idempotency.md`.
+
+## Verificado offline
+
+35 tests OK · auditoría 7/7 · compilan A y B (**+2196 B de flash, 0 de RAM**; baseline sacado compilando `main` en un worktree temporal ya removido) · **9 mutaciones probadas, ninguna sobrevive**. La primera vuelta una sí sobrevivía: el auditor buscaba `on_conflict=reading_uid` como texto y lo encontraba en un comentario — se aprobaba leyendo su propia documentación. Ahora saca los comentarios antes de buscar.
+
+## ⚠️ Al mergear, el orden importa
+
+Primero la migration, **después** el firmware. Al revés PostgREST contesta 400 a todos los POST y se pierde el 100 % de las lecturas. Hay interruptor `READING_UID_ENABLED` en `config.h` por si hay que flashear antes.
+
+Sin verificar (necesita banco): el duplicado a mano, la cola punta a punta con el AP apagado, el desborde, y el `run_id` cambiando tras un corte de alimentación.
+
+**Branch:** `nocturno/local-2026-08-22-b-una-medicion-una-fila` (`ccd4a7a`, sale de `main`, no depende de otro nocturno). Informe en `diario/nocturno-local-2026-08-22-b.md`, `QUE_FALTA` actualizado, MATI-HQ pusheado (`c45634a`).
+===== FIN s�b 22/08/2026 22:33:35,45 ===== 
+===== TURNO NOCHE dom 23/08/2026  2:00:01,71 ===== 
