@@ -1978,3 +1978,33 @@ Sin verificar (necesita banco): el duplicado a mano, la cola punta a punta con e
 **Branch:** `nocturno/local-2026-08-22-b-una-medicion-una-fila` (`ccd4a7a`, sale de `main`, no depende de otro nocturno). Informe en `diario/nocturno-local-2026-08-22-b.md`, `QUE_FALTA` actualizado, MATI-HQ pusheado (`c45634a`).
 ===== FIN s�b 22/08/2026 22:33:35,45 ===== 
 ===== TURNO NOCHE dom 23/08/2026  2:00:01,71 ===== 
+Listo. Turno cerrado.
+
+**→ trabajo de @backend sobre `C:\Proyectos\frioseguro`** (PLATA, prioridad #1; por rotación tocaba frioseguro y coincide con la jerarquía).
+
+## Lo que encontré
+
+`devices.is_online` era un **latch**: tres escrituras a `TRUE` (INSERT de primer boot, heartbeat, y el trigger que corre con cada lectura) y **cero a `FALSE`**. Ningún cron miraba `last_seen_at` — la cuenta ya estaba hecha en `v_devices_status.seconds_since_seen` y nadie la consultaba. Y `cron-device-alerts` se llama *cron* pero es un webhook sobre `alerts`: necesita que alguien inserte una fila, **y un equipo sin luz no inserta filas**.
+
+Un freezer muerto hace una semana se veía `● Online` para siempre. La ausencia de datos era indistinguible de "todo bien" — justo sobre lo que se cobra (*«el servicio avisa»*). Eran los hallazgos **R1 y R7** del `08-14-b`, que decía literalmente *«son la noche entera»* y llevaban nueve días sin tocar; ningún branch nocturno tocó backend desde el 07-23 (verificado branch por branch).
+
+## Lo que hice
+
+Vigía de silencio: `pg_cron` cada 5 min → `cron-device-silence` → apaga `is_online`, abre alerta a los **15 min** de silencio (~90 lecturas perdidas: no es un hipo de router), escala a `critical` a la **hora** una sola vez, y **se resuelve sola** cuando el equipo vuelve. Toda la decisión es una función pura; la Edge Function sólo hace I/O.
+
+Seis invariantes con test propio — entre ellas el dedupe (sin él serían 288 alertas y 288 pushes por día sobre un equipo muerto) y la regla del `08-19-b`: ante fecha inválida, no se afirma nada.
+
+## Verificación
+
+- `node --test silence.test.ts` → **28/28**
+- **Mutación: 10 mutantes, los 10 caen** (romper el dedupe rompe 4 tests, ignorar el abono 3, nunca escalar 5…)
+- `npm run build` OK; eslint da **exactamente** los mismos 2 errores + 1 warning que `main` (medido con `git stash`)
+
+**Sin verificar por falta de nube/hardware:** nada corrió contra Postgres (no hay psql ni Docker acá), ninguna Edge Function se ejecutó, y **el copy de las alertas no lo vio nadie** — es lo que el cliente lee a las 3 de la mañana, va para @diseno/@comercial.
+
+**Branch:** `nocturno/local-2026-08-23-el-que-se-apaga-no-avisa` (`20a5757`, pusheado, sale de `main`, independiente).
+**MATI-HQ:** `diario/nocturno-local-2026-08-23.md` + `QUE_FALTA` #19, commit `534fe64` pusheado.
+
+Un detalle para tu día: el working tree de frioseguro tiene bastante sin trackear (`kit_santacruz/`, `firmware_revival/`, `BOOTSTRAP_2026-08-19.sql`). No lo toqué — el `git add` fue archivo por archivo. Pero `BOOTSTRAP_2026-08-19.sql` hoy es el esquema de verdad y está fuera de git.
+===== FIN dom 23/08/2026  2:14:21,67 ===== 
+===== TURNO NOCHE dom 23/08/2026 22:00:01,52 ===== 
