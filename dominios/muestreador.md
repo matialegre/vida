@@ -85,3 +85,43 @@ Sesión con el nodo enchufado por USB (Matías no podía conectar batería ni MP
 4. Prueba en batería (`probar_bateria.py`) y MPU6050 en 0x68: **ambas bloqueadas por el cableado**.
 
 **Límite del OTA que hay que tener presente:** `publicar_ota.py`/`ota.py` actualizan **solo `main.py`**. Si se rompe `red.py`, `sensores.py` o `celda.py` no hay rescate sin cable. Por eso la corrección de WiFi se flasheó por USB mientras estaba enchufado.
+
+## 2026-08-25 (madrugada) — OTA por aire confirmado, y el nodo se apaga sin poder decir por que
+Continuacion de la sesion anterior. Matias conecto **bateria y MPU6050**. Repo: `C:\Proyectos\datalogger`, branch `nodo-gimap/wifi-y-flasheo-2026-08-24`.
+
+**Lo que se gano (con evidencia):**
+- **Prueba en bateria: PASO.** `en_usb=False`, WiFi −17 dBm, uptime creciendo 13→71 s, `gaps 0`. Era el DoD pendiente.
+- **MPU6050 vivo** (`az` variando 543..655): quedo bien conectado.
+- **OTA aplicado POR AIRE**, con bateria y sin cable: 1.0.3 → 1.0.4, uptime reiniciado. **El OTA funciona.**
+- **El zumbido de 50 Hz desaparecio al sacar el USB** (p1 pasa de 9.593 de pico a 0 fijo). O sea: **entraba por la masa de la PC**, no por el sensor. Dato util para el informe.
+
+**Correccion importante a lo que dije antes:** dije que el OTA solo bajaba `main.py` y que hacia falta el cable. **Es falso.** `ota.py:115` era `info.get("archivo", "main.py")`: baja el archivo que le pidas. El que asumia uno solo era `publicar_ota.py`, un script de la PC. Fue una suposicion mia sin leer la linea.
+
+**Lo que se construyo (y se probo antes de mandarlo):**
+- `ota.py` multi-archivo: **lote atomico** (baja todo a temporales, verifica todos los hashes, y recien ahi pisa) + **`.bak` de cada archivo antes de reemplazarlo**. Lee `manifest.json` y cae a `version.json`.
+- **`boot.py` (nuevo)**: la red de seguridad que faltaba. El hash cubre la descarga rota; **no cubre el archivo que baja perfecto y no anda** — que es exactamente como el `celda.py` faltante casi deja el nodo mudo. Cuenta arranques, `main.py` lo pone en cero al llegar a operativo, y a los 3 fallidos restaura los `.bak` solo.
+- `tools/test_ota_gimap.py`: **16 checks, todos verdes**, con filesystem del Pico emulado, `http.server` real y `machine` doble. Incluye el control negativo que importa: con UN hash malo en el lote, `main.py` no se toca aunque su propio hash este bien.
+- `ajustar_ganancia.py`: barra en vivo con las cuentas crudas del ADC contra el objetivo de media escala.
+
+**El hallazgo de la ganancia** (gracias a que la v1.0.4 publica `crudo1/crudo2` en el canal de estado, sin tocar el protocolo de 200 Hz):
+
+| canal | reposo medido | objetivo | |
+|---|---|---|---|
+| p1 (GP26) | 16.820 = **0,847 V** | 32.768 = 1,650 V | hay que **subir** |
+| p2 (GP27) | 52.524 = **2,645 V** | 32.768 = 1,650 V | **contra el riel de arriba** |
+
+Correccion a lo que se anoto antes: **p2 no esta muerto, esta saturado.** Por eso no se movia ni un LSB. Y `crudo1 < base1` explica por que p1 daba 0 en reposo: el `max(0, c-base)` recorta todo lo negativo y **se pierde medio golpe**.
+
+**EL PROBLEMA QUE MANDA AHORA — el nodo se apago y no hay forma de saber por que.**
+Se quedo sin transmitir a los **276 s** de uptime (antes de la ventana de OTA de 10 min, asi que la v1.0.5 quedo publicada sin aplicar). No hay AP `NODO-GIMAP`, no hay ARP, no hay USB: **sin alimentacion**, no colgado. Duro ~10 min de bateria en total.
+
+**Y `bat_v` es `null`**, asi que no se puede distinguir celda agotada / conector suelto / cuelgue. **Ese es el costo real del bug de VSYS**: al arrancar (antes del WiFi) mide bien — leyo 4,54 V —, pero con el WiFi activo el ADC29 da basura y `main.py` la descarta como implausible. Peor: el corte por bateria baja es `V_MIN_PLAUSIBLE < v_bat < V_CORTE`, y con `v_bat≈0` **nunca se cumple: la proteccion de la celda es codigo muerto.**
+
+Dato adicional sospechoso: `crudo2` derivo de 52.524 a **65.535 (3,300 V, tope del ADC)** justo antes de morir, y `crudo1` subio de 0,847 a 0,980 V. Consistente con la alimentacion cayendose y arrastrando el punto de reposo del MCP6004.
+
+**Proximo paso (en este orden):**
+1. **Arreglar la lectura de VSYS con WiFi activo** en `bateria.py`. Ya se puede mandar por aire. Sin esto se vuela a ciegas y no se puede cerrar ninguna medicion de autonomia (@energia depende de esto).
+2. Que entre la v1.0.5 (`ota.py` + luego `boot.py`+`main.py`): **entra sola en el proximo arranque**, porque `main.py` consulta el OTA tambien al bootear. Requiere que el servidor OTA de la PC este levantado.
+3. Recien ahi, ganancia del MCP6004 con `ajustar_ganancia.py`, y el golpe con `probar_piezo.py`.
+
+**Nota de metodo (costo dos veces hoy):** el visor toma los puertos 50507/50508, y cualquier script que se ponga a escuchar ahi le roba o le pierde los paquetes. Un monitor reporto "el nodo esta muerto" cuando en realidad el visor se estaba comiendo el trafico. **Los monitores tienen que consultar al visor por HTTP (`/datos`), no bindear el puerto.** Mismo error que hacia fallar `test_red_gimap.py`.
