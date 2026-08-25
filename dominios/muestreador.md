@@ -61,3 +61,27 @@ Branch `nocturno/local-2026-08-10-cadena-vibracion` · herramienta `tools/check_
 **Además, del mismo análisis:** `burst_hz` acepta 4000 Hz con la ODR del accel fija en **1 kHz** (cada muestra leída 4 veces; el default 1000 es *exactamente* la ODR ⇒ duplicados al azar) y `real_hz` mide el **lazo de lectura**, no la tasa de datos nuevos · el dashboard hace la FFT **sin ventana** (±36 % de amplitud según dónde caiga en el bin de 3,9 Hz) y `analysis.py` la hace con Hanning pero normalizada al pico ⇒ **las dos herramientas no son comparables**, que es exactamente lo que **Medidas Electrónicas 2** pide declarar (incertidumbre, resolución, trazabilidad). **Ahí hay material de final servido.**
 
 **Verificación de banco pendiente (10 min, SIN instrumental):** capturar una ráfaga y **contar muestras consecutivas idénticas** — confirma y mide V2.
+
+## 2026-08-24 — Nodo GIMAP en el aire: el piezo llega, pero lo que se ve es red de 50 Hz
+Sesión con el nodo enchufado por USB (Matías no podía conectar batería ni MPU6050: cableado mal puesto). Objetivo: **ver el piezo en vivo por web**. Repo: `C:\Proyectos\datalogger`.
+
+**Estado alcanzado (con evidencia, no fe):** nodo v1.0.3 en `192.168.0.233`, rssi −23, UDP 50507 a 200 Hz + estado 50508, **`gaps: 0`**, visor sirviendo en `:8080` con `/datos` devolviendo 600 puntos vivos. Servidor OTA arriba en `http://192.168.0.232:8000` (publicado 1.0.3, así que no dispara update en loop).
+
+**Dos bugs reales encontrados y corregidos:**
+1. `flashear_nodo.py` copiaba 7 archivos y hacían falta **8**: faltaba `celda.py`. El nodo moría en `ImportError: no module named 'celda'` — es decir, **la v1.0.3 nunca pudo haber arrancado con ese script**. Corregida la lista `ARCHIVOS`.
+2. `red.py` hacía **un solo intento** de WiFi y al fallar imprimía *"no apareció 'Pazos 2.4GHz'"* — mentira: el scan desde el propio nodo la veía a **−24 dBm** y la conexión manual entraba en 4 s. El CYW43 recién arrancado no engancha al primer try. Ahora: 3 intentos reciclando la radio (`active(False)/active(True)`) y **traduce el status real** (`-2` no se encontró / `-3` clave rechazada / `1` asociando). Conectó al primer intento del código nuevo. **Un timeout no es un diagnóstico.**
+
+**El hallazgo de señal — el piezo está dominado por la red eléctrica:**
+- Frecuencia dominante medida por DFT: **exactamente 50,0 Hz** en los dos canales.
+- **50,0 % de las muestras en cero**, porque el firmware hace `p1 = max(0, c1 - base1)`: **recorta el semiciclo negativo**. Con 50 Hz muestreado a 200 Hz salen 4 muestras por ciclo ⇒ el patrón "un valor, tres ceros" que se ve como un peine en el gráfico. **Se está tirando la mitad de la señal, y el campo del protocolo es `H` (sin signo), así que arreglarlo toca el protocolo y el visor.**
+- Amplitudes de reposo: **p1 (GP26) hasta 9.593 ≈ 0,48 V** — usable. **p2 (GP27) hasta 40.725 ≈ 2,05 V** — prácticamente inservible. Un zumbido así de grande es lo típico de una entrada **flotando** (sin resistencia de polarización a masa); encaja con que Matías dijo que el cableado quedó mal.
+
+**Lo que NO se pudo comprobar:** que el piezo **responda a un golpe**. 150 s grabados en dos tandas (60 s + 90 s con detección de eventos): **cero transitorios**, señal planísima (p1 entre 6.328 y 10.985 todo el tiempo). Probablemente Matías no llegó a golpear, pero **no está verificado**. Queda `probar_piezo.py` (nuevo, en el repo) que mide el reposo 10 s, calcula umbral y avisa cuándo golpear — para que lo corra él frente al sensor.
+
+**Pendiente / próximo paso:**
+1. Correr `python probar_piezo.py` y golpear. Si da 0 golpes con `gaps: 0`, el problema es el piezo o el MCP6004, **no el enlace** (ya descartado).
+2. Decidir qué hacer con el 50 Hz: polarización de entrada en el MCP6004 y/o filtro notch. **Es problema de hardware, no de firmware.**
+3. Sacar el `max(0, ...)` y mandar la desviación **con signo** (toca `FMT_MUESTRA`, `main.py` y `visor_gimap.py` a la vez).
+4. Prueba en batería (`probar_bateria.py`) y MPU6050 en 0x68: **ambas bloqueadas por el cableado**.
+
+**Límite del OTA que hay que tener presente:** `publicar_ota.py`/`ota.py` actualizan **solo `main.py`**. Si se rompe `red.py`, `sensores.py` o `celda.py` no hay rescate sin cable. Por eso la corrección de WiFi se flasheó por USB mientras estaba enchufado.
