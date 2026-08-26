@@ -2008,3 +2008,87 @@ Seis invariantes con test propio — entre ellas el dedupe (sin él serían 288 
 Un detalle para tu día: el working tree de frioseguro tiene bastante sin trackear (`kit_santacruz/`, `firmware_revival/`, `BOOTSTRAP_2026-08-19.sql`). No lo toqué — el `git add` fue archivo por archivo. Pero `BOOTSTRAP_2026-08-19.sql` hoy es el esquema de verdad y está fuera de git.
 ===== FIN dom 23/08/2026  2:14:21,67 ===== 
 ===== TURNO NOCHE dom 23/08/2026 22:00:01,52 ===== 
+Los dos repos limpios y pusheados. Turno cerrado.
+
+## Qué hice esta noche
+
+**Repo:** `C:\Proyectos\cosechador` — el único de los cuatro que llevaba una semana sin tocarse, y va con UNIVERSIDAD en la jerarquía (convergencia TC2 + Medidas Electrónicas 2).
+**Branch:** `nocturno/local-2026-08-23-b-la-curva-de-carga` (`071ae0e`, pusheado).
+**Tarea:** M4 de la auditoría del 08-16 — el hallazgo que esa misma auditoría marcó como *«el que ordena todo lo demás»*, sin tocar en 7 días.
+
+**El hallazgo:** las **8,69 h** contra las que el DoD compara **no son un tiempo medido**. Son `3 V / 0,345 V/h`: la extrapolación ×17,4 de un ensayo de 30 min en el que la tensión subió 172 mV. Leído con potencia constante — el modelo que corresponde a un buck alimentado por un piezo — el mismo dato da **151 h**. Dos branches del mismo repo estaban 17× separados sobre la métrica del DoD.
+
+**Lo que hace que no sea una opinión:** los dos modelos pasan *exactamente* por el punto que el paper midió, así que un solo punto no puede elegir. Pero a los **10 minutos** las curvas ya difieren **42 mV** (42× la resolución de un DMM de mano) — el dato que decide 17× estaba adentro del ensayo que ya se corrió. La Fase 2 pasa de «cargar hasta 3 V» (6,3 días) a «anotar la tensión cada 5 min durante 30 min».
+
+**El hallazgo de paso:** metiendo las cargas permanentes del 08-11-b en la *carga* (no sólo en la descarga) aparece una **asíntota** — con la fuga al máximo de spec el banco se estanca en 3,37 V, apenas encima del objetivo de 3 V. Si el balanceo baja o el piezo rinde menos, **no llega nunca**. Ese modo de falla no existía en el modelo lineal.
+
+**Verificado:** 79 tests OK (0,17 s), 12 mutaciones y las 12 caen, el modelo reproduce los tres tiempos publicados del paper a menos de 0,02 h. **Sin verificar:** nada se midió — cierra la decisión (D17, con cláusula de reversión), no la métrica; y M5 (excitador + acelerómetro) sigue siendo la compra.
+
+**Dos cosas para tu día:** `main` de cosechador tiene 0 líneas de análisis y hay **cinco branches nocturnos** esperando — conflictúan entre sí en `PROGRESS.md`/`QUE_FALTA.md`, pero son añadido contra añadido; dejé el orden de merge escrito. Y un drift menor que no toqué: `DECISIONS.md` D16 dice «No usar git (todavía)».
+
+Informe completo: `diario/nocturno-local-2026-08-23-b.md`.
+===== FIN dom 23/08/2026 22:14:01,14 ===== 
+===== TURNO NOCHE lun 24/08/2026  2:00:01,71 ===== 
+API Error: 529 Overloaded. This is a server-side issue, usually temporary — try again in a moment. If it persists, check https://status.claude.com.
+===== FIN lun 24/08/2026  2:03:20,71 ===== 
+===== TURNO NOCHE lun 24/08/2026 22:00:01,53 ===== 
+Listo. Resumen de la noche:
+
+**Tarea:** datalogger, bloqueante #1 del DoD (MicroPython vs C). Tomé el paso 2 de la propuesta que dejó escrita la auditoría del 08-08 y nadie había hecho: **agregar una fase PROD al benchmark**, lo único de esa lista que se puede cerrar sin hardware y cuyo valor caduca el día de la sesión de banco.
+
+**Branch:** `nocturno/local-2026-08-24-fase-prod` (`aabe7a9`, pusheado) — **sale de `nocturno/local-2026-08-08-fidelidad-benchmark`, hay que mergear ése primero.**
+
+**Lo que apareció:** para espejar producción hay que leerla, y ahí salió que la auditoría anterior comparó el bench contra `nodo.py:tick()` y **nunca abrió `main.py`**, que es donde está el `while True` real. Tres hallazgos nuevos:
+
+- **B13** — el micro-sleep del loop principal (`max(1, min(20, period//4))`) es el **100 % del período a 1000 Hz** y el 50 % a 500: `fs_real < fs_obj` por construcción, gane MicroPython o gane C. Es la fila 4 de la tabla de decisión, la que manda a C — hoy la puede disparar la implementación, no el runtime.
+- **B14** — `gc.collect()` **agendado** cada 5 s dentro del loop. Las fases A–D colectan *antes* del lazo y nunca adentro: el benchmark está construido para no ver ni una de las 1–2 pausas que producción tendría en cada fase de 10 s.
+- **B10** — la fase D transmite cada 2000 ms; `config.py` dice 200. La contención de SPI0 (LoRa y SD comparten bus) está medida 10× por debajo.
+
+**Checker:** de 3 error / 6 warn / 3 info a **0 error / 3 warn / 11 info**, paridad 6/6. Cada eje tiene ahora tres estados, y el tercero es el seguro: si `capture_prod()` se despega de `main.py`/`nodo.py`/`config.py`, el hallazgo **vuelve como error**.
+
+**Verificación sin hardware:** 93 tests OK (79 del checker + 14 nuevos que *ejecutan* la fase P extrayéndola del bench por AST contra un reloj falso — eso valida el deadline, el resync y la contabilidad de `gaps`, que `py_compile` no puede). 11 mutantes de la fase P, todos caen.
+
+**Pendiente de hardware / de día:** nada corrió en un Pico. **No compilé `bench_c`** (no bajo el Pico SDK de noche) — comando anotado en el informe. Y la fase P la escribí y verifiqué yo: una lectura de @firmware antes del banco vale, buscando si `capture_prod()` *omite* algo que `tick()` sí paga.
+
+Informe completo en `diario/nocturno-local-2026-08-24.md`, `QUE_FALTA.md` del repo actualizado, MATI-HQ pusheado. No toqué el trabajo de día sin commitear de ningún repo — sigue pendiente el de frioseguro (`BOOTSTRAP_2026-08-19.sql` vive sólo en ese disco). El repo datalogger quedó checkouteado en el branch nuevo (lo encontré en el del 08-22).
+===== FIN lun 24/08/2026 22:27:06,61 ===== 
+===== TURNO NOCHE mar 25/08/2026  2:00:01,76 ===== 
+Listo. Resumen de la noche:
+
+**Tarea elegida:** galgas (rotación + P0 octubre), hallazgo **D1** del bloqueante #1 — el único de esa lista que no estaba ya en un branch esperando merge, y la continuación directa de la noche de galgas anterior.
+
+**El problema:** el RX contestaba `200` al emisor apenas encolaba y después, si Supabase no respondía en 3 intentos de 2 s (**~6 s de tolerancia**), descartaba la medición. El emisor ya la había borrado de su backlog RTC (el que se construyó el 08-22-b justo para no perderla). Estaba asumido en el código, no escondido — lo que cambió es que con el backlog adentro, el gateway pasó a ser el único eslabón que promete de más.
+
+**Qué hice** — `nocturno/local-2026-08-25-promesa-del-gateway` (`5838b60`, sale de `08-22-b`):
+- Política extraída a `firmware/shared/forward_queue.h`, sin `Arduino.h` para poder correrla en la PC: transitoria → reintento **sin tope** con backoff 2→60 s; 4xx → descarte inmediato (contracara obligatoria: si no, un body malformado congela la cabeza de la cola para siempre); cola llena → 503 y la medición se queda en el emisor.
+- `?on_conflict=reading_uid` + `resolution=ignore-duplicates` en el POST del worker — sin eso, reintentar siempre es una fábrica de duplicados.
+- El OTA ahora **aborta** si la cola no drena (vive en RAM; el `ESP.restart()` la borraba).
+- `/health` y heartbeat publican `queue_oldest_s`/`fwd_old`: con reintento sin tope el síntoma ya no es `fwd_drop` subiendo.
+
+**Verificado sin hardware:** 131 checks corriendo la política de verdad en g++ con reloj falso (incluido el corte de 5 min) · 15 mutantes, los 15 caen · checker estático 9/9 + 27 tests · **el sketch compila con el core ESP32 real** (+1504 B flash, +24 B RAM, medido contra el branch base).
+
+**Sin verificar:** todo lo de banco. Y dos cosas que dejé escritas y no tapé: en `MODE_ALERTA` las dos colas juntas cubren ~1 minuto (la pérdida ahora ocurre con un 503 que el emisor ve, pero ocurre), y el sketch está en **94 % de flash** con el Task 08 todavía por meterle LCD+buzzer+Realtime.
+
+⚠️ Sigue sin commitear el trabajo de día en frioseguro (`BOOTSTRAP_2026-08-19.sql` es el esquema de verdad y vive solo en este disco) y en MATI-HQ. No los toqué.
+===== FIN mar 25/08/2026  2:28:53,75 ===== 
+===== TURNO NOCHE mar 25/08/2026 22:00:01,68 ===== 
+Noche cerrada. Resumen:
+
+**Tarea:** `C:\Proyectos\frioseguro` (PLATA, prioridad #1) — hallazgo **R3** de `docs/continuity-chain.md`, el siguiente en la lista de arreglos de esa auditoría después de que el `08-23` cerrara R1+R7. R5, que iba antes, enciende hardware (GPIO con optoacoplador) y no se puede verificar de noche.
+
+**El bug:** `supabaseSync()` hacía `lastSync = now; if (internet) enviar();` — el reloj avanzaba igual, así que la lectura no se posterga: **no existe**. Un corte de router de 6 h son 2160 lecturas que nunca pasaron, y el hueco es indistinguible de "no pasó nada". Segundo agujero en la misma línea: `supabaseSendReading()` devuelve `bool` y nadie lo miraba — con internet, un 500 de Supabase también perdía el dato.
+
+**Lo que hice:**
+- `offline_buffer.h` — cola circular de 180 × 28 B (5068 B de RAM). Offline se muestrea a 60 s, no a 10. **Llena no tira: diezma** (una de cada dos + período duplicado), así los dos extremos del corte sobreviven: 3 h → 6 h → … → 192 h.
+- `device_clock.h` — el firmware **no tiene NTP ni RTC**. Un buffer que reenvía sin `created_at` apila el corte entero en el minuto del reenvío, peor que el hueco. La hora sale del header **`Date:` que toda respuesta de Supabase ya traía y se tiraba**. Sin reloj válido el buffer no se drena.
+- Filas recuperadas marcadas `system_state='buffered'` (columna que ya existía) → **cero migración**. `/api/status` publica el bloque `buffer`.
+
+**Verificado sin hardware:** 1332 checks en g++ sobre los headers reales con reloj falso (incluye el corte de 6 h completo, re-fechado y drenado en orden); 27/27 mutantes muertos; 33/33 checks de cableado con 21 tests propios; compila con el core ESP32 real — flash +5508 B (+0,42 %), RAM +5088 B, medido contra `main`.
+
+**Sin verificar:** nada corrió en hardware. Lo primero a mirar en el banco es si `HTTPClient` entrega el header `Date` (todo el reloj cuelga de eso; por eso `clock_syncs` está publicado). ⚠️ El sketch quedó en **98,7 % de flash, quedan 16 516 B** — no es de este branch, pero lo próximo que se agregue no entra.
+
+**Branch:** `nocturno/local-2026-08-26-el-hueco-y-el-reloj` (`a93ef03`, pusheado, sale de `main`, no depende de nadie). Informe en `diario/nocturno-local-2026-08-26.md`, `QUE_FALTA.md` #20 actualizado, MATI-HQ pusheado.
+
+Dos notas de higiene que van en el informe: el trabajo de día sin commitear de frioseguro **creció** (ahora hay un firmware entero, `firmware_revival/`, fuera de git — y es el que está corriendo en la instalación de Santa Cruz), y no toqué nada de eso.
+===== FIN mar 25/08/2026 22:48:01,85 ===== 
+===== TURNO NOCHE mi� 26/08/2026  2:00:01,81 ===== 
