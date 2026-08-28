@@ -84,3 +84,11 @@ Microsoft lanzó TS 7 = rewrite nativo en Go ("tsgo"): **8-12x más rápido** (V
 
 ## 2026-08-27 — Paradise (Eduardo): frontend completo en producción
 `C:\Proyectos\tienda-cosmetica` deployado a tienda-cosmetica-vert.vercel.app. Tres puertas sobre una base: `/` vidriera (paleta brandboard #F2EEE7/#EBCB7C/#BA8D41/#6D3D18, Cinzel Decorative, logos extraídos de los PDF CMYK con pymupdf, doble precio en todo, ficha con relacionados, checkout datos→pago, +18 en Pleasure Boutique, WhatsApp flotante, mobile-first), `/local` POS (lector EAN como teclado, caja del día desde ventas_local, login Supabase Auth), `/admin` (CRUD con subida de fotos a Storage, variantes, pedidos por estado, clientes). Los 16 productos actuales son seed demo — el importador `scripts/importar_productos.mjs` carga los 300 reales con fotos a WebP.
+
+## 2026-08-28 — emsica-web: REDISEÑO visual completo (pedido de Matías: "nivel Dastec/Meditecna")
+El sitio era funcionalmente sólido pero parecía wireframe (puro texto). Rediseño en `aad574f`, deployado a emsica-web-alpha.vercel.app:
+- **Firma visual**: el plano de instrumentación — hero azul profundo con retícula de blueprint + foto real del Smart-Ex 03 con arco de manómetro + tarjeta "Destacado del mes"; divisores tipo regla de calibración; CTA ámbar único en el hero.
+- **Carrusel infinito de marcas** (el pedido explícito): 22 logos REALES bajados del sitio vivo de EMSICA a `public/img/marcas/` (`components/LogoMarca.tsx` con mapa slug→archivo y alto óptico normalizado; `CarruselMarcas.tsx` CSS puro: lista duplicada + translateX(-50%), pausa con hover Y foco, gris→color, aria-hidden en la copia, reduced-motion→scroll común). 5 marcas sin logo (ECOM, Testo, Val-Tex, Odin, Brother) → tipografiadas; pedir logos al fabricante.
+- Íconos P&ID por categoría (`IconoCategoria.tsx`: válvula = moña de P&ID, manómetro, hexágono Ex...), credenciales en banda oscura con filetes ámbar, logos también en la grilla `/marcas`.
+- **SEO intacto**: H1/metadata/JSON-LD/sitemap sin tocar; los alt de los logos suman "<Marca> — representante en Bahía Blanca".
+- GOTCHA: `emsica-sitio.vercel.app` es OTRO proyecto (scope viejo, quedó con la demo anterior — "alias already in use"). La URL canónica para el cliente es **emsica-web-alpha.vercel.app**. Limpiar el proyecto viejo o pisarlo desde su scope.
