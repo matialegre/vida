@@ -35,3 +35,46 @@ Doc de dominio + bitacora. El agente lo lee al arrancar y lo actualiza al cerrar
 
 ## 2026-08-27 — Paradise (Eduardo): backend completo montado
 Schema `paradise` en la Supabase del kiosco (`egdlgprnanrlvmjfshrv`) — TEMPORAL por límite free (migración documentada en `C:\Proyectos\tienda-cosmetica\README.md`). Tablas categorias/productos/pedidos/ventas_local + vista clientes, RLS (anon solo lectura de catálogo), RPCs security definer transaccionales (`crear_pedido`, `vender_local`, `ajustar_stock` — validan y descuentan stock con `for update`), bucket público `paradise` con políticas de escritura solo authenticated, usuario auth del negocio, Realtime en productos, búsqueda GIN en español. Verificado por REST end-to-end. Mail serverless `api/nuevo-pedido.js` (Gmail SMTP) esperando app password.
+
+## 2026-08-28 — EMSICA mail_html: upload de imágenes con Vercel Blob
+Objetivo: el generador de mails (`C:\Proyectos\emsica-comercial\entregables\mail_html`) permite subir
+fotos directo desde el formulario en vez de exigir que el cliente hostee la imagen aparte.
+
+- **`api/upload.js`** (Vercel Function): firma permisos de subida con `handleUpload` de `@vercel/blob/client`
+  (**no** `put()` directo). Motivo del cambio de plan respecto a lo pedido originalmente: Vercel tiene un
+  límite DURO de 4.5 MB en el body de cualquier función serverless normal, no configurable; el requisito
+  era aceptar hasta 8 MB, así que un POST multipart directo habría fallado con 413 en fotos grandes. El
+  patrón oficial de Vercel para esto es "client upload": el archivo va del navegador DIRECTO al store, la
+  función solo firma un token de corta duración y valida ahí `allowedContentTypes` (jpeg/png/webp) y
+  `maximumSizeInBytes` (8 MB) — la validación queda igual de dura, solo cambia el transporte.
+- **GOTCHA de `@vercel/node` que costó tiempo de debug**: exportar `module.exports = async function(request){}`
+  (default export, un solo parámetro) NO lo detecta como "Web handler" — cae al modo Node clásico
+  `(req,res)` y `request.json()` cuelga porque `req` ahí es un `IncomingMessage`, no un `Request`. Hay que
+  exportar por método HTTP: `module.exports.POST = async function(request){}` (o `export function POST(){}`
+  en ESM). Sin esto la función cuelga 30s+ y Vercel la mata sin error claro en el log.
+- **`vendor/vercel-blob-client.mjs`**: el sitio es estático sin bundler propio, pero `@vercel/blob/client`
+  importa `node:crypto`/`undici` (remapeados a versión browser vía el campo `"browser"` de su package.json,
+  que solo respetan los bundlers). Se agregó `esbuild` como devDependency y `build.js` lo bundlea
+  (`platform: 'browser'`) a este archivo — es un artefacto generado, se commitea igual que `generador_mails.html`.
+- **`vercel.json`**: se agregó `"outputDirectory": "."`. Al aparecer `package.json` con un script `"build"`,
+  Vercel pasa de "sitio estático plano" a "Other framework con build command" y por defecto espera el output
+  en `public/` → sin este flag el deploy entero se hubiera roto (`Error: No Output Directory named "public"`).
+  Verificado con `vercel dev` antes y después del fix.
+- **Verificación E2E real** (no solo "compila"), con `vercel dev` local + credenciales reales de `.env.local`:
+  token de subida real generado, foto real subida al store `emsica-fotos`, URL pública confirmada con `curl`
+  (200, `Content-Type: image/png`), rechazo real de un `.txt` disfrazado de imagen (`Content type mismatch`)
+  y de un archivo de 9 MB (`File is too large`, límite real 8 388 608 bytes) — la validación es server-side
+  vía el scope del token firmado, no solo un chequeo de JS en el navegador. Con Playwright sobre
+  `generador_mails.html` real: elegir archivo en el campo de logo y en el de un bloque de producto completa
+  solo el campo de URL correspondiente, dispara el re-render de la vista previa (la URL aparece en el
+  `srcdoc` del iframe), y no rompió nada existente (cambiar de preset, agregar bloque, Descargar, Copiar
+  HTML — sin errores de consola). Blobs de prueba borrados del store al terminar.
+- **Pendiente**: correr el mismo flujo contra el deploy real de `emsica-mailer.vercel.app` (el Director
+  hace el `vercel --prod` o el deploy automático de git); local con `vercel dev` usa las mismas credenciales
+  pero es proceso distinto. Repo `emsica-comercial` no tiene remote configurado — commit local únicamente,
+  falta push/deploy.
+- Archivos tocados: `C:\Proyectos\emsica-comercial\entregables\mail_html\api\upload.js` (nuevo),
+  `generador_plantilla.html` (UI de subida + wiring), `generador_mails.html` (regenerado), `build.js`
+  (bundlea vendor/), `vendor\vercel-blob-client.mjs` (nuevo, generado), `package.json`/`package-lock.json`
+  (nuevos), `vercel.json` (outputDirectory), `.gitignore` (node_modules), `LEEME_generador.md` (sección
+  nueva para el cliente).
