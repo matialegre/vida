@@ -2092,3 +2092,48 @@ Noche cerrada. Resumen:
 Dos notas de higiene que van en el informe: el trabajo de día sin commitear de frioseguro **creció** (ahora hay un firmware entero, `firmware_revival/`, fuera de git — y es el que está corriendo en la instalación de Santa Cruz), y no toqué nada de eso.
 ===== FIN mar 25/08/2026 22:48:01,85 ===== 
 ===== TURNO NOCHE mi� 26/08/2026  2:00:01,81 ===== 
+===== TURNO NOCHE vie 28/08/2026  2:00:01,80 ===== 
+Noche cerrada. Una tarea, hecha entera.
+
+## Qué elegí y por qué
+
+**Repo:** `C:\Proyectos\galgas` (P0 — parada Dreyfus, octubre). Frioseguro se llevó las dos pasadas de anoche; galgas no se tocaba desde el 26.
+
+**El hallazgo:** la calibración se escribía en NVS y **no la leía nadie**.
+
+```c
+// firmware/esp_a_emisor/adc_sampler.cpp (main, hoy)
+const float k   = DEFAULT_K;                            // 1.00f, de config.h
+const float off = DEFAULT_OFFSET * (float)OFFSET_SIGN;  // 0.00f, de config.h
+```
+
+Del otro lado estaba todo construido: el comando en la cola, la validación de rangos, `nvsSaveCalibration()`, y hasta `nvsLoadCalK()`/`nvsLoadCalOffsetV()` — que existían desde el primer día y no las llamaba nadie. Mandabas `set_calibration`, el equipo contestaba `ack=OK`, la fila quedaba `executed`, y la medición salía idéntica. `force_calibration` peor: guardaba la etapa en una struct de RAM que el deep sleep de dos pasos después borraba; las tres etapas, `ack=OK` sin medir nada.
+
+Pega directo en el bloqueante #2 de octubre: el plan es calibrar contra la galga física **en sitio**, y ése era el único canal remoto.
+
+**Agravante que apareció en el camino:** las dos familias usaban fórmulas distintas — modular `v*k+off`, monolítico `(v-off)*k` — y el par `(k, offset)` que produce el procedimiento remoto que ya existe está definido para la del monolítico. Con `v_raw=1.70 V, k=2.0, off=0.20 V`: 3.00 V vs 3.60 V. Cablear la calibración sin unificar la fórmula primero habría dado una medición mal escalada.
+
+## Qué hice
+
+`firmware/shared/cal_model.h` nuevo (una fórmula, funciones puras), el sampler la aplica en las dos ramas (real y `DEV_SIMULATE_ADC`), el `.ino` la carga **antes** del burst, siembra en el primer boot, publica `cal_k`/`cal_offset_v` en el metadata del reading, y la tara (`stage 1`) se persiste en NVS y corre en el wake siguiente. Etapas 2 y 3: error honesto en vez de `ack=OK` vacío.
+
+Con los defaults la fórmula nueva es la identidad — un equipo sin calibrar mide igual que antes, así que el riesgo de merge hoy es cero.
+
+## Verificación (toda hecha, no prometida)
+
+- `tools/test_cal_model.cpp` sobre **el header real**: 35 checks OK
+- `tools/check_calibration_wiring.py`: 62/62
+- 18 tests de mutantes, incluido uno que corre el checker contra el código de `main` y **exige que repruebe el bug histórico**
+- Compilación real de **A y B**: 1237624 B vs 1235360 de `main` (+2264 B, +8 de RAM). Worktree del baseline creado y removido.
+
+Un mutante encontró un defecto real del checker mientras lo escribía: comentar `// nvsClearCalPending();` dejaba el nombre en el archivo y la búsqueda por subcadena la daba por hecha. Corregido.
+
+## Lo que NO pude cerrar
+
+- **La tara punta a punta** necesita un equipo prendido. Prueba de 15 min escrita en el doc: bajar el período, mandar `{"stage":1}` en reposo, ver `"cal_tared": true` en `readings` y `v_mean ≈ 0` en el wake posterior.
+- **El `k` real** sigue sin medirse (peso conocido). Este branch da el canal, no el número.
+- ⚠️ **El sketch quedó al 94% de la partición de programa.** No lo causé yo, pero es el mismo problema que `firmware_modular` de FrioSeguro al 98%: sin margen no hay OTA, y con la caja montada en el REDLER eso es un viaje a planta. `min_spiffs`/`huge_app` es `--build-property`, decisión tuya.
+
+**Branch:** `nocturno/local-2026-08-28-la-calibracion-que-nadie-lee` (`c048b93`, pusheado). No colisiona con la cadena de entrega (`08-22-b` → `08-25` → `08-26-c`).
+**Informe:** `diario/nocturno-local-2026-08-28.md` · **Doc:** `docs/calibration-chain.md` · Bitácoras de `@muestreador` (dueño) y `@firmware` actualizadas. Próximo paso: **@verificador** antes de mergear.
+===== FIN vie 28/08/2026  2:27:55,38 ===== 
