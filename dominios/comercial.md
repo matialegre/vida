@@ -72,6 +72,21 @@ Smart-Ex 03 como muestra; (2) línea de baja en el mail (Ley 25.326). `fluke.com
 pausa**: Emsica también representa Fluke, consultar con Jorge antes.
 
 ### Bitácora (línea 2)
+- 2026-08-27 — @comercial. **EMSICA pasó de prospecto a CLIENTE activo**: encargó su primera
+  campaña de mail (producto SEALWELD — grasas/sellantes/inyectores para válvulas de oil & gas).
+  Entregado en `C:\Proyectos\emsica-comercial\entregables\campania_sealweld\`:
+  (1) `investigacion_sealweld.md` — 5 productos estrella + el procedimiento de 3 pasos
+  (Cleaner→911→#5050) como eje del copy; (2) `mail_sealweld_copy.md` — mail 1 completo por
+  bloques (3 asuntos, preheader, 3 bloques de producto, CTA info@emsica.com.ar, baja Ley 25.326)
+  listo para que @diseno lo maquete en HTML/Outlook; (3) `segmentos_sealweld.csv` — **341
+  contactos** de los 596 de la base real (dedup por mail; P1=197 técnicos de empresas target,
+  P2=54 mantenimiento de industrial pesada, P3=90 compras) + `segmentos_notas.md` con huecos
+  (YPF 1 técnico, TGN cero, VM cero, minería casi vacía); (4) `prospectos_nuevos.md` — 15
+  empresas fuera de la base (TGN, Oldelval, CGC, Vista, Tecpetrol, Pan American Silver con
+  puerta tibia vía Matías, etc.), sin mails/teléfonos inventados. **Próximo paso (fechado):
+  sem. 31-ago — Jorge valida segmento y ola 1 (P1 sin TGS, ~135 mails); TGS se avisa al
+  vendedor de cuenta antes de tocarla. Antes del envío: verificar SPF/DKIM del dominio.**
+
 - 2026-08-21 — @comercial. Base creada y entregada en `C:\Proyectos\marketing-tecnico\`:
   60 empresas argentinas del perfil "representante/distribuidor con catálogo de marcas",
   **cada una con el sitio auditado desde afuera** (script propio `_audit/audit.py`, evidencia
