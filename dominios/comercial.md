@@ -87,6 +87,16 @@ pausa**: Emsica también representa Fluke, consultar con Jorge antes.
   sem. 31-ago — Jorge valida segmento y ola 1 (P1 sin TGS, ~135 mails); TGS se avisa al
   vendedor de cuenta antes de tocarla. Antes del envío: verificar SPF/DKIM del dominio.**
 
+- 2026-08-27 — auditado por @verificador 2026-08-27. Paquete EMSICA completo (sitio d029f67 +
+  campaña Sealweld + mail HTML + informe mail): sitio APROBADO (build 54 págs., 27 marcas con
+  title correcto, submenú Servicios exacto, sitemap 49 URLs, sin "Industrias"); campaña APROBADA
+  CON OBSERVACIONES (341 filas sin duplicados, 10/10 muestreados en fuente; 3 mails con punto
+  final corregidos de la base sin documentar); mail HTML APROBADO (plantilla Outlook-safe, build
+  reproducible byte a byte, logo 200, Ley 25.326 presente; render en clientes reales NO probado);
+  informe mail APROBADO (DNS re-verificado: MX M365, SPF only-Microsoft, DMARC p=none→Brevo,
+  brevo-code presente, DKIM selector1 ausente). Pendiente sin cliente: deploy, envío real, permiso
+  de Jorge, render Outlook real.
+
 - 2026-08-21 — @comercial. Base creada y entregada en `C:\Proyectos\marketing-tecnico\`:
   60 empresas argentinas del perfil "representante/distribuidor con catálogo de marcas",
   **cada una con el sitio auditado desde afuera** (script propio `_audit/audit.py`, evidencia

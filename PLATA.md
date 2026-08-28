@@ -68,4 +68,5 @@ Principio: **los agentes de IA hacen todo lo que no requiera cuerpo o confianza 
 **Regla de oro:** cada contratación se paga sola con ingresos EXISTENTES (comisión % de venta, monto fijo por instalación) — cero sueldos fijos hasta que el recurrente los cubra 2×. Matías decide siempre; el Director solo presenta la señal, los números y un recomendado.
 
 ## Bitácora
+- 2026-08-27 — **Paradise (Eduardo, Macachín):** desarrollo COMPLETO en producción (ver PORTFOLIO). Cotizado $480k (50/50) + **abono $55k/mes** — primer abono de desarrollo web del portfolio, mismo modelo que FrioSeguro: lo recurrente es lo que vale. Seña AÚN NO cobrada: no meter más horas hasta que entre (lo construido ya sirve de demo-cierre). El abono absorbe el único costo real (Supabase Pro USD 10/mes tras la migración).
 - 2026-07-07 — Documento creado. Próxima acción de plata: piloto casero FrioSeguro (sáb 25-jul según PLAN_MES) y lista de 10 comercios (sem 4). Matías define precios con el Director antes del primer contacto.
