@@ -2137,3 +2137,4 @@ Un mutante encontró un defecto real del checker mientras lo escribía: comentar
 **Branch:** `nocturno/local-2026-08-28-la-calibracion-que-nadie-lee` (`c048b93`, pusheado). No colisiona con la cadena de entrega (`08-22-b` → `08-25` → `08-26-c`).
 **Informe:** `diario/nocturno-local-2026-08-28.md` · **Doc:** `docs/calibration-chain.md` · Bitácoras de `@muestreador` (dueño) y `@firmware` actualizadas. Próximo paso: **@verificador** antes de mergear.
 ===== FIN vie 28/08/2026  2:27:55,38 ===== 
+===== TURNO NOCHE vie 28/08/2026 22:00:01,91 ===== 
