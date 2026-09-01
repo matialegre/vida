@@ -1,5 +1,102 @@
 # Bitácora @diseno3d — diseño mecánico 3D
 
+## 2026-08-31 — BANCO DE ENSAYO del drive CC del torno (Sistemas de Control)
+
+**Contexto**: el profesor objetó que "tocar el motor para cargarlo modifica la
+planta". Respuesta mecánica: un **disco de aluminio agarrado en el mandril** —
+una pieza de trabajo, no una modificación del motor — que hace tres cosas a la
+vez: inercia conocida, blanco de dos frenos (perturbación) y rueda fónica.
+
+**Hecho** (repo `C:\Proyectos\drive-torno-esp32s3\SISTEMAS_CONTROL\3d\`):
+6 `.scad` paramétricos + 10 STL + 4 PNG + DXF del plano acotado del disco +
+`NOTAS_MECANICA.md` con toda la memoria de cálculo.
+- `disco.scad` — Ø150 × 8 Al, cubo Ø40, 36 ranuras. **NO se imprime: es el
+  plano de mecanizado.** Exporta también DXF y PNG acotados (`-D VISTA="plano"`).
+- `brazo_imanes.scad` — freno de Foucault: base con servo MG996R, brazo
+  pivotante, porta con 4 N52 de 20×10×5 y rebaje de culata. 3 piezas.
+- `zapata_prony.scad` — freno de fricción: soporte, palanca (partida) y zapata.
+- `soporte_optico.scad` — bracket del TCRT5000 a 2-4 mm del canto, con escala.
+- `guarda.scad` — guarda de contacto en 2 segmentos de 90°.
+- `montaje.scad` — ensamble completo con sistema de coordenadas documentado.
+
+**LOS NÚMEROS** (los calcula el propio `.scad` con `echo()`, no un papel aparte
+que se desincroniza): masa **407,5 g**, **J = 1,001 × 10⁻³ kg·m²**,
+τ_m = J·Ra/(Kt·Ke) = **3,36 ms** (solo el disco), velocidad periférica
+**11,78 m/s** a 1500 rpm, óptico a **900 Hz**.
+*Verificación cruzada*: el volumen medido sobre la malla del STL da 407,3 g
+contra 407,5 g de la fórmula — **0,04 %**. El cálculo y el dibujo son la misma
+pieza.
+
+**Tres hallazgos que valen más que las piezas**:
+1. **El disco NO domina la inercia y hay que decirlo.** Un motor CC de 1 HP a
+   1400 rpm tiene J_rotor de 0,005 a 0,03 kg·m²: este disco mueve τ_m entre un
+   3 % y un 20 %. Pero eso se da vuelta a favor: el disco aporta un **ΔJ
+   conocido**, así que dos ensayos de desaceleración libre (con y sin disco) a
+   la misma velocidad dan `J_rotor = J_disco/(a_sin/a_con − 1)` — la misma
+   fricción se cancela. **El disco no ensucia la planta: es el patrón con el que
+   se la mide.** Ese es el argumento para la defensa.
+2. **Los dos frenos no son redundantes, son de especies distintas.** Foucault
+   da τ ∝ ω ⇒ cambia el coeficiente viscoso ⇒ **mueve el polo**: es una
+   perturbación PARAMÉTRICA (ensayo de robustez). Prony da τ ≈ cte·signo(ω) ⇒
+   **escalón aditivo puro**: es el que muestra el error de régimen del P y cómo
+   lo mata el I. Hacen falta los dos.
+3. **El freno de Foucault no puede frenar despacio.** Con 4 imanes N52 a 3 mm
+   y culata, el par estimado es **0,26–0,44 N·m a 300 rpm** y **0,9–2,0 N·m a
+   1000–1400 rpm** (fórmula de Wiederick, Am. J. Phys. 55, 500 (1987), con la
+   corrección ×0,3–0,5 por el retorno de las corrientes; **incertidumbre factor
+   3**). El objetivo de 1,2 N·m se alcanza arriba de ~1000 rpm y NO a 300 rpm, y
+   eso es física (τ ∝ ω), no un defecto. Para baja velocidad, Prony.
+   Si falta par: **culata en C (imanes en las dos caras) ⇒ ×3-4**, es la que
+   cierra el número; después entrehierro 3→1,5 mm (×1,7).
+   Y la calibración real de los dos frenos es **τ = Kt·(I_con − I_sin)**: el
+   propio drive es el dinamómetro. La fórmula dimensiona, no informa.
+
+**Cuatro bugs cazados por el conteo de volúmenes de CGAL** (el test unitario
+del CSG, otra vez):
+- `prony_palanca` daba **Volumes 3** = un cuerpo con una **cavidad cerrada**: el
+  agujero del eje de la zapata medía exactamente 2·pal_t y no llegaba a salir
+  por ninguna cara. Un agujero que no perfora es una burbuja.
+- `prony_zapata` salía con **15 facetas** (una caja): el asiento cilíndrico
+  Ø157 se comía la lengüeta entera. Se rediseñó la unión zapata-palanca como
+  **brida lateral atornillada** en vez de horquilla con pasador — más simple,
+  imprime sin soportes y encima es lo correcto (la palanca va AL COSTADO del
+  disco, no arriba).
+- `guarda_segmento` daba **Simple: no**: las orejas de unión entre segmentos
+  tocaban el cuerpo en **tangente** (unión de espesor cero). Se eliminaron: cada
+  segmento se amarra por sus propias patas. Menos piezas, y sano.
+- `soporte_optico` daba **Volumes 3**: las pestañas del canal de cable caían
+  justo sobre la ventana del sensor y quedaban **flotando en el aire**.
+
+**Un bug de FÍSICA que no lo caza ningún render, solo dibujar el conjunto**: la
+palanca del Prony tenía la zapata y la pesa **del mismo lado del pivote**, así
+que el peso **descargaba** la zapata en vez de cargarla. Pasó a palanca de
+primer género (pivote en el medio). Con b/a = 5 y µ = 0,3: **1 kg ⇒ 1,10 N·m =
+18,7 % del par nominal**, y 5 agujeros de gancho dan relaciones 2,8 a 5,0 con la
+misma pesa.
+
+**Un problema de cama**: la palanca entera medía **333 mm** y no entra en una
+cama de 220. Se partió con **empalme a media madera de 50 mm y 3 M5** en dos
+mitades de 217 y 166 mm. `palanca_b` se imprime **dada vuelta** para que su
+lengüeta quede contra la cama.
+
+**Total impreso**: ~490 g de PETG, ~22 h, **cero soportes en las 9 piezas**.
+
+**MEDIDAS QUE FALTAN (calibre, bloquean todo)** — tabla completa en §7 de
+`NOTAS_MECANICA.md`:
+1. **capacidad de las mordazas de 3** (`cubo_d`, puesto 40 mm) — si no agarra,
+   no hay disco. Es la primera.
+2. **altura del carro respecto del eje** (los 3 brackets: 50/55/55 mm). Los
+   oblongos dan ±11 mm; si el error es mayor, hay que reimprimir.
+3. **separación de agujeros del porta-herramientas** (50/50/24 mm).
+Menores: Ra en frío, **La (no hay dato, falta para τ_e)**, dimensiones reales
+del módulo TCRT5000, offset eje-cuerpo del servo, espesor del fieltro, alabeo
+axial del disco montado (decide si se puede bajar el entrehierro a 1,5 mm).
+
+**Próximo paso**: medir esas 3 cotas, poner los valores en los `.scad` y
+recompilar. **Y hacer el ensayo de desaceleración libre con y sin disco antes de
+imprimir nada**: da `J_rotor` y el τ_m real, que ya es un resultado del informe
+y no necesita ni una pieza de plástico.
+
 ## 2026-08-19 (c) — STITCH: rediseño de la cara porque DABA MIEDO
 
 **El disparador**: Matías vio el render armado y dijo *"es terrorífico, da miedo

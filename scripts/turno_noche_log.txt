@@ -2138,3 +2138,92 @@ Un mutante encontró un defecto real del checker mientras lo escribía: comentar
 **Informe:** `diario/nocturno-local-2026-08-28.md` · **Doc:** `docs/calibration-chain.md` · Bitácoras de `@muestreador` (dueño) y `@firmware` actualizadas. Próximo paso: **@verificador** antes de mergear.
 ===== FIN vie 28/08/2026  2:27:55,38 ===== 
 ===== TURNO NOCHE vie 28/08/2026 22:00:01,91 ===== 
+Noche cerrada. Una tarea, hecha entera.
+
+**Tarea elegida:** datalogger/RuView (P0, "terminarlo primero"), `QUE_FALTA` **#14 en rojo** — el único pendiente de software puro que no estaba ya esperando merge. Lo había abierto el worker de anoche y lo dejó sin arreglar a propósito ("cambio coordinado de dos firmwares, no es trabajo de una noche"). Sí lo era, porque el arreglo correcto no era el anotado.
+
+**El bug:** el chunk de ráfaga se pasaba de 255 B cuando el MPU satura (`-32768` = 6 caracteres). `REG_PAYLOAD_LEN` es de 8 bits → 269 se escribe como 13 y el frame se pierde entero, **justo cuando hay un golpe fuerte, que es para lo que existe la ráfaga**. Silencioso y dependiente del dato: con la mesa quieta no aparece nunca.
+
+**Por qué no era "bajar CH":** el 32 estaba escrito en `nodo.py` **y** en `esp32_dashboard.ino` (`const int CH = 32; // igual que el nodo`), dos firmwares que se flashean por separado. Bajarlo de un lado desparrama las muestras sin tirar error.
+
+**Lo hecho:**
+- **Gateway**: `burst_reasm.h` nuevo (sin Arduino adentro) que **aprende** el tamaño de chunk del aire. Ya no tiene el número → gateway nuevo entiende nodos viejos, así que se flashea en cualquier orden (gateway primero). De paso: buffer limpio entre ráfagas (los huecos se publicaban con muestras de la ráfaga anterior), no ubica a ciegas, y `"ok"` en `/api`.
+- **Nodo**: `BURST_CHUNK = 24`, peor caso medido 210 B. Cuesta 3 frames más de aire por ráfaga.
+
+**Verificado sin hardware:** 43 tests OK · el sketch **compila** con arduino-cli (`esp32:esp32:esp32s3`, +152 B flash) · **10 mutaciones, ninguna sobrevive**. Los tests del gateway compilan el header real con g++ y le dan los frames del nodo real extraído por AST — cero copias.
+
+**Sin verificar (necesita banco):** el aire con 11 frames en vez de 8, que el SX1278 acepte los 210 B, y saturar el MPU a propósito. Receta paso a paso en el informe.
+
+**Branch:** `nocturno/local-2026-08-28-b-el-chunk-que-no-entra` (pusheado) — **mergear `08-26-b` primero**. Informe en `diario/nocturno-local-2026-08-28-b.md`, MATI-HQ pusheado.
+
+Dos cosas para tu radar: el sketch del gateway está al **88 % del flash**, y arreglé de yapa un `sys.exit()` en `tools/test_misiones.py` que hacía fallar el `unittest discover` que documentan todos los branches anteriores.
+===== FIN vie 28/08/2026 22:23:14,65 ===== 
+===== TURNO NOCHE s�b 29/08/2026  2:00:01,79 ===== 
+Todo pusheado. Noche cerrada.
+
+## Lo que hice — FrioSeguro (PLATA, prioridad #1)
+
+**Branch:** `nocturno/local-2026-08-29-la-sonda-que-se-cae` (`be77516`, sale de `main`, no colisiona con ninguno de los 24 branches abiertos).
+
+**Por qué esa tarea:** por rotación tocaba frioseguro (anoche galgas y datalogger; cosechador sigue bloqueado por la compra), y ningún branch abierto tocaba `sensors.h`.
+
+**El hallazgo:** `checkAlerts()` empieza con `if (!sensorData.valid) return;`. Con la sonda caída el motor de alertas de temperatura queda apagado para siempre — correcto, pero eso hace del aviso de sonda caída **el último aviso que el sistema puede dar**. Tenía tres agujeros:
+
+1. **Se consumía antes de mandarse.** `faultAlerted1 = true` estaba arriba del `if (state.internetAvailable)` que hacía el envío. Con el router abajo —escenario correlacionado, sonda y router cuelgan del mismo corte de luz— el aviso se marcaba como dado y no salía nunca más.
+2. **Sin sonda en el arranque, silencio permanente.** `sensorCount` solo se asignaba en `initSensors()` y todo `readSensors()` colgaba de `if (sensorCount > 0)`. Bus vacío al bootear = equipo verde en el panel vigilando nada, hasta un reboot manual que nadie sabía que hacía falta.
+3. **No llegaba por Telegram**, que es el canal que el comerciante mira.
+
+**El arreglo:** la decisión sale de `readSensors()` a `sensor_fault_model.h`, un header puro (sin Arduino/HTTP/OneWire) que `sensors.h` *incluye* — no un espejo, así que lo que se testea es lo que se flashea. Invariante: un aviso pendiente no se consume hasta que se entrega.
+
+**Verificado sin hardware, las dos capas:**
+- `tools/test_sensor_fault.cpp` → **39 checks, 0 fail**, sin warnings con `-Wall -Wextra`. Los agujeros (1) y (2) están escritos como regresión.
+- `arduino-cli compile --fqbn "esp32:esp32:esp32:PartitionScheme=min_spiffs" firmware_modular` → **exit 0**, 65 % flash, 16 % RAM, cero warnings (~4,5 min; el core ESP32 ya estaba instalado, no hubo que bajar nada).
+
+Un detalle: **el test encontró un error de diseño mío**, no del código viejo. Mi primera versión avisaba "sonda recuperada" de una caída que el cliente nunca había escuchado caer porque se había quedado pendiente sin internet. Ahora se cancelan las dos.
+
+**Sin verificar (banco):** los 4 escenarios físicos del doc. Y el criterio de "entregado" es `internetAvailable`, **no** el `201` de PostgREST — `supabaseSendAlert()` devuelve `void`; eso lo arreglan los branches `08-26` y `08-27-b` cuando se mergeen, y ahí la máquina de estados no cambia una línea.
+
+Actualizado `QUE_FALTA.md` de frioseguro (ítem **#19**) y escrito `diario/nocturno-local-2026-08-29.md`. El working tree de frioseguro tiene cambios tuyos sin commitear del revival de Santa Cruz — **no los toqué**.
+===== FIN s�b 29/08/2026  2:17:38,48 ===== 
+===== TURNO NOCHE s�b 29/08/2026 22:00:02,85 ===== 
+===== TURNO NOCHE lun 31/08/2026 22:00:01,88 ===== 
+===== TURNO NOCHE mar 01/09/2026  2:00:01,89 ===== 
+Listo. Una tarea, hecha y verificada.
+
+## Qué elegí y por qué
+
+`C:\Proyectos\galgas` (P0, parada Dreyfus en octubre). Rotación: el 08-29 fue frioseguro, el 08-28 galgas + datalogger. **No hubo informe nocturno el 30 ni el 31.**
+
+## El hallazgo
+
+**El rollback post-OTA estaba escrito, comentado, llamado desde `setup()` — y la bandera que lo enciende no la prendía nadie.**
+
+`esp_rx_receptor.ino` tenía la máquina completa: `ota_pending_verify`, `checkOtaRollback()`, `doRollbackAndReboot()` con fallback manual, `ROLLBACK_VERIFY_WAKES` en su config. Pero `grep -rn "ota_pending_verify" firmware/shared/` devolvía **cero líneas**. Un comentario decía que "lo maneja `supabase_client.cpp`"; `supabase_client.cpp` no nombraba ese símbolo. Los emisores A/B directamente no tenían nada (Task 09, `TODO` en sus README).
+
+Las tres familias modulares —las de octubre— flasheaban OTA **sin red**. Un bin que no arranca se recupera con cable USB sobre una caja atornillada a un REDLER. Es el mismo patrón del 08-28 y del 08-27: drift entre la familia monolítica y la modular, donde lo que se perdió no fue el código sino el cable.
+
+## Qué hice
+
+`firmware/shared/ota_rescue.h`, armado con **una sola línea** en el downloader compartido (cubre RX + A + B). Dos arreglos sobre el original monolítico, los dos defectos reales de aquel:
+
+- **Estado en NVS, no en RTC memory.** La RTC memory se pierde con el corte de energía que provoca el propio bin malo al disparar brownout — la red desaparecía justo en el caso para el que existía.
+- **Se chequea el retorno de `esp_ota_set_boot_partition()`.** El original lo ignoraba: si el otro slot está vacío, apuntar el arranque ahí era el rescate fabricando el ladrillo.
+
+## Verificación
+
+| Qué | Resultado |
+|---|---|
+| `test_ota_rescue.cpp` (62 checks, header real + shims) | 0 fallas |
+| `check_ota_rescue_wiring.py --mutants` (50 checks + 9 mutantes) | 0 fallas, 9 mutantes muertos |
+| El mismo checker `--root` contra `main` | **reprueba, 27 fallas** |
+| Compilación de A, B y RX (esp32 3.3.8) | OK; +1628 B / +1152 B, RAM igual |
+
+**Sin verificar (necesita banco):** todo eso prueba la *decisión*, no el *efecto* — nadie vio todavía que el arranque de un ESP32 real se mueva. Procedimiento en `docs/ota-rescue.md` §5. Y dejé fuera a propósito la otra mitad de Task 09 (el watchdog): la API de `esp_task_wdt` cambió entre core 2.x y 3.x y el timeout tiene que superar un wake con OTA adentro (~110 s) — elegir mal ese número reinicia nodos sanos a mitad de una descarga.
+
+**Branch:** `nocturno/local-2026-09-01-el-rescate-desarmado` (`567aeef`, pusheado). MATI-HQ pusheado (`7728abd`).
+
+## Dos cosas para que mires
+
+1. **`datalogger` quedó con el árbol sucio.** Hay un branch `nocturno/local-2026-08-31-el-csv-que-no-avisa` local, sin pushear, sin commits arriba de `b8df100`, con 6 archivos modificados y 3 sin trackear. Parece un nocturno del 31 abortado a mitad (no hay informe del 30 ni del 31). **No lo toqué** — por eso trabajé en galgas, para no pisarlo.
+2. **MATI-HQ traía cambios sin commitear de antes**: `PLATA.md`, 4 bitácoras, y los 4 archivos de `cv suegro/` **borrados sin commitear el borrado**. Tampoco los toqué; commiteé sólo mis dos archivos.
+===== FIN mar 01/09/2026  2:29:34,20 ===== 
