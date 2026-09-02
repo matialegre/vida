@@ -95,3 +95,52 @@ calzar con el símbolo, pero conviene arreglarlo en el símbolo.
 **Próximo paso:** rutear. Prioridad: (1) analógico — S+/S− cortas y lejos de digital, Kelvin
 de REFP1 entre R1 y R2, **E−/REFN NO al plano de masa** (va sólo al pin AIN3); (2) alimentación;
 (3) digital y RF con keepout de antena.
+
+- 2026-09-02 [FRIOSEGURO / TERMOVIGIA Base v2 — layout rev B.1, PRELIMINAR] `C:\Proyectosrioseguro\hardware2	ermovigia_base\`
+  (`termovigia_base.kicad_pcb`, `LAYOUT.md`, `drc.txt`, `salida\pcb_top/bottom/3d.png`, `gerbers\` PRELIMINAR,
+  toolchain en `pcb\`). 143 componentes / 84 redes del `.net` de la rev B.1 (@esquematico), placement por bloques,
+  potencia y buses a mano (`pcb
+utas.py`, por pad), señales con FreeRouting, GND en las dos capas cosido.
+  - **HALLAZGO PARA EL DIRECTOR: 120 x 100 NO ENTRA.** Cuenta con courtyards reales: 16.900 mm2 de cuerpos (7.400
+    pasivos/conectores + 5.620 DevKit/3xLM2596/BK-A7670 + 3.900 los 2 modulos de rele) contra 12.000 de placa = 141 %
+    antes de rutear. Hice la placa en **160 x 155** (68 % de ocupacion, M3 a 4 mm de las esquinas). El gabinete
+    es parametrico (`pcb = [160,155,1.6]`): externo 190 x 185, 218 con orejas (Ender 3: al limite; acortar orejas).
+    Alternativas descartadas con numeros en LAYOUT.md par. 1 (reles elevados sobre pasivos, reles fuera de la placa).
+  - Decisiones de layout: DevKit con USB al borde superior (cara a 1,3 mm: ventana `usb_ventana`) y antena hacia
+    adentro sobre keepout SIN RELLENO (pistas permitidas: el DevKit va en zocalo y si no, la columna derecha queda
+    inalcanzable); pila de 3 LM2596 con U104 abajo (junto a la bateria), U102 medio, U103 arriba (junto al modem);
+    modem en el borde derecho con el IPEX hacia la pared del SMA, C502 a 11 mm de V, C104 a 9,5 mm de U103.OUT+;
+    barrera de los PC817 = una recta (los dos DIP alineados) con keepout de 6 mm; R114 a 6,5 mm de F102.1 en stub
+    recto (H33); pinza con burden a 5 mm del jack y CT_BIAS en estrella de 8 mm; LEDs en (39,8,148,5)/(39,8,138,5).
+    Prensacables y agujeros que el gabinete tiene que seguir: tabla en LAYOUT.md par. 2 (la PCB manda).
+  - Netclases: POTENCIA/MODEM 1,5 mm (2 A), ALIM 1,0, senal 0,3; clearance Default/GND 0,20 (el TO-92_Inline tiene
+    0,22 entre pads), pads de zocalos/headers de modulos 1,5/1,0 (con 1,7 no pasaba nada entre pines).
+  - **Trampas nuevas del harness KiCad 10 + Python** (todas costaron > 20 min): (1) `ExportSpecctraDSN` devuelve
+    False sin mensaje si hay dos huellas con la misma referencia (los 8 agujeros de los modulos eran "HR");
+    (2) `PCB_VIA.GetWidth()` SIN capa y `GetBoundingBox()` sobre pistas del .ses abren un "wxWidgets Debug Alert"
+    MODAL: el proceso queda colgado para siempre (`Get-Process python | select MainWindowTitle` lo delata);
+    (3) `ZONE_FILLER.Fill()` sobre una rule area se cuelga; (4) el `.kicad_pro` con `net_settings.meta.version 4`
+    se ignora y KiCad lo pisa con Default 0,2 al proximo Save — hay que escribir `version 5` + `tuning_profile`;
+    y el chequeo de lectura es por NOMBRE DE CLASE (`GetNetClassByName("POTENCIA")`), con nombre de red devuelve
+    Default; (5) `PCB_SHAPE.SetArcGeometry(start, mid, end)` para arcos; (6) el jack CUI SJ1-3523N trae un recorte
+    en Edge.Cuts que rompe el contorno: borrar los items de Edge_Cuts de la huella al cargarla; (7) el DevKit sobre
+    el agujero M3 de la esquina = `courtyards_overlap` aunque el tornillo quede debajo del zocalo.
+  - Para @bibliotecario (cosechar en `pc\kicad_gen\` o `pc\kicad_pcb\`): `pcb\gen_pcb.py` (placa desde .net +
+    placement + rutas por pad, keepouts derivados), `chequear_solapes.py` (courtyards con cajas exactas),
+    `netclases.py` (con guardia y readback), `autorutear.py`/`importar_ses.py`/`cerrar_ruteo.py`/`coser_rellenar.py`
+    (cadena FreeRouting con pistas protegidas), `rotular.py` (referencias en lugar libre), `render2d.py` (svg->png
+    con pymupdf), `gen_modelos3d.py` (cajas VRML para modulos sin modelo), `verificar.py` (DRC+metricas+renders+
+    gerbers+glb/step), `rutear_astar.py` (router A* sobre grilla 0,25 mm, 2 capas con vias, para lo que FreeRouting
+    deja abierto: se probo con 3 redes de 40-130 mm y con islas de GND).
+  - **Resultado final**: DRC `--severity-all` **0 errores / 0 sin conectar** (200 avisos de serigrafia: referencias
+    encimadas), 0 solapes de courtyard, 787 segmentos + 354 vias, 44,5 % de segmentos en B.Cu (deuda: rev C a mano
+    por F.Cu), caidas < 180 mV @ 2 A en toda la potencia, desacoples medidos (LAYOUT.md par. 7). Renders 2D/3D
+    MIRADOS y corregidos (modulos de rele dibujados 40 mm abajo por el signo Y del VRML). Gerbers PRELIMINAR +
+    glb + step. Mas trampas: (8) KiCad asigna a una via nueva la red del cobre que toca -> con las zonas rellenas
+    una via de senal nace GND (cortocircuito): `UnFill()` antes de agregar vias; (9) `b.Remove(via)` con relleno
+    previo -> segfault (exit 139): la costura ahora es aditiva/idempotente sin borrar; (10) DRC sin relleno previo
+    = todos los pads de GND "sin conectar" (el A* se puso a unir 149 islas): rellenar SIEMPRE antes del DRC;
+    (11) `Fill()` con rule areas en la lista se cuelga; (12) pads cuadrados: el obstaculo es la semidiagonal.
+  - **Pendientes (LAYOUT.md par. 10)**: decision del Director sobre 160 x 155; mediciones de Gonza (martes) en
+    `gen_huellas.py`; @diseno3d con la tabla de prensacables/LEDs/USB; serigrafia a mano (36 refs); rev C con el
+    haz DevKit-borneras a mano por F.Cu. Nada commiteado (orden).

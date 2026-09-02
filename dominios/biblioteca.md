@@ -47,3 +47,63 @@ del nodo cambiaría su sha256 vs. el OTA publicado).
 2. Correr `flashear_pico.py` contra un Pico real y actualizar su ficha.
 3. Cuando FrioSeguro necesite un cambio de OTA/WiFi: modularizar ahí y cosechar
    a `esp32\` (definir la interfaz mínima: state, wdtFeed, logRemoto).
+
+## 2026-09-01 — Segunda cosecha: KiCad por código + primer .scad
+
+Pedido del Director: cosechar el toolchain de @esquematico (Termovigía base v2)
+y la lib OpenSCAD de @diseno3d. Repo biblioteca: commit `f601b61`.
+
+### Qué entró
+
+**pc\kicad_gen\** (carpeta nueva, con `README.md`):
+- `kicad_gen.py` — framework de esquemáticos KiCad 10 por código (Sheet/Part con
+  `.pin(n)`, wire/junction, rail/gnd/pwr_flag, hojas jerárquicas, `modulo_symbol`,
+  `chequear_geometria`, `chequear_referencias`, `write_sheet/write_custom_lib/write_project`).
+- `symlib.py` — extractor de símbolos de las libs oficiales (resuelve `extends`) + pines.
+- `chequear_solapes_sch.py` — QA de texto (copia idéntica a laser-pcb y Termovigía; solo se agregó ficha).
+- `verificar.py` — pipeline ERC + solapes + PDF + netlist + BOM + PNG, parametrizado
+  (raíz por argumento, hojas hijas descubiertas del archivo).
+- `ejemplo\generar_ejemplo.py` — 3 componentes (bornera → R → LED → GND).
+
+**Linaje verificado en los repos** (no de palabra): laser-pcb
+(`ejemplo_kicad/tools/gen_sch.py` + `esquematico/kicad/generar_interfaz.py`,
+erc.rpt 2026-07-30 0/0) → galgas (`hardware/kicad/generar_nodo_galga.py`,
+erc.rpt 2026-08-20 0/0) → Termovigía (`hardware/v2/termovigia_base`, erc.txt
+2026-09-01 0/0, 6 hojas). `ALDI DISEÑO.kicad_sch` NO cuenta: es a mano en
+eeschema 9. `hardware/generar_kicad_sch.py` (KiCad 9, sin symlib) es ancestro
+conceptual, no de código.
+
+**Evidencia de la copia**: `python ejemplo\generar_ejemplo.py` + `python
+verificar.py ejemplo\ejemplo.kicad_sch` → `ERC messages: 0 Errors 0 Warnings 0`,
+0 solapes, PDF/NET/BOM OK, PNG mirado (J1→+5V→R1→D1→GND correcto). Quedan
+`ejemplo\ejemplo.kicad_sch` y `salida\p1.png` commiteados como evidencia.
+Gotcha nuevo cazado con el ejemplo: el ERC de KiCad 10 valida que la huella
+exista en las libs instaladas (`footprint_link_issues` = warning = falla).
+
+Adaptaciones respecto del original (en ficha como probadas SOLO por el ejemplo):
+`configurar()` en vez de `PROJECT[0]`/`CUSTOM_LIB` hardcodeado, `Sheet(madre=...)`
+genera sus uuids, `sheet_symbol(hija, ...)`, `write_sheet` sin `root_uuid`.
+El descubrimiento de hojas hijas en `verificar.py` no se probó con un proyecto
+jerárquico: **solo sintaxis**.
+
+**3d\** (sección nueva en LEEME):
+- `lib_gabinete.scad` — de `frioseguro\hardware\v2\gabinete\lib_termovigia.scad`.
+  Módulos: tabla PG + `pg_distribuir`/`pg_extremo` (los agregó @diseno3d
+  mientras yo cosechaba; incluidos), gota truncada, `agujero_pared`, standoff,
+  columna_tapa, oreja_pared, ranura_precinto, guia_luz, oblongo, caja_r.
+  Afuera: el isotipo de marca (`iso_*`, `isotipo`) — es Termovigía, no gabinete.
+- `test_lib_gabinete.scad` — instancia todo; `openscad.exe -o x.stl` →
+  Volumes 10, sin warnings, echos de la tabla PG correctos. `*.stl` gitignoreado.
+  **NO impreso**: la ficha lo dice.
+
+### Proyectos de origen
+NO tocados (ni el comentario de "versión canónica"): Termovigía sigue con
+`include <lib_termovigia.scad>` y con sus `kicad_gen.py`/`symlib.py` locales.
+
+### Próximo paso
+1. Próximo esquemático de @esquematico: usar `biblioteca\pc\kicad_gen` en vez
+   de copiar de Termovigía; si es jerárquico, marcar en la ficha de
+   `verificar.py` que el descubrimiento de hojas anduvo.
+2. Cuando @diseno3d imprima el gabinete: actualizar PROBADO de `lib_gabinete.scad`
+   con lo medido (agujero PG7, standoff M3).
+3. Siguen pendientes los del 08-21 (batería del nodo, flashear_pico, OTA ESP32).

@@ -1,5 +1,161 @@
 # Bitácora @diseno3d — diseño mecánico 3D
 
+## 2026-09-01 (b) — GABINETE TERMOVIGÍA v2: PCB pasa a 120 × 100 (relés a bordo)
+
+**Decisión del Director**: la PCB de la Base v2 pasa de 100 × 80 a **120 × 100 ×
+1,6** con los 2 módulos de relé a bordo (@esquematico mostró en `DISENO.md` §8
+que con 3 LM2596 + borneras no entraba en 100 × 80). Agujeros M3 a 4 mm de las
+esquinas: (4,4) (116,4) (4,96) (116,96). Alto máx. de componentes sigue 25.
+
+**Hecho** (`C:\Proyectos\frioseguro\hardware\v2\gabinete\`):
+- `pcb = [120, 100, 1.6]` en `termovigia_gabinete.scad`. Gabinete cerrado
+  **154,5 × 134,5 × 46** (178 de ancho con orejas); interior 144 × 124;
+  standoffs a 112 × 92 entre centros; tornillos de tapa a 128 × 108.
+- **Lo que NO recalculaba y se arregló** (el parametrizado de la mañana
+  tenía números fijos): posiciones de los prensacables (eran X/Y a mano),
+  `oreja_y = 42`, `logo_pos`/`texto_pos`/`logo_alto`, `sma_pos` y
+  `prensas_der`. Ahora: `pg_distribuir(lista, luz, centro)` en la lib reparte
+  los PG a lo largo de la pared con 4 mm entre tuercas y centra el grupo
+  (abajo X = −36/−10/+14,5/+37,5; izq. Y = −27/−4; der. Y = −31 + SMA en
+  +20,7); orejas a `ext_y/2 − 22`; logo `round(0,38·ext_y)` = 49 mm, bloque
+  escudo+texto centrado en la franja libre a la izquierda de los rótulos de
+  LED. Cuatro `assert` nuevos: tuerca de PG vs columna de tapa (3 paredes),
+  tubo de LED vs nervio de la tapa, tubo de LED vs columna.
+- **LEDs: SUPUESTO** `led_pcb = [[110,90],[110,78]]`. `DISENO.md` §8 solo
+  fija (90,70)/(90,58) para la PCB de 100 × 80; los corrí 20 mm en X e Y
+  (misma esquina). @esquematico/@pcb tienen que confirmar.
+- Bug de OpenSCAD 2021 cazado: una variable de nivel superior que referencia
+  otra definida MÁS ABAJO da `undef` (sin error, solo warning) → el logo se
+  iba a `translate([undef, …])`. Se reordenó. Lección: en OpenSCAD los
+  derivados van siempre después de lo que usan.
+- Re-exportados `base_estandar.stl`, `base_premium.stl`, `tapa.stl`: los 3
+  `Simple: yes / Volumes: 2`, sin warnings. Medidos sobre la malla: bases
+  178 × 130 × 43, 127 cm³ (~100 g PETG al 25 %); tapa 154,5 × 134,5 × 24,8,
+  75 cm³ (~60 g). Entra en cama de 220 × 220.
+- Re-renderizados y mirados los 6 PNG del gabinete (`renders/`): 4 gotas con
+  el pico arriba y centradas en la pared de abajo, PG9 + SMA solo en la
+  premium, tapa con logo/rótulos/anillos en su lugar, ensamble con la PCB
+  fantasma de 120 × 100 (2 relés + DevKit + 2 LM2596 de ejemplo).
+- `IMPRESION.md` al día (cotas, gramos, checklist con 144 × 124 / 112 × 92 /
+  posiciones de PG, tabla de faltantes con el supuesto de LEDs).
+- `cuna_bateria`, `soporte_sonda`, `soporte_puerta`: sin cambios (no
+  dependen de la PCB).
+
+**Evaluación pedida: ¿sirven las 3 cajas IP65 de ferretería para la demo del
+viernes mientras se imprime la v2?** Respuesta corta: **para la demo sí,
+casi seguro; para el equipo definitivo no.** La demo lleva una de las PCB v1
+WiFi (`TERMOVIGIA_PLAN_COMERCIAL.md` ya dice "base en caja IP65"): no
+necesita la Base v2 de 120 × 100 ni sus relés a bordo, así que la
+restricción es mucho más laxa. Lo que bloquea es que **nadie anotó las
+medidas de las cajas** (`hardware.md` las tiene como "3 cajas, medida
+interior: confirmar contando"). Qué medir con calibre/cinta, una sola caja
+basta si son iguales:
+  1. **Interior útil** largo × ancho × profundidad (a la altura del piso y a
+     la altura de la boca — muchas tienen las paredes con desmolde y son
+     2-3 mm más chicas abajo).
+  2. **Profundidad libre** entre piso y cara interior de la tapa (la tapa
+     suele tener burlete y nervio que comen 3-5 mm).
+  3. Si el piso trae **torretas de montaje**: cuántas, a qué distancia entre
+     centros, diámetro del agujero (¿M3, M4, autorroscante?) y cuánto
+     sobresalen. Si no trae, va PCB sobre separadores pegados o una placa
+     de PLA (15 min de impresión) atornillada a 2 puntos.
+  4. **Espesor de pared** donde van los prensacables y si es lisa o con
+     nervaduras (para taladrar Ø12,8 / Ø15,5 hace falta ≥ 20 mm de pared
+     lisa por agujero, y con copa o escalonada, no mecha común).
+  5. Tipo de cierre (tornillos plásticos cautivos vs. metálicos) y si la
+     tapa es opaca o translúcida (para los LEDs de la demo: opaca = hay que
+     agujerear).
+  Regla para decidir: si el interior ≥ **140 × 110 × 55** entra hasta la
+  Base v2 con relés (PCB 120 × 100 + 10 mm por lado para tuercas de PG +
+  altura 6 + 1,6 + 25); si ≥ **110 × 90 × 45** entra la PCB v1 de la demo.
+  Nada de esto lo hago hasta tener los números.
+
+**Próximo paso**: (1) que Matías o Gonza midan las 3 cajas (lista de arriba)
+y lo anoten en `hardware.md`; (2) @pcb/@esquematico confirmen `led_pcb` y si
+el USB del DevKit queda a ≤ 3 mm del borde; (3) imprimir `soporte_sonda`
+como pieza de calibración y después `base_estandar`. Sin commitear (orden
+del Director).
+
+## 2026-09-01 — GABINETE TERMOVIGÍA v2 (custom 3D, reemplaza la caja IP65 de ferretería)
+
+**Pedido del Director**: gabinete propio para las 5 unidades de Termovigía
+(Estándar / Premium), montaje en pared afuera de la cámara, IP54 razonable en
+PLA/PETG, logo de marca, más soportes de sonda y de puerta.
+
+**Hecho** (`C:\Proyectos\frioseguro\hardware\v2\gabinete\`): 5 `.scad` +
+6 STL + 10 PNG + `IMPRESION.md`.
+- `lib_termovigia.scad` — módulos genéricos con FICHA para @bibliotecario:
+  tabla PG (PG7/PG9/PG11/PG13/M12/M16), `agujero_pared()` en **gota
+  truncada** (agujero horizontal que imprime sin soporte, pico de 1 mm que
+  tapa el hexágono del prensacable), `standoff()`, `columna_tapa()`,
+  `oreja_pared()`, `guia_luz()`, `oblongo()`, `ranura_precinto()` y el
+  **isotipo Termovigía modelado nativo** (`isotipo()`).
+- `termovigia_gabinete.scad` — base + tapa, `variante = "estandar"|"premium"`.
+  Cerrado **134,5 × 114,5 × 46** (158 con orejas). PCB 100 × 80 a 12 mm de
+  las paredes (lugar para la tuerca del prensacable), standoffs M3 directos,
+  4 columnas con **inserto térmico M3** que asoman 2 mm sobre la pared y son
+  el tope duro de la tapa. Tapa con falda exterior + nervio interior = canal
+  de 3,5 × 6 para **cordón de silicona Ø3**. Prensacables: abajo 2×PG9 + 2×PG7,
+  izquierda 2×PG7, derecha (Premium) PG9 batería + SMA. Dos ventanas de LED
+  selladas (placa a 0,8 mm + tubo guía hasta la PCB) con rótulo OK/ALERTA.
+  Logo en bajorrelieve de 0,8 en dos niveles. USB apagado (ver hallazgo 3).
+- `cuna_bateria.scad`, `soporte_sonda.scad`, `soporte_puerta.scad`.
+
+**DECISIÓN — batería FUERA del gabinete, en cuna aparte.** Con la SLA adentro
+la caja se va a ~200 × 150 × 130, cuelga 3 kg de orejas de plástico, hay que
+abrir el equipo para cambiar la batería y una SLA ventea gas al cargar (no
+va en caja sellada). Con la cuna, **la base es la misma para las dos
+variantes salvo 2 agujeros**: para 5 unidades importa. Bolsillo de 40 mm,
+4 tornillos de 5 con tarugo 8, ranuras de velcro opcionales.
+
+**Cuatro hallazgos que salieron de mirar los renders (no del código)**:
+1. **La gota estaba al revés.** `rotate([-90,0,0])` mandaba el +Y del 2D a
+   −Z: el pico de la gota quedaba ABAJO, o sea el voladizo seguía arriba y
+   encima había un pico inútil. Se vio en la vista ortogonal de la pared de
+   abajo. Fix: `rotate([90,0,0])` + extrude centrado. Lección: todo agujero
+   con forma orientada se verifica con una vista ortogonal de esa pared.
+2. **El clip de sonda no retenía nada.** Los dedos subían 4,5 mm sobre el eje
+   y el chaflán de entrada de 1,8 mm se los comía casi enteros. Rehecho:
+   dedos rectos hasta 3 mm sobre el eje, boca 5,2 para sonda de 6 (0,4 de
+   interferencia por dedo), chaflán de 1,2. Verificado con corte ortogonal
+   (`renders/soporte_sonda_seccion.png`).
+3. **La ventana USB "para flashear sin abrir" no sirve con esta PCB.** Con la
+   PCB a 12 mm de la pared (que hace falta para la tuerca del PG9) un
+   micro-USB no llega al DevKit. Queda apagada (`usb_ventana=false`); el
+   flasheo es por OTA (firmware v2.6 ya la tiene) o abriendo 4 tornillos.
+   **Pedido a @esquematico**: si el conector del DevKit queda a ≤ 3 mm del
+   borde de la PCB, se activa la ventana y se imprime el `tapon_usb`.
+4. **La PCB de 100 × 80 está justa.** 2 relés de 50 × 39 + DevKit 25 × 48 +
+   A7670SA 50 × 35 = ~6.900 de 8.000 mm² sin borneras ni fuente. Si
+   @esquematico la agranda, `pcb = [x, y, 1.6]` es la única variable a tocar.
+
+**Sobre el logo**: OpenSCAD 2021 ignora los STROKES del SVG y la curva del
+escudo es un stroke de 8,5 → `import()` habría dado el escudo sin curva. Se
+reconstruyó nativo con las mismas coordenadas del `isotipo.svg` (Bézier
+evaluada en 16 puntos, curva = hull de círculos). `renders/tapa_frente.png`
+(CGAL, ortogonal) muestra el isotipo exacto. La tapa se imprime cara abajo,
+por eso bajorrelieve y no alto: en esa orientación un relieve positivo es
+imposible; a cambio, cambiando filamento a los 0,8 mm sale bicolor.
+
+**Evidencia**: los 6 STL con `Simple: yes / Volumes: 2` en CGAL (un cuerpo
+cerrado cada uno), sin warnings; bbox y volumen medidos sobre la malla con
+parser propio (base 102,7 cm³, tapa 56,9, cuna 112,6, sonda 6,6, puerta
+6,1). **Cero soportes en las 6 piezas.** Renders CGAL de cada pieza mirados.
+
+**Lo que falta (calibre / otros agentes)** — tabla completa al final de
+`IMPRESION.md`: `led_pcb`/`led_alto` y posición del USB (@esquematico),
+`sma_d`, `sonda_d` (6,0 vs 6,3), dimensiones del MC-38, `riser` por cámara
+(lo mide el electricista), altura real de la SLA (94 vs 100), rango de cable
+de los PG de Matías. **Sin impresora todavía: nada de esto se probó en
+plástico.**
+
+**Próximo paso**: imprimir **solo `soporte_sonda`** (30 min, 8 g) como pieza
+de calibración de tolerancias y `base_estandar` cuando @esquematico confirme
+la PCB. Antes de la base, medir los prensacables reales con calibre y poner
+`tabla_pg` al día. @bibliotecario: cosechar `lib_termovigia.scad` (ya tiene
+ficha).
+
+
 ## 2026-08-31 — BANCO DE ENSAYO del drive CC del torno (Sistemas de Control)
 
 **Contexto**: el profesor objetó que "tocar el motor para cargarlo modifica la

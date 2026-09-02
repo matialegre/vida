@@ -2227,3 +2227,67 @@ Las tres familias modulares —las de octubre— flasheaban OTA **sin red**. Un 
 1. **`datalogger` quedó con el árbol sucio.** Hay un branch `nocturno/local-2026-08-31-el-csv-que-no-avisa` local, sin pushear, sin commits arriba de `b8df100`, con 6 archivos modificados y 3 sin trackear. Parece un nocturno del 31 abortado a mitad (no hay informe del 30 ni del 31). **No lo toqué** — por eso trabajé en galgas, para no pisarlo.
 2. **MATI-HQ traía cambios sin commitear de antes**: `PLATA.md`, 4 bitácoras, y los 4 archivos de `cv suegro/` **borrados sin commitear el borrado**. Tampoco los toqué; commiteé sólo mis dos archivos.
 ===== FIN mar 01/09/2026  2:29:34,20 ===== 
+===== TURNO NOCHE mar 01/09/2026 22:00:01,93 ===== 
+Listo. Una tarea, hecha entera.
+
+**→ @firmware (frioseguro)** — la entrega del aviso por Telegram. Branch `nocturno/local-2026-09-01-b-el-aviso-que-no-sale` (`f13e2fe`), pusheado.
+
+## Por qué esa y no otra
+Es el segundo turno de la noche (el primero fue galgas). Jerarquía: frioseguro es PLATA. **Datalogger sigue bloqueado** por el árbol sucio del 31-ago, cosechador por la compra. Y había una deuda concreta esperando: el branch `08-02` dejó **H1–H4 demostrados con 18 tests y explícitamente sin corregir** ("generator != evaluator"). Ninguno de los 26 branches abiertos toca `telegram.h`.
+
+## Qué estaba mal
+Las 4 fuentes de alerta pasaban por un solo gate global de 300 s:
+- **H1** — `lastTelegramAlert` y `millis()` arrancan ambos en 0 → **los primeros 300 s de vida del nodo eran mudos**. Que es la ventana posterior a un corte de luz, un watchdog o un OTA.
+- **H2** — un aviso de puerta silenciaba 5 min a la temperatura crítica que viniera atrás, y la descartada **se perdía** (no había cola).
+- **H3** — el timestamp avanzaba sin mirar el código HTTP. Cuarta vez en este repo del *"el reloj avanza aunque la acción no ocurra"* (van `08-26`, `08-29` y ésta).
+- **H4** — los call-sites marcaban `alertSent = true` fuera del `if` de internet.
+
+Los cuatro se juntan en el escenario más común del negocio: se corta la luz.
+
+## Verificado sin hardware (corrió esta noche)
+- `test_telegram_gate.exe` → **66 checks, 0 fallas**, `-Wall -Wextra` sin warnings
+- `check_telegram_wiring.py --mutants` → **92 checks, 0 fallas, 9/9 mutantes muertos**
+- el mismo checker contra `main` → **46 fallas** (si no reprueba el bug, no sirve)
+- `arduino-cli compile` → **exit 0, 65 % flash, 16 % RAM**
+
+El mutante de H2 **sobrevivió la primera pasada** y encontró un agujero real del test: el caso "lo crítico no espera" usaba una fuente que aún no había entregado nada, así que pasaba por la regla de H1 y el bypass nunca se ejercitaba. Se agregaron 4 checks.
+
+## Lo que no está verificado
+El POST real. Cinco escenarios de banco en `docs/telegram-delivery.md`. Y **el delta de flash contra `main` quedó pendiente** — la compilación baseline en worktree limpio seguía corriendo y no la esperé (disciplina de tiempo); el comando está en el informe, junto con `git worktree remove /tmp/fs-main` para limpiar.
+
+**Dos cosas para mirar de día:**
+1. `power_monitor.h` y `current_sensor.h` **no los incluye el `.ino`** — son código muerto en el firmware que se flashea. Los cableé para que el cambio de firma no los deje rotos, pero su edición no pasó por el compilador. De las 4 fuentes de H2, las vivas son 2.
+2. **Datalogger sigue trabado igual que anoche**: branch `nocturno/local-2026-08-31-el-csv-que-no-avisa` sin un solo commit y sin pushear, árbol sucio. Es lo que lo bloquea dos noches seguidas — o se commitea o se descarta, pero no es mío decidirlo.
+
+Informe en `diario/nocturno-local-2026-09-01-b.md`, `QUE_FALTA.md` de frioseguro con el ítem #20, MATI-HQ pusheado (`668a89a`).
+===== FIN mar 01/09/2026 22:23:19,31 ===== 
+===== TURNO NOCHE mi� 02/09/2026  2:00:05,33 ===== 
+Listo. Una tarea, hecha y verificada.
+
+## Lo que hice
+
+**Desbloqueé datalogger**, que llevaba dos noches saltado porque su checkout está sucio (branch `08-31` sin commits). Lo resolví con un `git worktree` aparte sacado de `main` — el checkout de esa carpeta quedó **intacto**, mismo branch, mismos 6 modificados y 4 sin trackear. Verificado al cerrar; los worktrees temporales ya se borraron.
+
+**La tarea: el OTA del nodo Pico decía "no brickea" y era mentira por el camino normal** (no es código dormido: `wifi_push` lo llama cada 30 s).
+
+- El swap hacía `os.remove` del archivo bueno, y si el `rename` fallaba **se tragaba la excepción y seguía con el siguiente**; después `_set_ver()` corría igual. El nodo quedaba sin `nodo.py` **y con la versión nueva anotada**, así que `check_update()` (`if ver <= local_ver()`) **no reintentaba nunca**: la falla se auto-sellaba.
+- `main.py` atrapaba crashes de `main()`, pero importaba `config`/`nodo` —los archivos que el OTA reemplaza— **fuera de todo `try`**. Un `SyntaxError` en el que entró sale del import de `main.py`, cae al REPL, y `recovery_loop()` no corre. **La red cubría todo menos la única falla que el OTA causa.**
+
+Ahora es una transacción: journal, `.bak`, `_set_ver()` solo si el swap entero salió bien, `boot_check()` como primera línea de `main.py`, y rollback + cuarentena tras 3 arranques sin confirmar.
+
+Es la cuarta vez que aparece el mismo patrón en tu portfolio (`08-26`, `08-29`, `09-01-b`): **el estado avanza aunque la acción no ocurra.**
+
+## Verificación (corrida esta noche)
+- `tools/test_ota_install.py` → **88 checks, 0 fallas**, sobre el `ota.py` **real** con shims de MicroPython.
+- `tools/check_ota_wiring.py --mutants` → **48 checks + 16 mutantes, todos mueren**.
+- El mismo checker **contra `main` reprueba con 18 fallas** (rc=1) — sin eso, lo demás no vale.
+
+Un mutante sobrevivió en la primera pasada y tenía razón: el guard de `size < 0` lo tapa la comparación posterior. Reforcé el test para afirmar que no se pide ningún archivo, y ahora muere por el motivo correcto.
+
+## Sin verificar (necesita banco)
+El **efecto**: ningún Pico ejecutó esto. Falta ver el rollback ocurrir con un `nodo.py` roto a propósito, el corte de energía real, y si `os.statvfs` existe en el puerto rp2 (en Windows no, así que los tests no ejercitan esa rama).
+
+**Branch:** `nocturno/local-2026-09-02-el-ota-que-si-brickea` (`8d0d72b`, pusheado). `QUE_FALTA` #15, doc en `docs/ota-sin-ladrillo.md`, informe en `diario/nocturno-local-2026-09-02.md`. MATI-HQ pusheado (`3ac94f2`) — stageé **solo** el informe; tus cambios previos en `PORTFOLIO.md`, las 6 bitácoras y `comercial/` siguen sin commitear, no los toqué.
+
+⚠️ Dos cosas para un minuto tuyo: el árbol sucio de datalogger sigue ahí (tercera noche, ya no bloquea pero es trabajo colgando), y al mergear con `07-17-b-ssid-casing` hay que quedarse con su `from wifi_nets import NETS` y borrar el `NETS = [...]` literal.
+===== FIN mi� 02/09/2026  2:14:32,73 ===== 

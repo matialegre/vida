@@ -169,3 +169,171 @@ Doc de dominio + bitacora. El agente lo lee al arrancar y lo actualiza al cerrar
   - **Proximo paso**: sin cambios de fondo (P1 ADC fisico, P4 banco), mas **P8 supercap con ESR
     ≤ 1 Ω** y **P9 D4 unidireccional con IR ≤ 1 µA** para @hardware — los dos hay que resolverlos
     antes de comprar. @verificador revisa la rev B antes del layout. **Nada commiteado.**
+
+- 2026-09-01 [TERMOVIGIA / FRIOSEGURO] **TERMOVIGIA BASE v2 — esquematico completo, jerarquico, KiCad 10.**
+  Todo en `C:\Proyectos\frioseguro\hardware\v2\termovigia_base\` (carpeta nueva).
+  - **Entregables**: `termovigia_base.kicad_pro/.kicad_sch` (raiz A3: diagrama de bloques con sheet pins
+    cableados + tabla GPIO) + 5 hojas hijas A3 (`01_alimentacion`, `02_entradas`, `03_mcu`, `04_salidas`,
+    `05_4g`), `termovigia.kicad_sym` (DevKit 38p, modulo LM2596, modulo rele 2ch, breakout A7670,
+    level-shifter, rieles +VIN/VSYS/+4V0), `termovigia.pretty` (4 huellas placeholder, A MEDIR),
+    `termovigia_base.pdf` (6 paginas), `.net` (79 redes), `_bom.csv` (campos Funcion y Poblar),
+    `erc.txt`, `DISENO.md` (calculos C1-C12, tabla GPIO para config.h, poblar Estandar/Premium,
+    envolvente, riesgos), `generar_sch.py` + `kicad_gen.py` + `symlib.py` + `verificar.py`.
+  - **Evidencia**: `kicad-cli sch erc --severity-all` **0 errores / 0 advertencias**; `chequear_solapes_sch`
+    **0 solapes** en las 6 hojas; PDF exportado y **mirado** (5 pasadas, render PNG con pymupdf);
+    netlist leido red por red. 108 componentes.
+  - **Circuito**: entrada 12-24 V (jack + bornera) -> PTC 1,85 A -> SB540 serie -> P6KE30A -> +VIN ->
+    OR SB540 con bateria -> VSYS -> LM2596 5 V (DevKit, 4 reles, buzzer) y LM2596 4,0 V (solo A7670,
+    2x1000 uF). Premium: 3er LM2596 CC/CV 13,8 V / 0,7 A + 1N5822 + fusible 3 A + SLA Kaise KB1270,
+    sensado red 100k/12k -> GPIO34 y bateria 100k/22k -> GPIO35 (clamps 1N5819). 1-Wire 4k7 + 3 borneras
+    3P + P6KE6.8CA + 100R + clamps; 3 puertas con 10k/1k/100n/TVS; **2 optos PC817** (defrost GPIO33 +
+    grupo GPIO36, pedido de @firmware) con barrera dibujada; SCT-013-000 burden 33R, bias 1,65 V ->
+    GPIO32. Reles por BC547 colector abierto (**GPIO HIGH = ON**, reposo/reset = OFF; K4 reposo = RED,
+    regla ATS). A7670SA-LASE con level-shifter BSS138 + jumper LV = VDD_EXT / +3V3, PWRKEY (25) y
+    RESET (12) por BC547, STATUS -> GPIO39. DHT22 eliminado (sin GPIO libre).
+  - **Cambios de decision durante la sesion** (del Director via @hardware/@firmware/@diseno3d): LM317 ->
+    LM2596 CC/CV; entrada 12-19 -> 12-24 V; burden 22 -> 33 ohm; segunda opto; STATUS del modem;
+    bordes de borneras y posicion de LEDs para @pcb. Todo reflejado en hojas y DISENO.md.
+  - **HALLAZGOS del toolchain (van a kicad_gen.py y a la doctrina)**: (1) KiCad **fusiona referencias
+    duplicadas** en el netlist sin error de ERC -> el generador chequea unicidad; (2) los `Conn_01x06`
+    de KiCad NO estan centrados como el 01x04: pin 1 en +5.08 -> un cable salio en diagonal y la union
+    no existia; ahora `wire()` prohibe diagonales; (3) `D_TVS` con rot 90 tiene el pin 1 ABAJO: los
+    cables cruzaban el cuerpo (usar rot 270); (4) un extremo de cable sobre el interior de otro sin
+    junction NO conecta y el ERC no lo dice -> chequeo de geometria en el generador; (5) la
+    justificacion de texto se espeja con rot 90/180 y mirror y (el chequeador de solapes ya lo modelaba;
+    el generador ahora escribe 'right' para que 'left' se dibuje como left); (6) hojas jerarquicas:
+    sheet pin borde derecho = angulo 0 + justify right, izquierdo = 180 + left, shape igual al
+    hierarchical_label; instances path `/ROOT_UUID/SHEET_UUID`.
+  - **Para @bibliotecario**: `kicad_gen.py` (framework generico multi-hoja con ficha ORIGEN/PROBADO/USO/
+    DEPENDE/GOTCHAS) + `symlib.py` + `chequear_solapes_sch.py` + `verificar.py` = toolchain KiCad-por-
+    codigo probado en 3 proyectos (laser-pcb, galgas, termovigia). Cosechar a `C:\Proyectos\biblioteca\pc\kicad\`.
+  - **Pendientes**: revision Matias/@verificador del PDF; @hardware confirma breakout A7670 (VDD_EXT
+    expuesto o UART 3,3 V), LM2596 CC/CV y modulos; @pcb mide las 4 huellas placeholder y rutea desde
+    `termovigia_base.net`; Director decide envolvente (100x80 NO entra con los 2 modulos de rele sobre
+    la placa: DISENO.md seccion 8) y si la hoja 5 + riel 4 V se marcan `Poblar = PREMIUM` en la BOM.
+    **Nada commiteado** en frioseguro (orden de la tarea: entregables en la carpeta).
+
+- 2026-09-01 [FRIOSEGURO / TERMOVIGIA BASE v2] **Auditoría @verificador del esquemático rev A** →
+  **APROBADO CON CORRECCIONES: rev B obligatoria antes de rutear; @pcb NO rutea desde este `.net`.**
+  Informe completo: `C:\Proyectos\frioseguro\hardware\v2\termovigia_base\VERIFICACION_2026-09-01.md`.
+  - Evidencia propia: ERC `--severity-all` re-corrido 0/0; PDF re-exportado; netlist (79 redes, 108 comp.)
+    parseada y leída red por red — polaridades, OR, optos, buzzer, drivers, UART/shifter, PWRKEY/RESET
+    coinciden con lo declarado; 0 refs duplicadas, 0 sin huella. Cold-start: `generar_sch.py` + `verificar.py`
+    en copia aislada reproducen el entregado (solo UUIDs). GPIO12/0/2/15/5 en boot: OK. K4 en reposo = RED:
+    físicamente correcto.
+  - **Bloqueante H1**: breakout A7670 MLA1487294925 sin confirmar — la ficha ML dice "5V"; si es 5 V con
+    regulador propio, +4V0 no sirve y el puente +5V→VCC (que no está en la netlist) compartiría el riel del
+    ESP32 con ráfagas de 2 A. Posible doble inversión de PWRKEY si el breakout ya trae transistor.
+    Propuesta: riel +VMODEM exclusivo por U103 (4,0 o 5,0 V) + JP para puentear Q501. Dueño: @hardware.
+  - **Mayores (cambian netlist)**: H2 sirena sin alimentación en placa (Premium no tiene 12 V y +VIN es 0 en
+    el corte); H3 sin LVD → la SLA se descarga a fondo en cortes largos (decisión Director); H4 J303 OLED
+    VCC-SCL-SDA-GND no coincide con módulos comunes (GND-VCC-SCL-SDA); H5 K4/ATS en GPIO18 = `PIN_DHT22`
+    del firmware heredado → `dht.begin()` (INPUT_PULLUP) satura Q404 y conmuta a GRUPO; falta R B-E 10 k en
+    los drivers; H6 optos sin filtro (AC → 50 Hz en el GPIO); H7 batería invertida no protegida; H8 hoja
+    raíz desactualizada (22R / ×0,130 / 1,0 V vs 33R / ×0,107 / 0,9 V — `generar_sch.py:1070,1072`).
+  - Menores H9–H18 (símbolo TVS bidireccional para P6KE30A, GPIO39 flotante en Estándar, +3V3 sin PTC a
+    sondas, MountingHole ausentes, `Poblar` de hoja 5, texto fuera de área útil, huella F101, etc.).
+  - Para @firmware (bloqueo antes del primer flasheo en esta placa): `RELAY_ON HIGH`, `SENSOR_DHT22_ENABLED
+    false` y no instanciar `DHT`, `MAX_RELAYS 4`, `#define` desde DISENO §2 (una vez corregida la raíz).
+  - Próximo paso: @hardware responde H1 → @esquematico rev B → @verificador re-audita el `.net` → @pcb.
+
+- 2026-09-01 [FRIOSEGURO / TERMOVIGIA BASE v2] **rev B del esquematico — cierra H1..H18 de la auditoria + datos B.1-B.5 de @hardware.**
+  Todo regenerado en `C:\Proyectos\frioseguro\hardware\v2\termovigia_base\` (`generar_sch.py` -> `verificar.py` en verde:
+  ERC `--severity-all` **0/0**, `chequear_solapes` **0 solapes / 0 fuera de area** en las 6 hojas, PDF + `salida/p1..p6.png`
+  mirados, `.net` 82 redes / 136 componentes leido red por red, BOM 45 lineas siempre + 27 PREMIUM). DISENO.md reescrito
+  con la seccion 12 "rev B — cambios por hallazgo" y la tabla GPIO final. **Nada commiteado** (orden).
+  - **H1 (cerrado por @hardware: breakout = BK-A7670 v1 AND Technologies)**: riel `+VMODEM` exclusivo por U103 a **6,0 V**
+    (VCC 5-10 V del breakout menos la caida del interruptor); UART 3,3 V **directa** (level-shifter U501 + JP501 eliminados);
+    PWRKEY directo GPIO25 -> R501 1k -> JP502 2 pines (abierto: arranca solo); sin RESET/STATUS -> **MODEM_PWR_EN en GPIO12**:
+    Q502 BC547 -> Q503 IRF9540N high-side (R504 47k G-S, R505 4k7, C504 4,7 uF: Vgs -5,4 V, arranque suave tau 20 ms, inrush
+    0,4 A). GPIO12 strapping queda LOW en boot por 2k2 + 10k B-E -> modem arranca apagado. U502 = header 1x7 con numeros
+    fisicos (G R T K V G S), huella `A7670_BK_1x07`. IO39 libre con R305 100k.
+  - **H2** J104 SIRENA desde VSYS via F103 1,5 A T, K1 conmuta (sirena 12-24 V). **H3 LVD**: Q107 IRF9540N + TL431,
+    56k/15k/470k/10k -> corta 10,9 V, reconecta 12,2 V (los 36k/10k/1M de B.3 daban 0,4 V de histeresis: oscila); R113 10k
+    sangrador contra la fuga de D106; 0,17 mA con el LVD abierto. **H7**: Q106 IRF9540N (0,47 W a 2 A) **+ D109 crowbar**:
+    sin el crowbar, bateria invertida con red = cargador CC en zona lineal sobre Q106 = **11 W** (el MOSFET solo no cierra
+    H7). **H5**: R406-R410 10k B-E, **K4 -> GPIO23, K3 -> GPIO18**. **H6**: C222/C223 10 uF (con 1 uF el hueco de media onda
+    llegaba a 2,15 V). H4 J303 GND-VCC-SCL-SDA. H8 33R/x0,107/0,9 V unicos. H9 D_Zener K a +VIN. H12 R224 22R 1W. H14 H1-H4
+    MountingHole en (4,4)(116,4)(4,96)(116,96), PCB **120x100**, LEDs (110,90)/(110,78) confirmados. H15 Poblar PREMIUM.
+    H16 tabla raiz en dos columnas. H17 F101/F102/F103 = portafusible 5x20 (2A T / 3A / 1,5A T; el PTC no existe en AR).
+    H18 sin objeto (no hay RESET).
+  - **HALLAZGO del toolchain (corregido en `kicad_gen.py`)**: KiCad aplica **rotacion primero, espejo despues**;
+    `rot_offset()` lo hacia al reves -> un IRF9540N `rot 90 + mirror x` quedo con los pines en otro lugar y el ERC lo
+    delato (`pin_not_connected` Q107). Con rot 0 el orden no importa, por eso rev A no lo vio. Para @bibliotecario.
+  - Otros gotchas: `label()` local debe ir EXACTAMENTE sobre un punto del cable (a 0,4 u del cable = `label_dangling`);
+    las lineas de heredoc con `'''` rompen la Bash tool -> scripts de parche por archivo (scratchpad).
+  - **Proximo paso**: @verificador re-audita el `.net` rev B (misma lista) -> @hardware compra (BOM B.8) -> @pcb mide 3
+    huellas placeholder y rutea desde `termovigia_base.net` -> @firmware `PINOUT.md` desde DISENO seccion 2
+    (RELAY_ON HIGH, DHT fuera, K3=18, K4=23, MODEM_PWR_EN=12, sin LTE_RESET/STATUS).
+
+- **2026-09-01 (noche) — @verificador: re-auditoria rev B del esquematico Termovigia Base v2.** Informe:
+  `C:/Proyectos/frioseguro/hardware/v2/termovigia_base/VERIFICACION_2026-09-01_revB.md`. **Veredicto: APROBADO CON
+  CORRECCIONES (rev B.1 corta antes de cerrar el ruteo; @pcb puede arrancar placement y medicion de huellas).**
+  - Evidencia propia: ERC `--severity-all` 0/0 re-corrido; PDF byte a byte igual (414.059 B); cold-start en copia aislada
+    (`generar_sch.py` + `verificar.py` exit 0) y parser propio del `.net`: conectividad, huellas y BOM **identicas** al entregado;
+    136 comp., 0 dup, 0 sin huella, 0 huerfanas (9 NC marcados), 3 placeholders exactos; pads de huella = pines de simbolo.
+  - **H1-H18: 17 cerrados con evidencia (pagina/ref/red), H18 sin objeto justificado.** Tabla GPIO raiz = DISENO 2 = `.net` =
+    firmware (K3=18, K4=23, MODEM_PWR_EN=12, sin LTE_RST/STATUS). LVD recalculado: 10,9 / 12,2 V confirmados.
+  - **Nuevos MAYOR**: H19 VBAT_SENSE no ve bateria ausente / F102 volado (con red el cargador CV la deja en 13,6 V; DISENO 3.5
+    promete "0,1 V -> alarma" y es falso; opcion: divisor J102.1 -> IO39 libre). H20 LVD sin constante de tiempo: un pico de
+    2 A (0,58 ms) o la sirena a 11,2 V lo enclava hasta 12,2 V (fix: 1 uF en REF). H21 LTE_TX sin R serie -> alimentacion
+    fantasma del breakout con MODEM_PWR_EN LOW (fix: 1k serie o Serial2.end() antes de cortar).
+  - **MENOR**: H22 IO35 flota en Estandar (R106/R107 solo PREMIUM); H23 fusibles por variante (sirena con strobo -> F103 2 A T /
+    F101 3 A T) no estan en BOM; H24 Q503 a Vgs -5,45 V fuera de hoja (+VMODEM 7 V o P-MOS logic-level); H25 DISENO 3.5 se
+    contradice sobre inversion sin red; H26 TL431 a 0,9 mA (R109 4k7); H27 apagado lento del modem + cada reset del ESP32 lo
+    corta (regla AT+CPOF y LOW >= 10 s para @firmware); H28 medir R104 del breakout (decide si JP502 sirve); H29 PLAN 2.1/4.1
+    desactualizado (@firmware). H30 informativo: burden es R220 33R (no R224): 100 A -> +-2,33 Vpk recortado, 24 A -> +-0,56 Vpk
+    lineal, ADC lineal hasta ~36 A.
+  - Duenos: rev B.1 (H19-H22) @esquematico; decision H19a/b y H24 Director; H23/H28 @hardware antes de comprar; H21/H27/H28/H29
+    @firmware en PINOUT.md. Nada commiteado (orden). Detalle y reproduccion en el informe.
+
+- 2026-09-02 [FRIOSEGURO / TERMOVIGIA BASE v2] **rev B.1 del esquematico — cierra H19..H30 de la re-auditoria de @verificador con las
+  decisiones del Director.** Regenerado en `C:\Proyectos\frioseguro\hardware\v2\termovigia_base\` (`generar_sch.py` -> `verificar.py`
+  en verde: ERC `--severity-all` **0/0**, `chequear_solapes` **0 solapes / 0 fuera de area** en las 6 hojas, PDF + `salida/p1..p6.png`
+  mirados y ademas recortes a 200 dpi de cada bloque tocado; `.net` **84 redes / 143 componentes** parseado red por red, BOM 72 lineas
+  = 45 siempre + 27 PREMIUM). DISENO.md con seccion 13 "rev B.1 — H19..H30" + diff de conectividad; **`PINOUT.md` nuevo** (tabla GPIO
+  final + reglas para @firmware). **Nada commiteado** (orden).
+  - **H19 opcion (a)**: divisor R114 100k / R115 22k + C112 + D110 (a +3V3) + **D111 (a GND: bateria invertida -> -12 V en J102)**
+    desde **J102.1 pre-fusible** (etiqueta local `BATT_RAW`, unica etiqueta nueva: el resto es cable) -> **IO39 = `VBATT_RAW_SENSE`**.
+    IO39 paso a la columna izquierda del simbolo del DevKit (con las otras ADC) sin mover ningun otro pin. **R305 eliminada**: con
+    100k en paralelo el ratio de Premium pasaba a 6,55; el pull-down de Estandar es R115 22k siempre poblada (mismo criterio que
+    **H22**: R107/C111 pasan a ESTANDAR+PREMIUM). Seccion 3.5 reescrita con tabla de casos: regla `|V39 - V35| > 0,5 V > 10 s`.
+  - **H20**: C113 1 uF en REF del TL431: tau = (56k || 15k || 470k) x 1 uF = 11,5k x 1 uF = **11,5 ms**; la rafaga de 0,58 ms llega
+    al 5 %. **H26**: R109 10k -> **4k7** (I_K 1,8-2,2 mA >= 1 mA de hoja). **H21**: R507/R508 1k en LTE_TX/LTE_RX (redes nuevas
+    `Net-(U502-R)` / `Net-(U502-T)`) + regla `Serial2.end()` antes de bajar IO12. **H24**: +VMODEM **7,0 V** -> V_G 0,64 V, Vgs
+    **-6,4 V**, caida < 0,4 V, VMODEM_SW >= 6,4 V (margen 1,4 V; era 0,4); condicion: regulador del breakout conmutado (@hardware).
+    **H23**: F101 3 A T, F103 2 A T (un valor por posicion). H25/H27/H28/H30 en texto (hojas + DISENO): inversion siempre vuela F102,
+    ~0,5 mA con LVD abierto, cada reset del ESP32 = 30-60 s sin LTE (AT+CPOF -> LOW >= 10 s), medir R104 del breakout, lineal ~36 A.
+  - **Diff de conectividad rev B -> B.1** (no hay `.net` de rev B en git: la carpeta esta sin trackear; el diff sale del generador):
+    nuevas `BATT_RAW`, `VBATT_RAW_SENSE`; cambiadas `Net-(U105-REF)` (+C113), `LTE_TX`/`LTE_RX` (partidas por R507/R508); eliminada
+    `Net-(U301-IO39)` (R305); solo valor: R109, F101, F103, U103 (ajuste). Detalle en DISENO.md seccion 13.
+  - **Dibujo**: para meter 3 columnas de sensado en la hoja 1 hubo que angostar el bloque 3 -> nuevo helper `parrafos()` en
+    `generar_sch.py` (envuelve parrafos a N caracteres con `textwrap`; el ancho en mm = N x size, el mismo modelo que
+    `chequear_solapes_sch.py`). Gotchas nuevos: (1) el chequeador no ve texto-sobre-simbolo (C112 tapaba a D111 con 0 solapes:
+    solo se ve mirando el PNG); (2) un cable vertical que cruza el interior de otros cables no conecta ni da ERC, pero es ilegible
+    (PWRKEY por x=212 cruzaba los pines G del breakout); (3) el sheet pin de la raiz tiene que quedar >= 2 u dentro del borde del
+    bloque; (4) `label()` a 90 grados choca con cualquier nota horizontal que cruce: preferir angulo 0 en el extremo de un stub.
+  - **Proximo paso**: @verificador re-audita solo las redes tocadas (diff de 5 lineas en DISENO seccion 13) -> @hardware compra
+    (BOM B.8 + C113 1 uF, 1k x2, 1N5819 x2, 100k/22k 1 %, fusibles 3 A T / 2 A T) y mide R104 + regulador del breakout -> @pcb cierra
+    el ruteo con `termovigia_base.net` rev B.1 -> @firmware implementa `PINOUT.md` (RELAY_ON HIGH, DHT fuera, IO39 vs IO35,
+    MODEM_PWR_EN, Serial2.end).
+
+- **2026-09-02 — @verificador: verificacion corta rev B.1 del esquematico Termovigia Base v2.** Informe:
+  `C:/Proyectos/frioseguro/hardware/v2/termovigia_base/VERIFICACION_2026-09-02_revB1.md`. **Veredicto: APROBADO PARA LAYOUT.**
+  - Evidencia propia: ERC `--severity-all` 0/0 re-corrido (KiCad 10); cold-start en copia aislada (generar_sch.py + verificar.py
+    exit 0); parser propio: `.net` entregado = regenerado (84 redes / 143 comp., conectividad identica); BOM md5 identico
+    (72 = 45 + 27); 9 redes de un nodo = 9 NC. Diff declarado en DISENO 13 verificado red por red contra el `.net`: coincide
+    (BATT_RAW, VBATT_RAW_SENSE, U105-REF + C113, LTE_TX/RX partidas por R507/R508, R305 fuera; cuentas 136+8-1 y 82+3-1 cierran).
+  - **H19-H30: 12/12 cerrados** con calculo propio: IO39 a 15 V = 2,70 V; invertida = -0,2 V por D111 con 0,14 mA (BATT_RAW queda
+    negativa permanente, es pre-fusible); Estandar IO39 a GND por R115; tau LVD 11,5 ms (rafaga al 5 %); Vgs Q503 -6,36 V con
+    VMODEM_SW >= 6,0 V peor unidad; I_K TL431 1,8-2,55 mA en 10,9-14,5 V. **PINOUT.md = config.h (v3.1, 98afbf7): 24/24 pines
+    y todas las constantes coinciden.**
+  - **Nuevos, menores, texto (sin cambio de netlist, @esquematico)**: H31 hoja 4 bloque 3 sigue diciendo "F103 1,5 A T"
+    (generar_sch.py:1109); H32 DISENO 13 llama "nueva" a BATT_RAW y es la red J102.1-F102.1 renombrada (+R114.1); H33 nota de
+    layout: R114 pegada a J102, BATT_RAW es la unica red sin fusible (tambien @pcb).
+  - **Firmware (@firmware, no bloquean)**: H34 flote = 2,45-2,49 V en el ADC a 11 dB, calibrar en 13,8 V; H35 headers huerfanos
+    current_sensor.h (PIN_CURRENT_SENSOR 36 = GEN_RUN_N) y power_monitor.h con pines viejos, no incluidos pero cargados; H36 boton
+    WiFi 5 s (hoja 3 / PINOUT) vs 3 s (config.h / .ino) + config_SANTA_CRUZ.h con PIN_BUZZER 17 y RELAY_ON LOW sin aviso;
+    H37 lo que PINOUT exige y v3.1 todavia no tiene (SCT_AMPS_PER_VOLT, BATT_V_SHUTDOWN, HAS_LTE/HAS_BATTERY, lte_a7670.h).
+  - Nada commiteado, nada corregido (orden). Proximo: @pcb rutea con `termovigia_base.net` rev B.1; @hardware compra y mide
+    R104 + regulador del breakout; @firmware H34-H37; la verificacion del firmware la hace otro agente.

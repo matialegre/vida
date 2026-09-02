@@ -37,6 +37,10 @@ Corolario: datalogger = Pico (PIO+SD) + LoRa · nodos eternos = ATmega pelado + 
 | Módulos 2 relés | ~10 | casa | upsell FrioSeguro | 2026-07-07 |
 | Analizador lógico | 1 | casa | debug | 2026-07-07 |
 | Supercapacitor 1F 5.5V | 1+ | casa | pulso TX LoRa emisor Dreyfus | 2026-07-10 |
+| Cajas IP65 + prensacables PG7/PG9 + tapones | 3 cajas | casa | Termovigía | 2026-07-08 (compra) — **confirmar contando** |
+| ESP32 en campo (reefer Cerro Moro) | 1 | Santa Cruz | Termovigía SCZ | 2026-08-21 — descontar del stock de ESP32 |
+| PCB FrioSeguro v1 | 5 | casa | **no aptas para Base v2** (SIM800/ACS712) → banco/UTN | 2026-09-01 |
+| DS18B20 / reed / módulos relé / ESP32 | 15-20 / 10-20 / 5-10 mód. / 4-9 | casa | Termovigía + galgas | 2026-09-01 — **discrepancia Matías vs bitácora: CONTAR** (ver BOM_5_EQUIPOS §1) |
 
 ## Compras en curso
 - 2026-07-08 — Matías compra 3 cajas estancas IP65 + prensacables (PG7 sonda / PG9 alimentación) + tapones ciegos para huecos sin usar. Es el enclosure v1 de FrioSeguro (decisión: estanca de ferretería, NO 3D custom — ver bitácora 2026-07-07). Destraba las primeras 3 instalaciones comerciales.
@@ -77,3 +81,34 @@ Entregado `C:\Proyectos\laser-pcb\docs\PRESUPUESTO_FABRICA_PCB.md` (10 secciones
 
 ## 2026-07-13 — Torno Villatoro (variador CC): compra ByP hecha
 Matías compró en ByP los módulos de la **Opción D** (presupuesto 0004-00046240, **$38.302 c/IVA**): dimmer SCR 4000W + puente 15A (armadura) + puente 8A (campo) + varistor + portafusible + disipador + 1 TYN612 de repuesto p/ la ME06 original. Registro completo con flags técnicos en `Downloads\Villatoro-torno CC\Villatoro-torno CC\COMPRA_BYP_2026-07-13.md`. **Pendiente antes de instalar:** fusible cerámico o térmica C10 (el de vidrio rápido es solo p/ banco — capacidad de ruptura y pico de arranque), gabinete IP54, bornera ignífuga 12P (ByP tenía 2 u.), cable 2,5 mm²+prensacables. Banco: trafo de aislación SÍ o SÍ (control a potencial de red).
+
+## 2026-09-01 — TERMOVIGÍA Base v2: inventario reconciliado + BOM 5 equipos + compras
+Entregado `C:\Proyectos\frioseguro\hardware\v2\BOM_5_EQUIPOS.md` (precios ML AR verificados en vivo 2026-09-01, ID por renglón; método: HTML público con UA de buscador — la API sigue 403 y el scraping común bloqueado).
+
+**Inventario — discrepancias a CONTAR (Gonza/Sergio, 30 min):** ESP32 (Matías 5 / bitácora 10; 1 está en Cerro Moro) — **crítico porque galgas-Dreyfus necesita 3 en octubre**: 5 Termovigía + 3 galgas + 1 SCZ = 9 · DS18B20 (15 vs 20) · reed (20 vs 10) · módulos relé ("10 relés de 2" = ¿10 módulos o 5?) · 3 cajas IP65 (medida interior) y prensacables sobrantes. Las 5 PCB v1 (ALDI DISEÑO) **no sirven** para la Base v2 (footprint SIM800/ACS712): quedan para banco/UTN. En el repo frioseguro no hay ninguna compra registrada con cantidades.
+
+**Escenarios:** MÍN 5 Estándar **$386.941** · REC 5 Est. + 2 Premium **$864.962** · COMPLETO +repuestos **$1.157.242** (estimados no verificables en ML: ~$107–129k). Estándar ≈ $65k/equipo; kit Premium ≈ $234.500, 63 % es el A7670SA.
+
+**Hallazgos duros:** (1) A7670SA existe en AR: MLA1487294925 $146.673 (breakout + antena 4G + GPS, bandas B2/B4/B7/B28 ok); alternativa A7670G MLA2141725040 $88.999 sin confirmar antena/medidas (guion de preguntas en el doc); importado por courier ≈ $48k con el régimen nuevo (Dec. 604/2026: USD 400 solo IVA). (2) No hay "cargador flotante" chico en ML (todo cargadores de auto $29–386k) → el flotador es un LM2596 CC/CV a 13,8 V/0,7 A ($4.999) y Premium entra con fuente 19 V de notebook ($22.581), no 12 V. (3) Batería Motoma $21.600 dice "no apta UPS" → Kaise KB1270 $24.999. (4) La placa lleva 3 posiciones LM2596 (5 V / 4 V / flote) y jack DC + bornera en paralelo: una sola PCB para Estándar y Premium. (5) Transferencia: en placa solo contactos secos + entrada "grupo en marcha" por 2.ª fuente 12 V + PC817; contactores/tablero se cotizan aparte (referencia interna contactor bipolar 25 A $29–34k).
+
+**PCB:** JLCPCB ×10 por DHL con CUIT ≈ $70–90k y 10–15 días (recomendada; 100×100 cuesta lo mismo si el breakout no entra en 100×80). 2gtech (MLA929971373) = cotizar como plan B. laser-pcb **descartado** para esto (bloqueado, sin láser comprado, y la v2 es doble faz con vías).
+
+**Pendiente @hardware:** preguntar al vendedor del A7670SA medidas y conector de antena; preguntar a Gonza/Sergio qué tienen para fabricar; `PINOUT.md` de la Base v2 con @firmware cuando @pcb tenga el esquemático; medir ripple del 4 V bajo TX antes de dar por bueno el primer equipo.
+
+## 2026-09-01 (noche) — TERMOVIGÍA Base v2: rev B del BOM (H1/H2/H3/H7/H17 del verificador + PCB 120×100)
+Entregado: sección "rev B 2026-09-01" (B.1–B.9) al final de `C:\Proyectos\frioseguro\hardware\v2\BOM_5_EQUIPOS.md`. Sin commit.
+
+**Hallazgos duros:**
+1. **H1 CERRADO sin el vendedor.** El breakout de MLA1487294925 es el **BK-A7670 v1 de AND Technologies** (fotos de la publicación = manual del fabricante v1.0, leído completo): **VCC 5–10 V con regulador a bordo (TP 4,0 V), UART 3,3 V TTL, PWRKEY = pin K con R104 a GND (arranque automático), sin RESET ni STATUS en el header (7 pines G-R-T-K-V-G-S), 3 × IPEX (LTE/GPS/BT), 37 × 37 mm, un solo agujero de montaje, antena LTE FPC 2 dBi + GPS cerámica incluidas.** Para rev B: `+VMODEM` = **5,0 V** (no 4,0), JP501 en 1-2, U501 DNP, Q502/R502 fuera, huella 1×7, opcional `MODEM_PWR_EN` (P-MOSFET high-side) para reiniciar el módem por riel. Mensaje al vendedor redactado (confirma revisión, variante LASE/FASE, R104, stock) — Matías lo pega.
+2. **PCB 120×100 cotizada EN VIVO en JLCPCB** (headless, capturas): 10 u. 2 capas = **USD 15,50** (100×100 = USD 5,00) + DHL DDP USD 28,97. Diferencia real 120×100 vs 100×100: **USD 10,50 = $25.271 con IVA**. Renglón PCB pasa de `EST.` 85.000 a **$122.026** (fab + DHL verificados; gestión 15k sigue `EST.`). 120×100 aprobado por costo; falta que entre en la caja (medir el martes).
+3. **Sirena 12/24 V**: candidata **MLA1144075239** (15 W, DC 12/24 V, 110 dB, tamper, strobo). Va desde **VSYS** con F103 propio, conmutada por K1. Precio `PENDIENTE` (ver 5); referencia de clase $21.967.
+4. **LVD + inversa** (kit Premium): `J102 → F102 → Q_REV (IRF9540, gate a GND 100k) → +BATT_OK → Q_LVD (IRF9540 + TL431 36k/10k, R_g 10k, histéresis 1M) → D106 → VSYS`; cargador y VBAT_SENSE cuelgan de +BATT_OK (batería invertida = 0 V en el ADC → alarma). Consumo del LVD ≈ 1,4 mA (@energia valida). IDs: IRF9540 MLA611352928 / MLA1444696259 / pack MLA3784963550; TL431 MLA653337466.
+5. **PTC RXEF185 no existe en ML AR** → F101/F102/F103 = **portafusible 5×20** (2 A T Estándar / 3 A T Premium; 3 A F batería; 1–2 A sirena): una sola huella `Fuse_5x20`, 4 packs de portafusibles. Huella `MF-RG1100` se elimina.
+6. OLED: sí, por cable a la tapa, J303 = GND-VCC-SCL-SDA, Nubbeo $7.699 (REC/COMPLETO, no MÍN).
+7. **Totales rev B: MÍN $502.947 · REC $1.032.943 · COMPLETO $1.346.720** (+ LVD/inversa y pigtail `PENDIENTE`). El salto es la sirena (+$69k en MÍN), no la PCB (+$37k).
+
+**Límite de la sesión:** MercadoLibre bloqueó la IP a las 22:20 (`account-verification` en todo, API 403, también headless y proxies). Todo lo nuevo tiene ID verificado por buscador y precio `PENDIENTE`; nada inventado. Scripts listos en el scratchpad de la sesión 72c41d2f (`ml.py`, `mlitem.py`, `pw_ml.py`, `pw_jlc7.py`).
+
+**Para Gonza el martes 2 (B.6):** medir con calibre DevKit (separación de filas, silk), LM2596 ×2 tipos (4 agujeros), módulo relé (header + agujeros), level-shifter (filas), OLED, interior de la caja IP65 y batería vs Genrod; el breakout A7670 cuando llegue. Resultado a `DISENO.md §9`.
+
+**Pendiente @hardware:** llenar `PENDIENTE` en cuanto ML responda; pegar el mensaje al vendedor; `PINOUT.md` con @firmware tras la rev B verificada; medir ripple de `+VMODEM` (5 V) bajo registro/TX del A7670 en el primer Premium.
