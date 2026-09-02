@@ -36,7 +36,7 @@ Corolario: datalogger = Pico (PIO+SD) + LoRa · nodos eternos = ATmega pelado + 
 | STM32 BluePill | 1 | casa | libre | 2026-07-07 |
 | Módulos 2 relés | ~10 | casa | upsell FrioSeguro | 2026-07-07 |
 | Analizador lógico | 1 | casa | debug | 2026-07-07 |
-| Supercapacitor 1F 5.5V | 1+ | casa | pulso TX LoRa emisor Dreyfus | 2026-07-10 |
+| Supercapacitor 1F 5.5V (moneda) | 1+ | casa | ~~pulso TX LoRa emisor Dreyfus~~ **NO SIRVE como CSC** (ESR ~30 Ω, ver P8 / Rev C 2026-09-02) → backup RTC | 2026-07-10 · corregido 2026-09-02 |
 | Cajas IP65 + prensacables PG7/PG9 + tapones | 3 cajas | casa | Termovigía | 2026-07-08 (compra) — **confirmar contando** |
 | ESP32 en campo (reefer Cerro Moro) | 1 | Santa Cruz | Termovigía SCZ | 2026-08-21 — descontar del stock de ESP32 |
 | PCB FrioSeguro v1 | 5 | casa | **no aptas para Base v2** (SIM800/ACS712) → banco/UTN | 2026-09-01 |
@@ -112,3 +112,112 @@ Entregado: sección "rev B 2026-09-01" (B.1–B.9) al final de `C:\Proyectos\fri
 **Para Gonza el martes 2 (B.6):** medir con calibre DevKit (separación de filas, silk), LM2596 ×2 tipos (4 agujeros), módulo relé (header + agujeros), level-shifter (filas), OLED, interior de la caja IP65 y batería vs Genrod; el breakout A7670 cuando llegue. Resultado a `DISENO.md §9`.
 
 **Pendiente @hardware:** llenar `PENDIENTE` en cuanto ML responda; pegar el mensaje al vendedor; `PINOUT.md` con @firmware tras la rev B verificada; medir ripple de `+VMODEM` (5 V) bajo registro/TX del A7670 en el primer Premium.
+
+## 2026-09-02 — GALGAS/Dreyfus: P8 (supercapacitor) y P9 (D4) CERRADOS — se destraba el layout del nodo
+Entregado: sección **"9. Rev C — 2026-09-02"** (C14–C20) al final de
+`C:\Proyectos\galgas\hardware\NOTAS_CALCULO.md`. Sin commit. No se tocó nada del §0 al §8.
+
+**Hallazgo que cambia el problema (C14):** el enunciado de P8 pedía "1 F con ESR ≤ 1 Ω" y **se
+olvidaba de la tensión**. Con la topología en serie de la rev B, CSC cuelga de `V_SC = VBAT − 1,6 mV`,
+o sea que está **permanentemente a 3,67 V**, no a 3,0 V. → **ninguna celda suelta de 2,5/2,7/3,0 V
+es candidata**; toda solución es de **dos celdas en serie** (o un pack de fábrica de 5 V), y eso
+arrastra **resistencias de balanceo** y **dos huellas** que no estaban en el esquemático.
+
+**P8 — elegido: 2× Eaton HV0810-2R7105-R en serie (CSC1+CSC2) + RB1/RB2 150 kΩ 1 % 0805.**
+1 F 2,7 V c/u → 0,5 F 5,4 V; ESR 0,2 Ω/celda; fuga 10 µA máx.; ⌀8,5 × 13,5 mm, paso 3,5 mm.
+Caída en el pulso de TX (120 mA, 150 ms) = **132 mV peor caso contra 420 mV de margen (3,2×)**, y
+aguanta incluso si la ESR real fuera 4× la de catálogo. Derating 68 % de la nominal.
+**Huella: `Capacitor_THT:CP_Radial_D10.0mm_P3.50mm` ×2** (D10, no D8: el cuerpo es de 8,5 mm) +
+`Resistor_SMD:R_0805_2012Metric` ×2. Reemplaza al `CP_Radial_D13.0mm_P5.00mm` tentativo.
+**Costo energético: +22,2 µA de reposo (10 de fuga + 12,2 de balanceo) = 13,7 % del budget** →
+I_media 0,184 mA → **1,30 años** (antes 1,48). **Lo tiene que firmar @energia.** Hay compuerta de
+medición a 72 h que, si la fuga real es < 1 µA, permite RB = 1 MΩ y devuelve la autonomía a 1,38 años.
+Alternativa de producto (una sola pieza, sin balanceo, 1,38 años): **Eaton PB-5R0V105-R** 1 F 5,0 V,
+ESR 0,5 Ω, fuga 12 µA — **no elegida hoy porque no tiene huella y no pude abrir el plano mecánico**.
+
+**P9 — elegido: D4 = onsemi ESD5Z5.0T1G, SOD-523.** Unidireccional, **VRWM 5,0 V**,
+**`IR` = 0,05 µA máx. especificada a 5,0 V** (el criterio pedía ≤ 1 µA @ 3,7 V: se cumple con una
+condición más dura y **con número de hoja de datos**), VBR 6,2 V, VC 11,6 V, 80 pF.
+Cuesta **0,44 mAh/año = 0,02 % de la pila**. **Huella: `Diode_SMD:D_SOD-523`** — reemplaza al
+`SOT-23` tentativo, que además estaba **mal** (símbolo de 2 patas sobre huella de 3 pads).
+LCSC **C82044**, USD 0,0164, 250k en stock, y está en la librería de JLCPCB → si la PCB va con
+montaje, viene soldado. Descartado con motivo el candidato "obvio" **PESD5V0L1BA (SOD-323): es
+BIDIRECCIONAL** — la "L" es de *low capacitance*, no de unidireccional. Trampa anotada.
+
+**Otros hallazgos:**
+- **El supercap 1 F 5,5 V del inventario (renglón 2026-07-10) NO sirve como CSC** y hay que corregir
+  ese renglón: es de tipo moneda, clase **Eaton KW-5R5C105H-R, ESR 30 Ω @ 1 kHz** → ΔV 1,44 V, apagón.
+  Queda liberado para backup de RTC. **Sigue sin comprarse nada para P8.**
+- **CONFIRMADO el faltante de la guía de perfboard §8.2**: ni las resistencias de precisión (R1 348 Ω,
+  R2/R3, RCAL 174k65, RS1/RS2, RGD), ni los C0G (CD 100 nF, CC1/CC2 10 nF), ni la bornera de paso
+  **5,08 mm**, ni el perfboard de islas, ni el **cable de galga apantallado** figuran comprados ni en
+  stock **en ningún documento**. Lista completa en C19. **Sin eso Matías no puede soldar el banco.**
+- **Inconsistencia de bornera**: el `.kicad_pcb` usa huella MX126 de **paso 5,00** y el perfboard exige
+  **5,08** → dos borneras distintas para el mismo proyecto. Recomendación DFM: estandarizar en 5,08. Dueño @pcb.
+- **C8 cambia**: con 0,5 F, τ = 10 s y 3τ = 30 s (antes 20/60 s). El "minuto de despasivación" del
+  checklist de instalación hay que reescribirlo (el pico de 184 mA no cambia). Para @energia con P5.
+- **P2 sigue abierto** (D1/D2/D3 de entrada: hace falta un **bidireccional** con IR ≤ 10 nA @ 1,5 V;
+  el ESD5Z5.0T1G no sirve ahí).
+
+**Límite de la sesión (honestidad de datos):** no hubo red saliente (sólo buscador) y MercadoLibre
+sigue bloqueando la IP desde el 2026-09-01 → **todos los precios quedaron `PENDIENTE`**; los datos
+eléctricos salen de atributos de distribuidor (Farnell/DigiKey/RS/LCSC) y están marcados como tales,
+sin ningún número inventado. Falta abrir las hojas de Eaton HV y de onsemi ESD5Z para confirmar la
+frecuencia de la ESR y el plano mecánico.
+
+**Pendiente @hardware:** (a) preguntar a GIMAP si tiene supercaps de baja ESR o diodos ESD antes de
+importar; (b) llenar los `PENDIENTE` de precio cuando haya red; (c) pasar los 8 cambios de C18 a
+@esquematico/@pcb y regenerar; (d) montar la compuerta de medición de fuga a 72 h; (e) comprar la
+lista del banco (C19) — es lo único que separa a Matías de soldar la Placa A.
+
+## 2026-09-02 (b) — GALGAS: G17 (LDO) y G13 (dropout + pila a fin de vida) — respuesta al RECHAZO de P6
+Entregado: **"9-bis. Rev C (adenda)"** (C21–C23d) en `C:\Proyectos\galgas\hardware\NOTAS_CALCULO.md`,
+a continuación de C14–C20. Sin commit. Origen: `hardware\VERIFICACION_P6_2026-09-02.md`.
+
+**G17 — CONFIRMADO, pero la plata no se perdió.** `HT71xx-1` (Holtek) = **30 mA máx**, Iq 2,5 µA típ.
+La TX del RA-02 pide **87 mA (+17 dBm) / 120 mA (+20 dBm)** — verificado hoy en la **tabla 6 de
+`SX1276-77-78-79_Semtech.pdf`. Con el HT7130A el nodo no transmite.** PERO: la **Placa A** (banco,
+sin radio) consume 10,4 mA → **los 2 HT7130A comprados son el LDO de la Placa A**, no descarte.
+⚠ La guía de perfboard §8.1 dice lo contrario ("no hace falta en Placa A, es para la B") → **corregir**.
+- **U4 se queda MCP1700-3002**: SOT-23-3 en la PCB (**@pcb no cambia nada, la huella `SOT-23` sigue**)
+  y **TO-92-3 para el perfboard**. Mismo die, dos encapsulados.
+- **COMPRAR: `MCP1700-3002E/TO` TO-92 ×5.** Candidato AR **`MLA-703690036`** (ADICHIP, "MCP1700
+  regulador 3V LDO 250mA x5"). **Precio `PENDIENTE`** — el buscador devolvió $328,60, que es un
+  cacheado viejo, y ML sigue bloqueando la IP desde el 2026-09-01; no se usa ese número.
+  ⚠ **Casi todas las publicaciones de MCP1700 en AR son la 3302 = 3,3 V** (MLA-698527309,
+  MLA-1107192763): hay que pedir la **3002 = 3,0 V** o rompe C6.
+- ⚠⚠ **TRAMPA DE PINOUT (pág. 1 del datasheet, leída hoy):** `SOT-23: 1=GND 2=VOUT 3=VIN` pero
+  `TO-92: 1=GND 2=VIN 3=VOUT` — **pines 2 y 3 invertidos**. El símbolo usa U4.3=VI (SOT-23). Soldar
+  el TO-92 "según el esquemático" lo destruye. Y el pinout del HT7130A tampoco se puede asumir igual.
+- **TPS7A02 descartado** (Iq 25 nA tentador, pero 1,35 Ω de pass FET = igual que el MCP1700, SOT-23-**5**
+  cambia la huella con @pcb ruteando, y cero stock AR). Anti-sobre-ingeniería.
+
+**G13 — CONFIRMADO y ampliado.** `MCP1700_Microchip.pdf` pág. 3: **178 mV es TÍPICO, 350 mV es el
+MÁXIMO** @250 mA. Y **segundo error que nadie vio**: C6/C7 nunca aplicaron la Nota 1
+(`VIN ≥ VR + 3,0 % + VDROPOUT`). Los dos errores tiraban para lados opuestos y se tapaban.
+RDS(on) del pass PMOS peor caso = 350 mV/250 mA = **1,40 Ω** (escalado justificado con el texto de
+TI en `TPS7A02_TI.pdf` §7.3.5; sigue siendo extrapolación → medición de banco asignada).
+→ `VIN` mínimo real: **3,105 V midiendo · 3,212 V a +17 dBm · 3,258 V a +20 dBm** (C6 decía 3,18 V).
+
+**Pila a fin de vida (OCV 3,20 V, R_pila 40 Ω, con el CSC de la rev C):**
+medir 3 s hunde 67 mV + TX a +20 dBm otros 88 mV → `V_SC` 3,045 V → **el LDO sale de regulación** →
+`VOUT` = 2,877 V. **Está por debajo de los 2,9 V del `VBOT` máximo del fusible `BODLEVEL=2,7 V`
+(ATmega tabla 32-8) → reset justo en la última TX.** A +17 dBm quedan 2,948 V: pasa por 48 mV, o sea
+por suerte. **El brownout es de FUSIBLES, no de hardware.**
+
+**Hallazgo lindo:** con `R_pila = 100 Ω` en vez de 40 la caída del pulso **no cambia** (88 mV), porque
+`Req = ESR ‖ (R_pila+RSC)` la domina la ESR de 0,4 Ω. **El supercap borra la resistencia interna de
+la pila de la cuenta; lo que queda mandando es la OCV.** Confirma la topología de la rev B y P8.
+
+**Las 3 reglas (ningún componente nuevo) — VEREDICTO: el riel aguanta la última TX SÓLO con R1+R3:**
+- **R1** fusible **`BODLEVEL=110` (1,8 V)**, no 101 (2,7 V) → dueño **@firmware**.
+- **R2** escalón de TX por VBAT con el divisor de C9 que ya existe (≥3,35 V → +20 dBm · <3,35 → +17 ·
+  <3,05 → sólo trama "pila agotada") → **@firmware** + umbrales de **@energia**.
+- **R3** transmitir **30 s después** de medir (el nodo ya duerme 293 s): recupera 47 mV, **gratis**.
+  Con R1+R3 transmite hasta OCV ≈ 3,02 V a +20 dBm y 2,95 V a +17 dBm.
+
+**Pendiente @hardware:** (a) **comprar el MCP1700-3002E/TO ×5** — es lo que bloquea la Placa B;
+(b) medir el dropout real a 87/120 mA (10 min, INA219 + fuente) para cerrar la extrapolación de 1,40 Ω;
+(c) medir el consumo del RA-02 en PA_BOOST por debajo de +17 dBm (Semtech no lo publica y R2 depende
+de eso) — con @comms; (d) corregir la guía de perfboard §8.1; (e) pasar R1/R2/R3 a @firmware y las
+correcciones de C6/C7 a @esquematico.

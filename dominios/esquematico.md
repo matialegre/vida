@@ -337,3 +337,60 @@ Doc de dominio + bitacora. El agente lo lee al arrancar y lo actualiza al cerrar
     H37 lo que PINOUT exige y v3.1 todavia no tiene (SCT_AMPS_PER_VOLT, BATT_V_SHUTDOWN, HAS_LTE/HAS_BATTERY, lte_a7670.h).
   - Nada commiteado, nada corregido (orden). Proximo: @pcb rutea con `termovigia_base.net` rev B.1; @hardware compra y mide
     R104 + regulador del breakout; @firmware H34-H37; la verificacion del firmware la hace otro agente.
+
+- **2026-09-02 — @esquematico: DREYFUS/galgas — REV C del nodo de galga. Los 9 bloqueantes de P6, cerrados.**
+  Repo `C:/Proyectos/galgas/hardware/`. Todo por generador (`kicad/generar_nodo_galga.py`), **nada a mano sobre el `.kicad_sch`**.
+  Entregables: `kicad/nodo_galga_v3.kicad_sch` rev C · `kicad/nodo_galga_v3.net` (51 redes) · `kicad/erc_revC.rpt` **0/0 y sin
+  chequeos apagados** · `kicad/DIFF_REDES_revB_revC.txt` (diff red por red) · `NOTAS_CALCULO.md` §10 (C21-C29, C7b, C10c) ·
+  `kicad/verificar_sch.py` (nuevo) · PDF/SVG regenerados y **mirados**. **Sin commit** (ordenado): 41 archivos staged.
+  - **G19 primero, era de una linea**: `hardware/` estaba **UNTRACKED**. `git add hardware/` + `.gitignore`
+    (`hardware/kicad/.history/` era otro repo git adentro, `tools/*.exe`, `*.lck`, `__pycache__/`). El proyecto ya sobrevive a
+    un `git clean -fd`.
+  - **G1 anotacion**: 13 refs sin digito -> `RCAL1, CD1, CA1, CB1, CBLK1, RR1, RP1, RL1, RG1, RSC1, CI1, CO1` (+ `CSC1/CSC2`).
+    Se agrega el `1`, no se renumera a `R17`: el nombre sigue diciendo que es. Propagado a la guia de perfboard y verificado
+    contra el PLACEMENT de @pcb (55 refs, 0 huerfanas en los dos sentidos).
+  - **G2/G3 RA-02**: `FP_RA02 = "galgas:RA-02"` en el generador **y** `galgas.kicad_sym` ahora **se escribe desde el mismo
+    generador** con la huella adentro (una sola fuente de verdad; antes el PCB la forzaba con una tabla hardcodeada). Simbolo
+    renumerado al **pinout fisico 1-16** (1 ANT, 2 GND, 3 3V3, 4 RESET, 5 DIO0 ... 12 SCK, 13 MISO, 14 MOSI, 15 NSS, 16 GND) y
+    con los 16 pines (antes tenia 12 y los 3 GND del modulo quedaban en 2). @pcb ya habia renumerado `galgas.pretty/RA-02` a la
+    numeracion oficial: coinciden. **P3 sigue abierto y esta escrito en negrita en la hoja**: el pinout sale del datasheet, no del
+    modulo que tiene Matias — hay que medirlo con tester antes de fabricar.
+  - **G4 bornera**: `TerminalBlock_Phoenix:...MKDS-1,5-4-5.08_1x04_P5.08mm_Horizontal` (era MX126 de 5,00 contra el BOM de 5,08).
+  - **G5 RGD1 = 1 M** (no 100 k, y la cuenta esta escrita, C21): con 1 M los 100 nA de IGSS del BSS138 dan 0,1 V contra 0,8 V de
+    Vgs(th) (margen 8x) y la descarga de Ciss tarda 27 us contra segundos de paso de calibracion; con 100 k se irian 30 uA.
+  - **G6**: RPU1 (CS del ADS1220), RPU2 (NSS) y RPU3 (RESET del RA-02), 100 k. Costo real: 1 nA de media (30 uA solo mientras el
+    micro fuerza el selector abajo, ~10 ms cada 300 s).
+  - **G7 DIO0 -> PB0** y PD0/PD1 liberados a **J3** (header 1x3 TXD/RXD/GND, sin poblar). Aviso a **@firmware**: DIO0 pasa a
+    **PCINT0**, no es mas una interrupcion de PORTD.
+  - **G8 ANT**: alineado con la decision de @pcb (`LAYOUT.md` §4): **IPEX**, pad ANT sin poblar, sin linea de 50 ohm en la PCB.
+  - **G9**: `/NODO_A`, `/E_REFN`, `/S_MAS`, `/S_MENOS`, `/V_BAT_SENSE`, `/V_SC_MID` con **etiqueta local sobre el cable** (no
+    globales: la doctrina prohibe conectar con etiquetas lo que se conecta con un cable). Ojo: los **netclass_patterns del
+    `.kicad_pro` apuntaban a los nombres viejos** (`Net-(D3-A2)`) — se actualizaron; era un dato duplicado a mano.
+  - **Componentes nuevos de @hardware (§9)**: CSC1+CSC2 (2x Eaton HV0810, D10/P3.5) en serie con `V_SC_MID` + RB1/RB2 150 k;
+    D4 = **ESD5Z5.0T1G** en `Diode_SMD:D_SOD-523` (la SOT-23 era huella de 3 pads para un simbolo de 2 patas).
+  - **Deuda de documento mia, corregida con cuenta propia**: **G10** C12 tenia un factor 10 -> `10 nA x 175 ohm = 1,75 uV =
+    **1,17 ue**` (no 0,12): **endurece P2**, 10 nA ya valen ~1 ue y hay que mirar la curva de fuga vs. temperatura. **G13** el
+    dropout del MCP1700 es 178 mV **tipico** / 350 mV **maximo** (168 mV escalado a 120 mA), y aparece **C7b, el caso fin de
+    vida** que faltaba: con OCV 3,2 V y R_pila 40 ohm el nodo **se apaga en la ultima TX** -> fin de vida = VBAT 3,3 V y back-off
+    a +14 dBm por debajo de 3,35 V (@firmware). **G14** RD3 4M7 + CVB1 10 nF: ADC7 dejaba de violar `VCC+0,5` los 365 dias
+    (queda en 3,03 V, cuesta 0,64 uA) y el S/H tiene su carga (constante del divisor: 0,2481 -> **0,2357**, esperar 12 ms +
+    conversion dummy). **G11** el conteo real es **11 con nombre + 23 auto + 17 unconnected = 51** (la rev B declaraba 15+32, que
+    no existian). **G16** unificado a **BSS138**, con criterio numerico para admitir un 2N7000: `Rds(on) <= 175 ohm` medido a
+    3,3 V = 1 ue sobre 1000. **G12/G22** tabla de pines del micro y "sin cristal, RC interno 8 MHz" escritos en §4 y en la hoja.
+  - **G25 y el harness (esto es lo que evita el proximo G1)**: el `.kicad_pro` no tenia seccion `erc` y regian los defaults **con
+    4 chequeos en ignore, incluido el de anotacion**. Ahora estan **los 43 encendidos** (`unannotated: error`). Encenderlos
+    **encontro 3 defectos reales que la rev B tenia y nadie veia**: (1) D1/D2/D3, simbolo de 2 patas sobre huella **SOT-23 de 3
+    pads** -> `D_SOD-323`; (2) JP1 era un simbolo de *solder jumper* con huella de header -> `Conn_01x02`; (3) **4 cables de
+    longitud cero** heredados (el generador ahora los descarta). Ademas `verificar_sch.py`: un comando que chequea anotacion +
+    huellas vacias + ERC 0/0 sin ignores + la advertencia del export de netlist, y devuelve codigo != 0.
+  - **Gotchas de dibujo de esta sesion** (para la doctrina): (a) un cable nuevo que comparte columna `x` con otro **se fusiona en
+    silencio** — RPU1 en x=u(254) toco el bajante de CLK->GND y **cortocircuito CS con masa**; lo detecto el ERC por
+    `pin_to_pin`, pero lo que lo hizo evidente fue el **diff de redes**; (b) un cable que pasa por **dentro del cuerpo** de una R
+    no lo ve ni el ERC ni el chequeador de solapes (PD1 atravesaba RP1): solo se ve mirando el PDF ampliado; (c) el chequeador de
+    solapes no compara texto contra **simbolo** (el GND de RGD1 tapaba el valor de RCAL1); (d) 64 renglones de calculo a paso 2,7 u
+    se comen el **cuadro de rotulo** de la A2: paso 1,85 u y entran.
+  - **Proximo**: **@verificador** re-audita **solo lo tocado** con `DIFF_REDES_revB_revC.txt` (18 redes quedaron identicas y
+    ninguna red analogica cambio de nodos) -> **@pcb** rutea con `nodo_galga_v3.net` rev C (y puede borrar el
+    `FOOTPRINT_FORZADO` de D4: ya sale del esquematico) -> **@energia** firma los +22,8 uA de reposo / 1,30 anos (P11) ->
+    **@firmware** P12 (PCINT0, divisor 0,2357, back-off de TX) -> **@hardware** P10 (100 nF C0G en 0805) y G17 (el HT7130A
+    comprado no da la TX; hace falta el MCP1700-3002).

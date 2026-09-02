@@ -56,6 +56,93 @@ Doc de dominio + bitacora. El agente lo lee al arrancar y lo actualiza al cerrar
 
 - 2026-07-08 [BRIEFING GIMAP] — leer ../BRIEFING_EQUIPO_GIMAP.md y los 4 docs (PARTE_GIMAP, PRESUPUESTO_ENERGIA, PROTOCOLO_CALIBRACION, INGENIERIA_NODO_1ANO). Para vos: placa emisor bajo consumo (gateo puente + supercap cerca del LoRa para el pulso, sin boost) + placa receptor ESP32+LoRa 220V. Convergencia UTN Diseño y Manufactura/Tecnología.
 
+## 2026-09-02 — GALGAS / DREYFUS: ruteo del bloque analógico, netclases y antena (rev C, PRELIMINAR)
+
+`C:\Proyectos\galgas\hardware\kicad\` — `nodo_galga_v3.kicad_pcb`, `LAYOUT.md`, `drc.rpt`,
+`salida\pcb_3d_top.png` / `pcb_3d_bottom.png`, toolchain nuevo en `pcb\`
+(`rutas.py`, `rutear.py`, `netclases.py`, `rellenar.py`). **Sin commit, sin gerbers** (orden).
+
+**Estado medido:** 55/55 componentes (netlist rev C), 51 redes, **81 segmentos + 12 vías**,
+**DRC `--severity-all` = 0 errores**, 0 solapes de courtyard, **89 pads sin conectar** (alcance
+declarado: falta el digital y la potencia a propósito), 50 avisos de serigrafía (deuda escrita).
+Renders 3D top/bottom **mirados**.
+
+**La sesión cambió de objetivo dos veces en vuelo** y la placa lo aguantó: primero @hardware cerró
+P8/P9 (supercap partido en 4 cuerpos, D4 a SOD-523), después @verificador **rechazó P6** y
+@esquematico entregó la **rev C** con 10 componentes nuevos, 12 referencias renumeradas y las
+4 redes analógicas rebautizadas. **Las netclases y el bloque analógico ruteado sobrevivieron sin
+tocar una sola coordenada**, porque todo está anclado **POR PAD y no por nombre de red**. Esa
+decisión de diseño se pagó sola el mismo día.
+
+**Tres defectos de layout que un DRC 0 no ve, encontrados y corregidos:**
+1. **El ADS1220 estaba mal orientado.** Sus 4 pines analógicos (7/8/9/10) están todos en UN
+   extremo del TSSOP y los digitales en el otro; con U1 a 0° ese extremo miraba al sur y
+   SCLK/CS/CLK quedaban enfrentados al bloque analógico. Rotado a 270°, y **el front-end se
+   rehízo entero** (R3/R2/R1, RS2/RS1, CC2/CD1/CC1 reordenados de norte a sur) para que el orden
+   físico de las señales sea el orden de los pines: cero cruces entre S+, S−, REFN y REFP.
+2. **`RG1` (pull-down del gate de Q2, el FET de la pila) vivía en el bloque analógico**, a 30 mm
+   de su transistor. Movido junto a Q2.
+3. **`CBLK1` era "reserva de bloque" a 32 mm del radio.** Es el único bulk del riel del lado del
+   RA-02 y de ahí sale el pulso de TX de 120 mA: movido a la esquina de potencia del módulo
+   (+3V0 a 8,6 mm, GND a 7,0 mm).
+
+**El Kelvin de REFP1, que es el punto fino.** REFP1 (pin 11) y AVDD/DVDD (12/13) son la MISMA red:
+el esquemático no puede dar el Kelvin, lo da la geometría. Dos ramales que se juntan **en el LDO,
+no en el chip**: ramal A (0,8 mm) lleva SOLO la excitación del puente (4,5 mA) al tope R1.1/R2.1,
+y REFP1 se deriva a 2,4 mm de R1.1 → cobre compartido = **6,7 nV sobre 3 V = 2 ppb**. El consumo
+propio del ADC (350 µA) va por el ramal D y no aparece en la referencia. R1 y R2 se colocaron
+adyacentes (2,2 mm): con 10 mm entre ellos los 4,3 mA del brazo de la galga habrían metido 43 µV
+= **29 µε de offset**.
+
+**E−/REFN verificado en la placa, no sólo en el `.net`**: camino continuo `J1.3 → Q1.2 → D3.2 →
+R3.2 → U1.6` sin una sola vía a masa. No lleva Kelvin **a propósito** (por el pin 6 circula toda
+la corriente de excitación): se compensa con ancho y cortedad, 0,5 mm → 39 ppm fijos.
+
+**Sólo 2 ranuras en el plano** (2,3 y 4,7 mm), las dos sobre `+3V0`, ninguna bajo el RA-02.
+Un tercer cruce (`/NODO_A` contra el riel de E−) **se resolvió moviendo el ramal de calibración**
+al sur del riel, no metiéndole vías a un nodo del puente.
+
+**G8 — antena DECIDIDA: IPEX, el pad ANT sin poblar.** Motivo con número: una línea de 50 Ω en
+2 capas FR4 1,6 mm pide ~2,9 mm de microstrip y la alternativa coplanar **no se puede validar sin
+VNA**; con IPEX toda la cadena de 50 Ω está dentro del módulo. Además el nodo va en caja estanca
+sobre un REDLER que vibra. Consecuencia para @diseno3d: pasamuros SMA en la pared derecha y
+**≥ 12 mm libres sobre el módulo**. Y para @esquematico: que el símbolo diga el porqué.
+Corolario que hay que entender: para un módulo apantallado con IPEX, el "keepout de antena"
+clásico (vaciar cobre) **sería un error** — el plano va entero abajo, verificado en el render.
+
+**Netclases (G9) al `.kicad_pro`, definidas POR PAD**: `EXCITACION` 0,5 / `ANALOGICA` 0,3 /
+`ALIMENTACION` 0,8 / `GND` 0,6 / Default 0,3. Los 0,8 mm no los pide la ampacidad (IPC-2221 da
+2,4 A, 20× el pulso de 120 mA) sino la **caída**: el presupuesto del pulso ya usa 132 mV de 420 y
+el cobre suma 9 mV. `ANALOGICA` quedó en clearance 0,25 y no en 0,30 porque KiCad aplica la clase
+GLOBALMENTE y el TSSOP de paso 0,65 no admite 0,30 — los ≥0,30 reales se consiguen por ruteo.
+
+**Bug propio #4 del generador (familia de los tres de agosto): rotar una huella rota la POSICIÓN
+de los pads pero NO su FORMA.** El ángulo del pad va en su propio `(at x y ANG)` y si no se
+escribe queda 0. En un 0805 casi no se nota; en el TSSOP-16 de paso 0,65 con pads de 1,475 × 0,40
+a 270° los pads quedan **apilados, solapándose 0,825 mm**: 33 `solder_mask_bridge` + 28
+`shorting_items`. Arreglado sumando la rotación de la huella al ángulo de cada pad.
+
+**Trampas nuevas del harness KiCad 10 + Python:**
+- **`meta.version 1` en el `.kicad_pro` hace que KiCad DESCARTE `net_settings` en silencio** y
+  vuelva a su Default interno de 0,2 mm. Tiene que ser `3` (además de `net_settings.meta.version 5`,
+  ya conocido de Termovigía). El guardia de relectura por `GetNetClassByName` lo cazó.
+- **`pcbnew.VIATYPE_THROUGH` ya no existe** en KiCad 10; un `PCB_VIA` nace THROUGH (tipo 4).
+- Una vía se posiciona con `SetStart`/`SetEnd` (es un segmento de largo cero).
+- **El heredoc de bash con contenido largo se rompe** aunque esté citado: para archivos de >100
+  líneas, usar la tool de escritura, no `cat <<EOF`.
+
+**Pendientes / entregado a otros:**
+- El ruteo digital + potencia se corre **una sola vez**, contra el netlist rev C ya verificado.
+- @esquematico: nota del pad ANT en el símbolo (G8).
+- @diseno3d: tabla de agujeros/conectores en `LAYOUT.md` §5 — la PCB manda. Ojo `CSC1/CSC2`:
+  13,5 mm de alto y a 0,71 mm del borde inferior.
+- Serigrafía (50 avisos), fiduciales y test points: pendientes para la pasada final.
+- Corregido de paso, por pedido: `perfboard/GUIA_ARMADO_PERFBOARD.md` §8.1 estaba **al revés**
+  (los 2 HT7130A son el LDO de la **Placa A**, no de la B) + aviso grande de que el **MCP1700
+  cambia de pinout entre SOT-23 y TO-92** y el símbolo usa el del SOT-23 (en la PCB va SOT-23:
+  para el layout no cambia nada, el que se quema es el banco).
+
+
 ## 2026-08-21 — Layout del nodo de galga: placement completo, DRC 0
 
 **Entregable:** `C:\Proyectos\galgas\hardware\kicad\nodo_galga_v3.kicad_pcb` (abrir con KiCad 10)
