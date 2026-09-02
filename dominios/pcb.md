@@ -144,3 +144,31 @@ utas.py`, por pad), señales con FreeRouting, GND en las dos capas cosido.
   - **Pendientes (LAYOUT.md par. 10)**: decision del Director sobre 160 x 155; mediciones de Gonza (martes) en
     `gen_huellas.py`; @diseno3d con la tabla de prensacables/LEDs/USB; serigrafia a mano (36 refs); rev C con el
     haz DevKit-borneras a mano por F.Cu. Nada commiteado (orden).
+
+- 2026-09-02 [FRIOSEGURO / TERMOVIGIA Base v2 rev B.1] **DOSSIER en UN PDF, para el celular y para Gonza/Sergio**:
+  `C:\Proyectos\frioseguro\hardware\v2\termovigia_base\TERMOVIGIA_BASE_v2_revB1_DOSSIER.pdf`
+  (**43 paginas, 4,17 MB**, A4, numerado, con marcadores/TOC) generado por `armar_dossier.py` (misma carpeta).
+  - Contenido: portada con logo + render 3D · indice · resumen de 1 pagina · **esquematico 6 hojas** (A3 -> A4
+    apaisado, vectorial: zoom sin pixelar) · tabla GPIO + reglas de firmware + IO35/IO39 + poblar E/P ·
+    layout (top, bottom, 2 renders 3D, mapas de taladro PTH/NPTH) · **7 capas de fabricacion**
+    (`kicad-cli pcb export pdf --mode-multipage --include-border-title --drill-shape-opt 2`) · **BOM de 72 lineas**
+    en apaisado con la columna Poblar sombreada · pendientes y deudas · anexo del gabinete.
+  - **Regla del script: ningun numero tipeado a mano.** Lee la BOM (143 comp.), el `.net` (84 redes), el
+    `.kicad_pcb` (bbox de Edge.Cuts = 160 x 155, 787 segmentos / 354 vias / 151 huellas), `drc.txt`
+    (0 err / 0 sin conectar / 200 avisos de serigrafia), `erc.txt`, `salida/verificar.txt`, y trae las secciones
+    de LAYOUT.md / DISENO.md / PINOUT.md / las 3 VERIFICACION_*.md por regex de titulo (conversor markdown->HTML
+    propio). Si cambia el layout, se re-corre y el PDF queda al dia.
+  - **Deudas puestas en el PDF, no escondidas**: 44,5 % de segmentos en B.Cu, antena con pistas debajo, 36 refs
+    de serigrafia, desacoples de 5,9 y 12,6 mm aceptados con razon, veredictos de las 3 auditorias y H31-H37
+    abiertos. Ademas **drift detectado al mirar el render**: el cajetin del esquematico todavia dice
+    `PCB 120 x 100` y los M3 viejos -> nota en la portadilla del esquematico (no cambia ninguna red).
+  - Toolchain (para @bibliotecario): PyMuPDF **`fitz.Story` + `DocumentWriter`** para texto/tablas paginadas
+    (el `story.draw(page)` NO existe: hay que dibujar sobre el *device* del writer), `@font-face` con
+    `C:\Windows\Fonts` via `fitz.Archive` para tener Ω/µ/×; **`width="%"` en los `<th>` es obligatorio** o las
+    columnas de la derecha se caen fuera de la hoja; U+200B despues de `_ : - /` para que las huellas largas
+    corten de linea; `insert_text` usa Latin-1 (los "—" salen como "?"): sanitizar; recorte del marco blanco
+    de los PNG y de las paginas PDF (mapas de taladro) por bbox de tinta con PIL, si no se anexa medio A4 vacio.
+  - Verificacion: contact sheet de las 43 paginas + 13 paginas renderizadas y MIRADAS a 115-125 dpi. Se
+    corrigieron mirando: logo negro sobre azul (placa blanca), BOM con 3 columnas caidas fuera de la hoja,
+    imagenes centradas con pie que no entraba, mapas de taladro al 25 % de la hoja, y **`redes = 0`** (el
+    `.net` de KiCad 10 pone `(net` y `(code` en lineas distintas).
