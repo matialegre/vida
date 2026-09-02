@@ -39,7 +39,7 @@ Corolario: datalogger = Pico (PIO+SD) + LoRa · nodos eternos = ATmega pelado + 
 | Supercapacitor 1F 5.5V (moneda) | 1+ | casa | ~~pulso TX LoRa emisor Dreyfus~~ **NO SIRVE como CSC** (ESR ~30 Ω, ver P8 / Rev C 2026-09-02) → backup RTC | 2026-07-10 · corregido 2026-09-02 |
 | Cajas IP65 + prensacables PG7/PG9 + tapones | 3 cajas | casa | Termovigía | 2026-07-08 (compra) — **confirmar contando** |
 | ESP32 en campo (reefer Cerro Moro) | 1 | Santa Cruz | Termovigía SCZ | 2026-08-21 — descontar del stock de ESP32 |
-| PCB FrioSeguro v1 | 5 | casa | **no aptas para Base v2** (SIM800/ACS712) → banco/UTN | 2026-09-01 |
+| PCB FrioSeguro v1 ("ALDI DISEÑO") | 5 | casa | **no aptas para Base v2 NI para el Kit v1** — motivo CORREGIDO 2026-09-02: el diseño **no tiene SIM800/ACS712**, es un front-end de galga (MCP6004) y **tiene las 6 borneras con los 18 pads sin red** + 2 redes de 3,3 V separadas + 4 pull-ups sin conectar → 23 bodges por placa. Ver `frioseguro/hardware/v1_modulos/BOM_KIT_V1.md` §5. Uso: banco/UTN | 2026-09-01 · corregido 2026-09-02 |
 | DS18B20 / reed / módulos relé / ESP32 | 15-20 / 10-20 / 5-10 mód. / 4-9 | casa | Termovigía + galgas | 2026-09-01 — **discrepancia Matías vs bitácora: CONTAR** (ver BOM_5_EQUIPOS §1) |
 
 ## Compras en curso
@@ -221,3 +221,115 @@ la pila de la cuenta; lo que queda mandando es la OCV.** Confirma la topología 
 (c) medir el consumo del RA-02 en PA_BOOST por debajo de +17 dBm (Semtech no lo publica y R2 depende
 de eso) — con @comms; (d) corregir la guía de perfboard §8.1; (e) pasar R1/R2/R3 a @firmware y las
 correcciones de C6/C7 a @esquematico.
+
+## 2026-09-02 (c) — TERMOVIGÍA **KIT v1 (módulos)**: cambio de estrategia — no se fabrica la PCB v2 todavía
+Entregado `C:\Proyectos\frioseguro\hardware\v1_modulos\BOM_KIT_V1.md` (8 secciones). **La v2 queda intacta**, sólo se pospone y ahora tiene criterio de disparo. Sin commit.
+
+**El número de la decisión: arrancar 5 equipos de demo con el stock que ya hay cuesta $133.780 = $26.756 por equipo.**
+9 renglones, todos con ID de ML y precio verificado **hoy** (la IP se desbloqueó, con cortes cada ~4 consultas; parser nuevo `ml2.py` — ML cambió el HTML de las tarjetas y el `ml.py` viejo devolvía listas vacías **sin avisar**): plaqueta PE05 101×56 ×5 MLA2489408876 $3.830 · bornera 3 vías pack×10 MLA883712506 $9.462 ×3 · tira hembra pack×5 MLA2396812672 $5.016 ×2 · 4k7 MLA1790498721 $2.659 · 10k MLA1790511395 $2.659 ×3 · 1000 µF 25 V low-ESR pack×20 MLA1942247187 $9.279 · kit separadores M3 580 pzas MLA3211774920 $25.299 · **caja IP65 165×165×80 pack×2 MLA1823115747 $17.000 (= $8.500 c/u, lo MISMO que la 160×120×80 y con 45 mm más de ancho)** · prensacables PG9 pack×10 MLA1816105105 $6.999 ×2.
+Peor caso si falla todo el conteo (ESP32, relés, sondas, reed, fuentes): **$351.220** — igual el 70 % del MÍNIMO de la v2 rev B ($502.947) y sin esperar fabricación.
+
+**Hallazgos duros:**
+1. ⚠⚠ **Las 5 PCB de julio están MAL y el motivo que teníamos anotado era el equivocado.** Parseé `ALDI DISEÑO.kicad_pcb` pad por pad: **cero footprints de SIM800/SIM900/ACS712/relé** (la cadena "SIM800" no existe en el archivo); es un **front-end de galga** (MCP6004 + 5 presets + 3 MΩ + `ADC1..4MICRO`, `Bateria`, `Acelerometro1`). Y los defectos reales: **las 6 borneras TB1-TB4/TB6/TB7 tienen los 18 pads SIN RED** (islas aisladas), **dos redes de 3,3 V distintas sin unir** (`+3.3V` net 3 vs `3V3` net 57, que toca sólo R17.2 y R20.2), **4 de 6 pull-ups con una pata `unconnected`** (R18/R19/R21/R22), única zona = GND. **23 bodges por placa × 5 = 115 soldaduras de rescate** para algo peor que una plaqueta de $3.830. → **ignorarlas para el Kit v1**; sirven para banco/UTN y el bloque MCP6004 puede rescatarse en UNA placa para galgas con @muestreador. Renglón del inventario ya corregido arriba. **Salvedad: los archivos son del 2026-03-10 → pedir fotos de las 2 caras antes de cerrar el tema.** Es además un caso de estudio de ERC/DFM de lujo para Diseño y Manufactura.
+2. **SIM800: NO probarlo, ni con Claro ni con Personal.** 2G AR verificado hoy: **Movistar apagado desde el 31-12-2023** (avisó por SMS; las alarmas GSM dejaron de andar) · **Claro y Personal siguen operativos, sin fecha pública de apagado**, y AR figura como el único país de la región con un switch-off 2G en curso. Banda no es problema (SIM800L 850/1900 = AR). **Lo que decide es el punto 1: no existe ninguna placa con SIM800 para probar.** Alternativa recomendada para el destino sin WiFi: **router 4G portátil LB-Link BL-MF618EU MLA1982028939 $65.548** (o Alcatel MW41 $90.000) con chip prepago → cubre los 2 equipos, **menos de la mitad de UN A7670SA ($146.673)**, es 4G y no cambia una línea de firmware. Paso previo gratis: hotspot del celular de alguien del lugar, antes de que el equipo viaje.
+3. **Placa de conexiones elegida: plaqueta experimental PE05 (patrón protoboard) + 5 borneras + ESP32 en zócalo**, atornillada con separadores M3. $10.991/equipo. Descartado el **screwshield** ($9.990–12.990, cero soldadura) porque **no tiene dónde vivir el 4k7 ni los seis 10 k** → resistencias colgando de un tornillo; queda como plan B de emergencia. Descartado **riel DIN + bornes Zoloda** ($17.598/10 bornes → >$25k/equipo, 2,3× más caro **y sigue sin resolver los pull-ups**).
+4. **Dos trampas eléctricas anotadas y ya presupuestadas:** (a) **el riel de 5 V** — ESP32 en TX (~500 mA) + 2 bobinas (~140 mA) exigen **fuente ≥1 A**: hay que **leer la etiqueta de las 5 fuentes ya compradas**, si son de 700 mA no sirven (mismo patrón que el brownout de galgas); 2× 1000 µF low-ESR por equipo y **medición del pozo con osciloscopio conmutando los 4 relés en TX como DoD**. (b) **los módulos de relé son activo-bajo y cliquean durante el boot** con el GPIO flotando → **10 k de cada IN a 3V3** (4/equipo, ya en el BOM) y GPIO elegidos fuera de strapping/flash: **1-Wire GPIO4 · reed 16/17 · relés 25/26/27/32**.
+5. **JLCPCB verificado hoy en vivo, 120×100 2 capas: 5 u = USD 9,80 · 20 u = USD 27,00** (+ DHL DDP USD 28,82). A $1.989/USD: **$15.363/placa a 5 · $8.815 a 10 · $5.551 a 20**, contra **$10.991 del perfboard** → **el punto de cruce está entre 8 y 10 placas** (y la mano de obra, 1 h por perfboard, lo adelanta: 20 plaquetas = 20 h de Gonza).
+6. **PCBA:** tarifa publicada verificada hoy — **"$8 setup + $0.0016 per solder joint"**, cupones mensuales de $6/$9/$10 que dejan el setup en $0, desde 2 placas. Para ~220 juntas: **$3.880/equipo a 5 u y $1.495/equipo a 20 u**. **JLC no cotiza sin BOM+CPL subidos** (el botón pasa a "NEXT"). **Pero el PCBA NO aplica a la v2 como está:** es una placa de **módulos** (DevKit, LM2596, relés, breakout A7670) que JLC no monta; sólo montaría las resistencias y cerámicos, que son la parte barata; el THT se cotiza aparte; y los componentes vienen de LCSC, lo que **anula el stock de GIMAP**. **Conviene desde ~20 u y sólo con un rediseño SMD (v3)** — con el costo escondido de que un v3 SMD **ya no se repara en el campo**.
+7. **Criterio de disparo de la v2, escrito:** (1) **8 equipos comprometidos** con seña/OC, o (2) un cliente pide algo que el Kit v1 **no puede** (sirena, batería, corriente de compresor, transferencia a grupo), o (3) pedido de ≥5 con plazo <3 semanas (y hay que disparar **antes**, JLC son 10–15 días).
+
+**Pendiente @hardware:** (a) **conteo de 30 min + etiqueta V/A de las 5 fuentes + interior de las 3 cajas** — bloquea el pedido; (b) **fotos de las 2 caras de las 5 PCB**; (c) `v1_modulos/PINOUT.md` con @firmware **antes de soldar**; (d) armar 1 en protoboard y validarlo antes de replicar; (e) medir el pozo del 5 V; (f) preguntar a GIMAP por 4k7/10k/1000 µF/borneras antes de comprar.
+
+## 2026-09-02 (d) — KIT v1 **rev B**: alineación con @esquematico (3 contradicciones cerradas) y el total sube a $178.368
+`BOM_KIT_V1.md` reescrito contra `PINOUT_V1.md` + `CABLEADO.md` de @esquematico (ERC 0/0, netlist y PDF), **canónicos en pines y alcance por decisión del Director**. Sin commit. La v2 sigue intacta.
+
+1. **GPIO: adopto los de @esquematico y el fundamento es mejor que el mío.** K1=**26**, K2=**27**, K3=**18**, K4=**23** · puertas **5/13/14** · 1-Wire **4**. Son **los mismos que la PCB v2** → entre kit y placa el único `#define` que cambia en los relés es `RELAY_ON`. Mi propuesta (25/26/27/32 + reeds 16/17) era defendible pero rompía esa continuidad. Corregido el diagrama §2.1, el mapa de armado §4.5 y el **checklist de continuidad §4.6**.
+2. **Alcance 3 sondas + 3 puertas** (yo había puesto 2+2). Impacto de compra: borneras **7 por equipo** (3→4 packs), prensacables **7 por equipo** (2→4 packs), plaqueta más grande (**PE04 150×56 $6.490 MLA1754687451** en vez de PE05 101×56: 7 borneras piden ~86 mm de borde), y **entran los 100 nF de las puertas que yo no había presupuestado** (MLA795403680 $3.914 ×2). **Y el stock cambia de veredicto: hacen falta 15 sondas y 15 reeds, no 10 — con 10 reeds faltan 5.**
+3. ⚠ **Retiré una afirmación mía que NO estaba verificada.** Yo daba por hecho que con IN flotando "el relé cliquea y queda pegado". @esquematico analizó el módulo (LED del opto de VCC a IN → sin camino a masa la corriente es 0) y concluye que quedan **abiertos**. **Los dos podemos tener razón según la variante** (los que traen pull-down en IN, o los "optoacoplados" que no lo son, sí cliquean). **Se cierra con una medición de 30 s, no con un argumento**: alimentar un módulo con IN al aire y ver si clickea — **Gonza, con los módulos del stock en la mano, antes de armar**. Los **10 k de IN a 3V3 quedan como seguro barato recomendado** (4/equipo, $266 por equipo): no molestan si no hacían falta y evitan desarmar 5 equipos si la medición sale mal. Lección para mí: escribí como hecho verificado algo que era una inferencia sobre una variante de módulo que nunca miré.
+
+**Total: $133.780 → $178.368 ($35.674/equipo).** Y ahora hay **dos mediciones que bloquean el pedido** (§8.1 del BOM), no una:
+- **A — amperaje de las 5 fuentes.** @esquematico calculó **446 mA continuos / 796 mA de pico** (4 bobinas SRD-05 = 284 mA + LEDs 12 mA + ESP32 150 mA medio / 500 mA pico) ⇒ **hace falta 5 V 2 A**. Con 1 A anda al 80 % del pico (C1/C2 obligatorios + escalonar relés 50 ms); **con 700 mA entra en brown-out cíclico**. Si las 5 compradas no llegan: **+$39.900** (MLA1258700476 $7.980). **Escenario realista = $218.268 → $43.654/equipo**; peor caso absoluto $437.238.
+- **B — el clic del relé** (punto 3).
+
+**Corrección de método que también me llevo:** en §7.2 yo comparaba **mal** el perfboard contra la PCB — ponía $10.991 (plaqueta **+ componentes**) contra el precio de la PCB **pelada**. Bien comparado, sustrato contra sustrato: plaqueta **$6.490** vs PCB $15.363 (5 u) / $8.815 (10 u) / $5.551 (20 u) ⇒ **el cruce en material puro está en ~15 placas (~25 con gestión)**, y baja a **8–10 sólo cuando se valúa la media hora extra de soldadura por plaqueta**. El criterio de disparo de §7.3 (8 equipos comprometidos) se sostiene, pero ahora dice por qué.
+
+**Además, hallazgo de @esquematico que hay que pasarle a @firmware ya:** `PIN_DHT22 18` ocupa el pin que ahora es **K3** (y `dht.begin()` le pone `INPUT_PULLUP` al relé) · `MAX_RELAYS` 2→4 · faltan `PIN_RELAY_3/4` · y `config_SANTA_CRUZ.h` trae `RELAY_PULSE_ON_CONNECT` de 1 s = **un bocinazo de sirena en cada reconexión de WiFi**. `RELAY_ON` = **LOW** en el kit (la v2 pide HIGH porque tiene BC547 que invierten): **cargar el firmware de la v2 en un kit v1 hace sonar la sirena en el `setup()`**.
+
+**Reparto de fuentes de verdad (escrito en el §8.2 del BOM):** `PINOUT_V1.md` + `.kicad_sch` = pines · `CABLEADO.md` = guía de armado · `BOM_KIT_V1.md` = **compras y cantidades**.
+
+## 2026-09-02 (d) — GALGAS/Dreyfus: **BOM y stock del bring-up de banco con ATmega328P-PU (DIP-28)**
+Entregado: sección **H (H0–H6)** de `C:\Proyectos\galgas\hardware\BRINGUP_BANCO.md` — documento
+compartido con @firmware, que escribió en paralelo las etapas 3/4/5 y el receptor. **Sin commit.**
+⚠ **Hubo colisión de escritura** (los dos agentes escribimos el mismo archivo a la vez): reordené el
+documento para que quede **toda mi sección H primero y la de @firmware después, sin perder una línea**.
+Si @firmware siguió escribiendo después, su contenido nuevo queda al final: **revisar el orden antes de commitear.**
+
+**Lo que decide el viernes 4 (3 números):**
+1. **Se puede armar HOY, sin comprar nada, las etapas 1 y 2** (micro + radio), sujeto a **3 confirmaciones
+   de 20 minutos**. Etapa 3 (cadena analógica) está **bloqueada** por la compra.
+2. **Compra local del lunes 7-sep: $162.238 mejor caso · $288.922 peor caso** (núcleo + los 9 pedidos de
+   @firmware). Con etapa 4 y galgas propias: **$344.290 / $362.186**.
+3. **Importación (camino crítico): emitir el 7-sep, llega 30-sep a 10-oct.** Sin margen para un segundo
+   intento. **Mitigante encontrado hoy** (ver abajo): el banco **ya no depende** de la importación.
+
+**Las 3 confirmaciones que bloquean (nadie las hizo nunca, van como NO CONFIRMADO):**
+**C-1** ¿los 3 ATmega328P del inventario son **PDIP-28 o TQFP-32**? (nadie anotó el encapsulado) ·
+**C-2** ¿**cuántos RA-02** hay y de qué tipo? (la lista de julio dice "en stock" **sin número**; hacen falta 3) ·
+**C-3** ¿**llegó el ADS1220** comprado el 2026-07-10? (**P1 abierto desde julio**).
+Extras del mismo conteo: **ESP32 en disputa** (10/5/1 en Cerro Moro/5 de Termovigía → **puede no quedar
+ninguno para el receptor**), pila ER14505, y **las galgas de GIMAP: ningún documento dice cuántas, de qué
+tipo, ni el FACTOR DE GALGA — sin eso no hay calibración**.
+
+**Hallazgos duros de la sesión:**
+1. ⚠⚠ **HAY SUPERCAPACITORES DE 2,7 V EN ARGENTINA** — contra lo que dije en la rev C ("importar sí o sí"):
+   Itytarg **2,2 F** MLA637412707 **$18.019**, **1,5 F** MLA633192257 $12.007, Samxon **10 F** MLA1407063549
+   $25.339. **Ninguno publica ESR** (que es todo el criterio de P8) → **para el producto siguen siendo los
+   Eaton**, pero **para el banco sirven y sacan la etapa 4 del camino crítico**: 2× 2,2 F en serie = 1,1 F
+   a 5,4 V, τ = 11 s contra los 10 s del diseño. Tarea nueva: **medir su ESR con el INA219**; si da ≤ 0,4 Ω
+   la importación deja de ser crítica.
+2. **El C0G de 10 nF y 100 nF THT NO EXISTE en ML AR** (sólo llega hasta ~33 pF). Sustituto justificado y
+   disponible: **capacitor de película (poliéster MKT / polipropileno)** — coeficiente de tensión nulo y
+   microfonía muy por debajo del X7R, que **es piezoeléctrico** y sobre un REDLER genera señal falsa.
+   MLA1506293993 (10 nF ×10) $4.806 · MLA1506215771 (100 nF ×10) $8.245.
+3. ⚠ **El ATmega DIP-28 no tiene ADC6 ni ADC7** → `V_BAT_SENSE` (hoy en ADC7) hay que remaparlo a PC2/PC3/
+   PC4/PC5 — **@firmware**. **No cuesta un componente**: el divisor RD1/RD2/RD3+CVB1 es el mismo.
+   Y dos olvidos clásicos del perfboard que anoté: **AVCC (pata 20) hay que conectarlo a VCC** (si queda al
+   aire el ADC no convierte) y **AREF (21) lleva 100 nF**.
+4. **El zócalo DIP-28 es el plan de recuperación, no un lujo**: en un ATmega con ISP **no hay OTA**; un nodo
+   colgado se recupera **sacando el chip**. Y **con zócalo se programa a 5 V fuera de la placa**: se evita el
+   level-shifter, se evita meterle 5 V al ADS1220/RA-02 y se evita la contención de MISO del ISP (G6).
+   **Es el argumento fuerte a favor del DIP-28.**
+5. ⚠ **Conflicto detectado con el pedido de @firmware**: mi candidato barato de ATmega dice **"bootloader"**
+   → fusibles a cristal externo → **sin reloj el ISP ni siquiera entra a cambiar los fusibles**. Resolución:
+   comprar igual **3 cristales de 16 MHz + 22 pF ($4.266) como KIT DE RESCATE**, que **no se sueldan en el
+   nodo** (el nodo sigue con RC interno a 4 MHz). Más barato que discutir con el vendedor.
+6. ⚠ **El RA-02 (paso 2,0 mm) NO tiene adaptador 2,0→2,54 en ML AR** — no existe la publicación. Tres
+   caminos: (a) el módulo **"con PCB"** ($19.990, **NO CONFIRMADO: hoy ML bloquea las fichas de producto y
+   "con PCB" en LoRa suele significar antena de PCB** → mirar las fotos antes de pagar); (b) fabricarlo en
+   JLCPCB de yapa (10-15 días); (c) **8 alambres Kynar a los pines usados + fijación mecánica** — es lo que
+   se puede hacer HOY, vale para el banco y **no** para el nodo que va a planta.
+7. **Nunca alimentar el RA-02 sin antena** (el PA se daña): antena helicoidal 433 MHz $3.243 c/u
+   (MLA1391079243) + pigtail U.FL→SMA $3.990 si hace falta. Renglón barato y crítico.
+8. ⚠ **El MCP1700-3002 (3,0 V) sigue sin confirmarse**: la búsqueda de hoy devolvió **sólo la variante
+   3302 = 3,3 V**, y la ficha del candidato MLA-703690036 **no se pudo abrir**. **Si se compra la 3302 se
+   rompe C6.** No bloquea el banco (la Placa A anda con los **HT7130A que ya están**).
+9. **Bornera 5,08 resuelta**: kit ×100 de 2/3/4 vías paso **5,08** MLA3164234660 $23.111 (casi todo lo que
+   se publica es **5,00**, que **no cae en la grilla de 2,54**). Cierra también la inconsistencia del
+   `.kicad_pcb` señalada en C19.
+10. **El renglón más caro del núcleo es el cable**: blindado 3×0,25 mm² mallado 5 m **$44.990**
+    (MLA1568717215) — un tercio de la compra en el mejor caso. Es "el ítem más olvidable y sin él no hay ensayo".
+11. **Galgas de repuesto SÍ hay en AR**: BF350-3AA $3.959–4.474 (MLA1599076089 / MLA1448905531). Se compran
+    **sólo si GIMAP no confirma** (regla del dominio: reusar antes de comprar).
+
+**Estado de la red (honestidad de datos):** ML **desbloqueó el listado** hoy (corte cada 2-4 consultas,
+con reintento automático en `q.sh` + `ml2.py`), pero **las fichas de producto individuales siguen
+bloqueadas** desde el 2026-09-01. → **todos los precios e IDs de la lista son de listado, verificados hoy;
+ninguna descripción de publicación se pudo leer**, y eso está marcado renglón por renglón. Nada inventado.
+
+**Pendiente @hardware:** (a) las **3 confirmaciones C-1/C-2/C-3** + conteo de ESP32 (bloquean la mitad de la
+lista); (b) **mirar las fotos del RA-02 "con PCB"** antes de pagar; (c) **preguntar al vendedor por la
+variante 3002** del MCP1700; (d) **preguntar a GIMAP**: galgas (cantidad, tipo, **factor de galga**),
+supercapacitores de baja ESR, diodos ESD; (e) **medir la ESR de los supercaps locales** con el INA219 —
+decide si la importación sigue siendo camino crítico; (f) **corregir el renglón del supercapacitor y agregar
+el encapsulado a los ATmega** en la tabla de inventario de este archivo cuando se cuente; (g) precios de
+importación (hoy `PENDIENTE`).

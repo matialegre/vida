@@ -12,6 +12,7 @@ Doc de dominio + bitácora. El agente lo lee al arrancar y lo actualiza al cerra
 | Sistema | fs | Ventana | Filtro | Justificación | Fecha |
 |---|---|---|---|---|---|
 | galgas-supabase | ráfagas (ver act.md) | — | agregados | heredado legacy | pre-2026-07 |
+| galgas — detector A−B | 5 Hz alcanza (registro real de campo) | media móvil **2 s** + histéresis | — | Con motor ON el ruido por muestra pica 21,5 mV y pisa el evento (12–15 mV); promediando 2 s el peor ruido cae a 4,86 mV vs. 9,13 mV del evento. Umbral instantáneo = falsas alarmas. | 2026-09-02 |
 
 ## Bitácora
 - 2026-07-07 — Agente creado por Claude Fable. Próximo paso sugerido: banco con galga real + INA333, inyectar deflexión conocida y comparar contra field_captures.
@@ -134,6 +135,80 @@ Dato adicional sospechoso: `crudo2` derivo de 52.524 a **65.535 (3,300 V, tope d
   VERIFICADO SIN HARDWARE: `tools/test_cal_model.cpp` compila **el header real** y corre **35 checks OK**; `tools/check_calibration_wiring.py` **62/62** (verifica que el firmware la USE, no que exista); `tools/test_check_calibration_wiring.py` **18 tests** — 16 mutantes + uno que saca los archivos de `main` con `git show` y **exige que el checker repruebe el bug historico**. Un mutante encontro un defecto real del checker: comentar `// nvsClearCalPending();` dejaba el nombre en el archivo y la busqueda por subcadena la daba por hecha (ahora saca los comentarios antes de buscar llamadas). Compilacion real de **A y B**: `1237624 B (94%)`, RAM 18%; baseline `main` en worktree limpio `1235360 B` → **+2264 B, +8 B de RAM**. Doc: `docs/calibration-chain.md` (incluye el procedimiento de tara paso a paso para campo).
   PENDIENTE (banco, 15 min): bajar el periodo con `set_period`, mandar `force_calibration {"stage":1}` con la galga en reposo y verificar en `readings` que el wake siguiente trae `"cal_tared": true` y el posterior `v_mean ~ 0` con `cal_offset_v != 0`. **El `k` real sigue sin medirse** (peso conocido, QUE_FALTA #2): este branch da el canal, no el numero. Ojo: la tara tarda **un periodo de sueño** (10 min en `MODE_NORMAL`).
   AVISO: el sketch quedo al **94% de la particion de programa** — mismo problema que `firmware_modular` de FrioSeguro al 98% (ver `firmware.md`, 2026-08-27): un firmware que no entra no se puede actualizar por OTA. `min_spiffs`/`huge_app` es `--build-property`, no cambio de codigo; es decision de Matias porque afecta el espacio de datos.
+
+## 2026-09-02 — DREYFUS: la evidencia de campo, y los 922 mV que NO son la rotura
+Entregable para la reunión del 4-sep (defensa contra el sistema de cámaras). Todo en
+`C:\Proyectos\galgas\hardware\evidencia_campo\`: 7 PNG a 200 dpi + `EVIDENCIA.md` +
+`generar_evidencia.py` (regenera todo con `python generar_evidencia.py`; lee
+`data/field_captures` en solo lectura, verificado `git diff` limpio en `data/`).
+
+**EL HALLAZGO QUE CAMBIA EL DISCURSO — los 922 mV de `reposo_1.csv` son el offset, no la cadena.**
+El salto ocurre a las **13:02:32,471**, que es *exactamente* el instante en que el
+auto-offset pasa de −0,4199/+0,4199 V a **cero**. Reconstruyendo el crudo (`raw = v − OFF`):
+el desbalance A−B vale **915,2 mV antes**, **915,7 mV durante** y **916,5 mV después** de la
+supuesta reconexión de las 13:04 — y **914–921 mV toda la tarde**, incluidos los tramos que
+el informe llama de "excelente simetría, 0,8 mV". Es un **desbalance eléctrico permanente
+entre canales**, no una condición de máquina. El argumento que lo cierra: una desconexión
+REAL de cadena, mismo día, mismo equipo, misma calibración, vale **16–19 mV**; 916 mV son
+**50×** eso. Además `reposo_1.csv` NO cubre 08:17–13:10: son 23 s de ceros + **hueco de
+4,74 h** + 313 s + 169 s, y el evento **ya está en curso en la primera muestra** del bloque
+(no hay "antes", así que de ahí no sale ninguna latencia). Lo real de ese archivo: la galga
+A derivó **+75,5 mV en 4 h 44 min** (la B no se movió) y esa deriva cruzó el umbral absoluto
+de 1,58 V. **Marcado NO PRESENTABLE** (fig. `99_reposo1_NO_PRESENTABLE.png`, uso interno).
+
+**Los 12 CSV son exportaciones ANIDADAS de la misma SQLite** (comparten `id` global):
+`134127` ⊃ `133635` ⊃ `133354` ⊃ `133045`. Sumar filas cuenta hasta 4× la misma muestra.
+Real: **16.752 muestras únicas** (no 34.563), **3.983 alertas** (no ~5.887), **56,1 min** de
+adquisición continua (no ~6 h; la ventana de reloj es 5,83 h con 2 huecos). El parser
+tampoco es trivial: `raw_json` está **sin comillar**, el JSON mete comas y rompe el conteo
+(42 columnas en el header, 179 en las filas) — `DictReader`/`read_csv` devuelven columnas
+corridas **sin avisar**. Se reconstruye por posición: `[0:3]` + `[-38:]`.
+
+**Números duros medidos (van al dossier de @comercial):**
+- **Latencia de detección 4,4 s** (evento 13:26: la señal se mueve 13:26:03,35, ALERTA
+  13:26:07,755). El escalón dura 3,4 s ⇒ la alerta sale **1,0 s después de completarse**.
+  Segundo evento (13:35:33): **2,8 s desde el 50 % del escalón**. El límite lo pone
+  `HOLD_SEC=1,5 s`, no el sensor.
+- **SNR**: evento sostenido 12,1 mV / σ. Con motor en marcha: **2,2× por muestra**, **6,9×
+  promediando 2 s**, **9,9× a 10 s**. Con motor parado (σ=1,45 mV): 8,3× / 22,6× / 32,0×.
+  El evento breve (14,7 mV): 2,7× / 8,4× / 12,0× y 10,1× / 27,4× / 38,9×.
+- **0 falsas alarmas en 8.136 muestras = 27,2 min** de condición normal (5 tramos, uno de
+  6,3 min **con motor en marcha**). Contado muestra a muestra, no citado del README.
+- **16.752 muestras / 56,1 min**.
+
+**Lección de DSP para la reunión y para octubre:** por muestra suelta con motor en marcha
+el pico de ruido llega a **21,5 mV** — *pisa* al evento de 12–15 mV. Un umbral instantáneo
+de 10 mV daría falsas alarmas; lo único que salva el tramo de motor ON con 0 alertas es la
+**persistencia (`HOLD_SEC`)**. Promediando 2 s el peor ruido baja a 4,86 mV contra un mínimo
+de 9,13 mV del evento: **separación limpia**. Recomendación firme: detector = media móvil de
+2 s de |A−B| + histéresis, no muestra instantánea.
+
+**Correcciones al informe de campo (que no cierran con los CSV):**
+- `galgas_..._133045.csv` "0 alertas" → tiene **480** (22,5 %). Los 0 de `131538`, `131637`,
+  `132005`, `132130` y `132330` **sí** se verifican.
+- "EMISOR A APAGADO detectado en <2 s" → medido **10,0 s** (última muestra nueva de A
+  14:05:03,739; alerta 14:05:13,752). Y A ya se había congelado **8,4 s** (43 muestras) a las
+  14:04:58 **sin** alertar ⇒ el timeout de enlace del receptor es de ~10 s.
+- Cronología: el informe pone la desconexión a las 13:43 y STAGE2 a las 13:49; en los datos
+  los escalones de B están a las **13:26:04** y **13:35:33** y el `STAGE1→STAGE2` a las
+  **13:31:36,9**. Las horas del informe no sirven para anclar figuras.
+- "σ reposo ≈3 mV → motor 5 mV": hay **dos sigmas** y el informe los mezcla. σ de la serie
+  registrada a 5 Hz: **0,97 / 1,09 mV** en reposo y **4,77 / 7,60 mV** con motor. σ
+  *intra-ráfaga* (`stdevA`/`stdevB`, del muestreo interno de 500 Hz): **5,84 / 5,93 mV** y
+  **6,95 / 9,70 mV**. Declarar cuál se cita (esto es material de Medidas Electrónicas 2).
+
+**MUESTREO — lo que realmente quedó registrado:** `bufA` del JSON se desplaza **exactamente
+1 muestra por fila** ⇒ el registro son **5 muestras/s por canal**, no las 500/s del README.
+Las 500 Hz existieron dentro del emisor y solo sobreviven condensadas en `stdev`. Para el
+fenómeno (sub-Hz) 5 Hz sobra; el punto es que **el dato crudo se tiró** — coherente con el
+principio del dominio: el agregado se recalcula, la muestra perdida no.
+
+**RIESGO ABIERTO PARA OCTUBRE (bloqueante de medición, no de la reunión):** la deriva de la
+galga A de **+75,5 mV en 4,7 h es 4–5× el evento a detectar (16–19 mV)**. Con `K_A=K_B=1`
+y sin calibración de ganancia **no se puede convertir a µε** ni separar térmica / adhesivo /
+batería / máquina. Mientras no se acote: (1) el umbral absoluto sobre una galga es inusable,
+(2) el diferencial A−B necesita **re-cero periódico**, (3) esto se ata con el canal de
+calibración cableado el 2026-08-28 (`cal_model.h`) — el `k` real sigue sin medirse.
 
 - 2026-08-31 [drive del torno — SISTEMAS_CONTROL/sim: gemelo digital, identificacion y diseno por LR · `C:\Proyectos\drive-torno-esp32s3\SISTEMAS_CONTROL\sim\`] — 5 scripts (`modelo_motor.py`, `identificar.py`, `banco_psim.py`, `diseno_pi.py`, `rango_placa.py`) + README con todos los numeros; 15 figuras PNG+SVG y 11 JSON en `figuras/` y `datos/`. Corren de punta a punta con `python x.py`.
 

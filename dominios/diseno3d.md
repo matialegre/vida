@@ -1,5 +1,97 @@
 # Bitácora @diseno3d — diseño mecánico 3D
 
+## 2026-09-02 — GABINETE TERMOVIGÍA **v1 "MÓDULOS CABLEADOS"** (los 5 de demo)
+
+**Cambio de estrategia del Director**: no se fabrica la PCB Base v2 todavía; los
+5 equipos se arman con **módulos comprados y cableados**. Hacía falta el
+gabinete equivalente pero **preparado para módulos, no para una placa**.
+**v2 quedó intacto**; lo nuevo vive en `C:/Proyectos/frioseguro/hardware/v1_modulos/gabinete/`: `termovigia_v1.scad` + `lib_modulos.scad` (librería
+nueva) + copia de `lib_termovigia.scad` + 3 STL + 10 PNG + `IMPRESION_V1.md`.
+
+**Qué se hizo.** Misma familia estética de v2 (labio y canal de junta, PG en
+gota truncada, orejas, guías de luz, isotipo). Interior en 3 franjas en Y, todo
+derivado de las medidas de los módulos:
+- **relés** arriba (bornes de 220 V contra la pared de arriba, lejos del ESP32),
+  4 postes de 4 mm con M3 autorroscante;
+- **ESP32 DevKit en CARRIL**, sin tornillos (los clones de 38 pines no comparten
+  patrón de agujeros y algunos no tienen): entra en diagonal bajo dos pestañas y
+  baja sobre un resalto de 1 mm;
+- **área de regleta** (la define @hardware) con 4 postes ranurados;
+- **5 anclas de precinto** en el piso para que los 5 equipos queden cableados
+  igual;
+- **LEDs en la TAPA** (no hay placa donde pararlos): 5 mm a presión en el tubo,
+  ventana sellada de 0,8;
+- rótulos grabados en el piso junto a cada prensacable y **lista de bornes
+  espejada en la cara interior de la tapa**.
+Cerrado **148,7 × 148,7 × 46** (172,2 con orejas). Base 140,7 cm³ (~110 g PETG,
+8-9 h), tapa 78,1 cm³ (~62 g, 5 h), tapón USB 0,7 cm³. Los 3 STL `Simple: yes /
+Volumes: 2` y **1 componente conexa** medida sobre la malla. **Cero soportes.**
+
+**Variantes que salen del mismo archivo**: `n_rele=1` → 139,5 × 148,7;
+`fuente_modo="embebida"` → 148,7 × **186,7** (franja propia de 220 V arriba,
+tabique de piso a tapa con ventana a 45°, PG9 propio). `n_sondas`/`n_puertas`
+mueven prensacables y rótulos sin tocar nada a mano.
+
+**Sobre el módulo de relé (lo que se buscó y lo que se decidió).** En catálogos
+hay **dos variantes**: 50,0 × 41,0 × 18,5 con agujeros a **44,5 × 35,5** (la más
+frecuente) y 50,6 × 38,8 × 19,3 con separación no publicada (~44,5 × 33,5). En
+vez de apostar a una, se toma la envolvente mayor y **la fila +Y de postes lleva
+ranura de 2,5 mm en Y**: la fila −Y ubica, la +Y absorbe. Cubre de 33,0 a 36,0.
+Igual está marcado **A CONFIRMAR CON CALIBRE**.
+
+**Sobre la fuente de 5 V (formato desconocido).** El caso base es **fuente de
+pared AFUERA** y solo entra el cable por un PG7 — es lo recomendado y es el
+default. La opción embebida existe (parámetro), con tabique + bornera con tapa +
+prensacable propio, y con la advertencia escrita de que 220 V en una caja
+impresa no autoextinguible es la opción mala.
+
+**Seis bugs, cinco propios y uno heredado**:
+1. **`mirror([0,0,0])` es degenerado.** Estaba en `etiqueta()` y en
+   `carril_placa()` cuando la bandera iba en falso. OpenSCAD no da error, pero
+   la base salía **`Simple: no`**. Se bisecó apagando los rótulos. Regla nueva:
+   nunca un `mirror`/`scale` con vector nulo; dos ramas explícitas.
+2. **Una ranura más larga que el poste lo parte en dos medias lunas.** Postes de
+   regleta Ø8 con ranura de 8. Ahora el CUERPO del poste también es oblongo.
+   Lo cazó el render en planta, no el CGAL (seguían pegados al piso).
+3. Un **ancla de precinto pisaba los postes de relé** (se fusionaban en un
+   bollo). Movidas a x = ±25 y angostadas a 7 mm.
+4. **El relé quedaba a 0,5 mm de la columna de la tapa.** La holgura lateral
+   pasó a ser `max(holgura_pg, col_off + col_d/2 + 3)` con `assert`.
+5. El **tapón USB heredado de v2 nunca se había exportado** y salía en 3 pedazos
+   (tres cubos que se tocaban en una arista de área cero).
+6. 🔴 **BUG QUE TAMBIÉN ESTÁ EN v2 Y HAY QUE PORTAR.** `agujero_pared(d, pared+2)`
+   extruye **centrado**: con `pared=3` penetra 2,5 de los 3 mm y **deja 0,5 mm
+   de membrana adentro**. O sea que en `v2/gabinete/termovigia_gabinete.scad`
+   **los agujeros de prensacable, el SMA y la ventana USB son CIEGOS**. Acá se
+   corrigió a `2*pared+4`. **Pendiente: aplicarlo en v2 y re-exportar los 3 STL.**
+
+**Una mejora real sobre v2**: como el carril arrima el ESP32 a **7 mm de la
+pared derecha** (esa pared no lleva prensacables, no necesita los 12 mm de
+holgura de la tuerca), **la ventana USB acá sí sirve** — en v2 no servía con la
+PCB a 12 mm de todas las paredes. La ventana lleva las esquinas de arriba a 45°
+para que el puente sea de 7 mm y no de 13 (cero soportes).
+
+**Renders mirados uno por uno** (y corregidos a partir de lo que se vio):
+ensamble, planta vacía, planta con módulos, iso interior, tapa por fuera
+(isotipo + TERMOVIGÍA + OK/ALERTA legibles), tapa por dentro (lista de bornes
+espejada, verificada girando la vista sobre Y y no sobre X), las tres paredes
+(8 gotas con el pico arriba, ventana USB con chaflán) y la variante con fuente
+embebida.
+
+**MEDIR CON CALIBRE ANTES DE IMPRIMIR — seis cosas** (tabla en §7 de
+`IMPRESION_V1.md`): (1) módulo de relé: 3 medidas + separación de agujeros en X
+e Y ← *la que manda el tamaño de la caja*; (2) ESP32 DevKit: largo × ancho de la
+placa y alto de componentes; (3) conector USB: cuerpo del enchufe y cuánto
+sobresale del borde; (4) los prensacables PG7/PG9 reales del cajón; (5) qué es
+la fuente de 5 V (pared o módulo, y sus 3 medidas); (6) la regleta de @hardware:
+alto con bornes y patrón de agujeros.
+
+**Próximo paso**: medir esas 6 cotas → recompilar → mirar
+`renders\interior_modulos.png` → imprimir **UNA sola base** como prueba de
+encastre (relé, carril del ESP32, prensacables) antes de las otras 4. Y portar
+el fix del agujero de pared a v2. Sin commitear (orden del Director).
+
+
 ## 2026-09-01 (b) — GABINETE TERMOVIGÍA v2: PCB pasa a 120 × 100 (relés a bordo)
 
 **Decisión del Director**: la PCB de la Base v2 pasa de 100 × 80 a **120 × 100 ×

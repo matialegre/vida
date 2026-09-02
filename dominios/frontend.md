@@ -236,3 +236,36 @@ El sitio explicaba el servicio y **no mostraba ni una pantalla** de lo que el cl
 - **Peso de la página: 981 KB** (788 KB en 20 WebP, 112 KB de fuentes de Google, 24 KB de CSS, 12 KB de JS). Lo nuevo son **152 KB en 5 WebP**, todos `lazy` y con `width`/`height`. **El gordo son los 12 rubros: 560 KB** — están a 800×600 y se muestran a 252×164, o sea ~3× de sobra. Es la próxima poda obvia (se pueden bajar a ~300 KB sin que se note), pero no se tocó: el brief decía no meterse con el carrusel de rubros.
 - **Nada de lo intocable se tocó**: `sellar.py` y su gate (se volvió a correr en cada cambio), CSS crítico inline (ampliado con `.pantalla`/`.pie-seccion` para que sin `estilo.css` el bloque se vea pobre pero no roto), carrusel de rubros arriba, FAB de WhatsApp, PEDIR DEMO, `alegrematias08@gmail.com`, la línea "Desarrollado en Bahía Blanca por ingenieros de la UTN FRBB", sin precios, "se desarrolló para", la advertencia honesta del Estándar, el límite legal del pie y la nota "Imágenes del diseño, no fotos de un equipo instalado".
 - **Pendiente**: (1) cierre con **@verificador** sobre este deploy — sigue abierto desde las versiones anteriores; (2) reemplazar las maquetas por capturas reales **cuando el dashboard esté rebrandeado a Termovigía** (ahí se cambian los 5 archivos manteniendo nombres y se corre `generar_plataforma.py` + `sellar.py`); (3) podar los 560 KB de fotos de rubro; (4) fotos reales del equipo armado; (5) `termovigia.com.ar` sin registrar; (6) INPI.
+
+## 2026-09-02 — Nota de @backend: el contrato del portal ya está escrito
+
+El portal del cliente (Vercel) tiene contrato cerrado en
+**`C:\Proyectos\frioseguro\servidor\API_PORTAL.md`**. Es el documento que manda: si el código y eso no
+coinciden, es un bug de @backend — avisá, no lo adivines. Lo que conviene saber antes de arrancar:
+
+- **Guardá el access token EN MEMORIA** (variable del contexto de React). No en `localStorage` ni en
+  `sessionStorage`: cualquier dependencia npm comprometida o un `dangerouslySetInnerHTML` se lleva la
+  sesión entera, y un JWT no se puede revocar. El motivo largo, en `SEGURIDAD.md` §6.
+- Al recargar la página el token se pierde: **eso es esperado**. El arranque del portal es siempre
+  `POST /auth/refresh` (la cookie httpOnly viaja sola); 200 = sesión recuperada, 401 = login.
+- **Todas las llamadas con `credentials: 'include'`.** Sin eso la sesión se corta cada 15 minutos.
+- **Serializá los refresh**: un refresh vale UNA vez y hay detección de reuso. Tres llamadas en
+  paralelo = las tres 401 y el cliente afuera. Un solo `Promise` compartido (hay ejemplo en §5).
+- **No recalcules el estado de una cámara.** `estado` (`ok`/`alerta`/`critico`/`sin_datos`) lo calcula
+  el servidor para que web, app y PDF digan lo mismo. Y usá `mudo`, no `is_online`: `is_online` lo
+  escribe el equipo y queda en `true` para siempre si le cortan la luz de golpe.
+- `temp_actual: null` = hace más de 30 min que no llega nada → mostrar "sin datos", **nunca** la última
+  temperatura conocida como si fuera actual (es el error que hace que el cliente crea que su cámara
+  está a -18 mientras se descongela).
+- En el gráfico horario dibujá **la banda min-max**, no solo el promedio: un pico de 20 minutos a -5 °C
+  desaparece en el promedio y es justo lo que mira un bromatólogo.
+- `permisos` de `GET /yo` es para **pintar** la interfaz (esconder botones). La autorización real la
+  hace la RLS de Postgres: no armes filtros de seguridad en el frontend, no sirven y esconden bugs.
+- **No hay Realtime todavía** (PostgREST no tiene websockets): polling de 5-10 s. **No hay registro
+  público** y no va a haberlo: si el portal muestra un "crear cuenta", es un bug.
+- **Decisión que hay que tomar con el Director antes del deploy**: si el portal vive en
+  `*.vercel.app`, la cookie del refresh es de terceros y Safari/Firefox la descartan (sesión perdida al
+  recargar). Con `portal.termovigia.com.ar` apuntado a Vercel + `api.termovigia.com.ar` funciona en
+  todos. Está soportado en los dos casos; escribí el cliente para que ande igual en ambos (§5).
+- Cuando tengas la URL real del portal, pedile a @backend que la agregue a `TV_ORIGENES_PORTAL` o el
+  navegador corta todo por CORS con un "Failed to fetch" que no dice nada.

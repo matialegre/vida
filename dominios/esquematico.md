@@ -394,3 +394,72 @@ Doc de dominio + bitacora. El agente lo lee al arrancar y lo actualiza al cerrar
     `FOOTPRINT_FORZADO` de D4: ya sale del esquematico) -> **@energia** firma los +22,8 uA de reposo / 1,30 anos (P11) ->
     **@firmware** P12 (PCINT0, divisor 0,2357, back-off de TX) -> **@hardware** P10 (100 nF C0G en 0805) y G17 (el HT7130A
     comprado no da la TX; hace falta el MCP1700-3002).
+
+- **2026-09-02 [FRIOSEGURO / KIT v1 — MODULOS CABLEADOS] Esquematico de CONEXIONADO de los 5 equipos de demo.**
+  Carpeta nueva `C:\Proyectos\frioseguro\hardware\v1_modulos\`. **`v2/` no se toco** (verificado: `git status`
+  solo lista `?? hardware/v1_modulos/`; los `.kicad_sch` de v2 conservan mtime 02:08).
+  - **Entregables**: `kit_v1_modulos.kicad_sch` (A3, 1 hoja, 19 componentes, 11 redes con nombre) +
+    `.pdf` + `.net` + `_bom.csv` + `erc.txt` + `salida/p1.png` · `generar_sch.py` (usa
+    `C:\Proyectos\biblioteca\pc\kicad_gen` por `sys.path`, primera vez que se consume la copia de la
+    biblioteca desde otro repo: anduvo sin cambios) · `kit_v1_modulos.kicad_sym` (2 simbolos propios) ·
+    **`CABLEADO.md`** (guia de armado con tablas y colores, lo que miran Gonza y Sergio) ·
+    **`PINOUT_V1.md`** (tabla GPIO para @firmware) · **`DIFERENCIAS_CON_V2.md`** (10 lineas).
+  - **Evidencia**: ERC `--severity-all` **0 errores / 0 advertencias**; `chequear_solapes_sch`
+    **0 solapes, 0 texto fuera del area util**; PDF exportado y **mirado** (hoja completa + 2 recortes a
+    190-200 dpi del bloque de reles y del ESP32, 4 pasadas: se corrigieron etiquetas DOOR pisando los
+    numeros de pin, dos solapes de simbolos de riel y el titulo cortado por el cajetin); `.net` leido
+    red por red (`/RELAY3 = U1.28(IO18) U3.2(IN1)`, `/RELAY4 = U1.21(IO23) U3.3(IN2)`, etc.).
+    **Cero cruces de cables** en toda la hoja: el orden de los pines del simbolo del DevKit se eligio
+    para que los 4 canales de rele y las 3 puertas salgan en abanico sin cruzarse.
+  - **Circuito**: J1 bornera 5 V -> estrella de 3 ramas (DevKit pin 19 / JD-VCC de U2 / JD-VCC de U3) con
+    C1 1000 uF en la entrada y **C5 1000 uF al pie de las bobinas**; 3 borneras 3P en un solo bus 1-Wire con
+    R1 4k7 -> IO4; 3 puertas con reed a masa, 4k7 a +3V3 y 100 nF -> IO5/IO13/IO14; 2 modulos de rele
+    activo-LOW con **VCC del lado opto a +3V3 y JD-VCC a +5 V** -> IO26/IO27/IO18/IO23.
+  - **POLARIDAD (lo central del pedido)**: modulos **activo en BAJO** -> `RELAY_ON LOW` / `RELAY_OFF HIGH`.
+    `firmware_modular/config.h:135` **ya dice LOW**: para el v1 esta bien y no se toca; lo que hay que
+    cambiar es `MAX_RELAYS 2 -> 4`, agregar `PIN_RELAY_3 18` / `PIN_RELAY_4 23`, borrar `PIN_DHT22 18` y
+    poner `SENSOR_DHT22_ENABLED false`. El `PINOUT.md` de la v2 pide `RELAY_ON HIGH` **porque la v2 tiene
+    BC547 que invierten**: esa instruccion NO se aplica al kit.
+  - **Arranque, con cuenta**: antes del `setup()` los GPIO estan en alta impedancia; en el modulo con opto
+    el LED va de VCC a IN, asi que sin camino a masa la corriente es 0 y **los 4 reles quedan ABIERTOS: la
+    sirena no suena al enchufar**. Aun con un pull-down interno de 45 k serian 49 uA, 20x menos de lo
+    necesario. El riesgo es 100 % de firmware. Regla escrita: `digitalWrite(pin, RELAY_OFF)` **antes** de
+    `pinMode(pin, OUTPUT)`.
+  - **JD-VCC (§3 de CABLEADO)**: con el puente puesto el LED del opto queda entre 5 V y el GPIO; con el GPIO
+    en 3,3 V le sobran 1,7 V y circulan `(1,7-1,05)/1k = 0,6 mA` -> CTR ~30 % -> ~40 mA de colector -> **la
+    bobina se queda a medio camino** (rele que zumba o no suelta). Sacando el puente: VCC = 3V3 (0,00 mA con
+    IN alto, apagado duro; 2,2 mA con IN bajo) y JD-VCC = 5 V. Aclarado que **la masa sigue comun: no aisla**.
+    Plan B escrito por si el modulo del stock necesita 5 V del lado opto: puente puesto + `OUTPUT_OPEN_DRAIN`
+    (y por que eso esta fuera de hoja de datos, que es justamente el motivo de los BC547 de la v2).
+  - **GPIO elegidos = LOS MISMOS DE LA v2** (K1=26, K2=27, K3=18, K4=23): asi entre kit y PCB el unico
+    `#define` distinto es `RELAY_ON`. Ninguno es strapping (0,2,5,12,15) y ninguno tiene pull interno al
+    reset. IO5 (puerta 1) **si** es strapping: con la puerta cerrada arranca en 0, y eso solo fija el timing
+    del SDIO esclavo -> es seguro y ya esta en produccion desde la v2.6. Descartado IO33 para K4 porque
+    choca con `PIN_DEFROST_INPUT 33` del config heredado.
+  - **PUERTAS — respuesta clara a la pregunta de Matias**: con pull-up simple **NO se distingue "puerta
+    abierta" de "cable cortado"** (los dos leen 1; el corte falla del lado seguro = alarma) y **el
+    cortocircuito no se detecta nunca**. Opcion barata OFRECIDA, no impuesta: **doble fin de linea** (10 k en
+    paralelo con el reed + 3k3 en serie, los dos EN LA CAJA DEL REED) leido por ADC -> 4 estados separados:
+    **0,82 V cerrada / 1,88 V abierta / 3,30 V cortado / 0,00 V en corto**. Si se toma, las puertas se mudan
+    a IO34/35/39 (solo entrada, ADC1, libres en el v1) y es cambio de firmware + 6 resistencias.
+    Recomendacion: arrancar los 5 con pull-up simple (4k7 externo + 100 nF **y ademas** `INPUT_PULLUP`, para
+    que si falta el 4k7 la entrada no flote).
+  - **ALIMENTACION**: 4 bobinas 284 mA + LED 12 mA + DevKit 150 mA medio / 500 mA pico = **446 mA continuo,
+    796 mA pico**. **Hace falta 5 V 2 A** (con 1 A anda al limite y C1/C5 pasan a obligatorios; con 700 mA
+    entra en ciclo de brown-out). El amperaje de la fuente comprada **sigue siendo dato a confirmar**.
+    Riel 3V3 del DevKit: 15,4 mA de todo lo externo, no se entera. Regla de armado: **USB y fuente nunca
+    juntos** (el pin 5V esta unido al VBUS sin diodo en muchos DevKit).
+  - **DISCREPANCIAS con `BOM_KIT_V1.md` de @hardware** (escrito en paralelo en la misma carpeta), anotadas
+    en CABLEADO §10 en vez de resolverlas en silencio: (a) su checklist de continuidad usa IN1..IN4 en
+    GPIO 25/26/27/32 y reeds en 16/17 — el mapa valido es el del `.net`; (b) el pide 2 sondas y 2 puertas,
+    la tarea pide 3 y 3; (c) **afirma que con IN flotando "el rele cliquea y queda pegado"**, que es lo
+    contrario de mi analisis: eso vale para un modulo SIN opto o con pull-down en IN. **Lo resuelve una
+    medicion de 30 s** (alimentar el modulo con IN al aire y ver si cliquea), escrita como paso previo al
+    armado. Si cliquea, hace falta 10 k de IN a VCC por canal y cambia la guia. Adoptado de su BOM: los
+    **dos electroliticos de 1000 uF low-ESR** (C1 en la entrada, C5 al pie de las bobinas).
+  - **Ocupacion de hoja 33 %** contra el 55-75 % de la doctrina: es un diagrama de cableado con 19
+    componentes y mucho texto de procedimiento; se prefirio aire a apretar. Anotado como deuda menor.
+  - **Proximo paso**: Matias/@verificador miran el PDF -> @hardware mide el modulo real (IN al aire) y lee
+    la etiqueta de las 5 fuentes -> @firmware aplica `PINOUT_V1.md` (`MAX_RELAYS 4`, `PIN_RELAY_3 18`,
+    `PIN_RELAY_4 23`, DHT fuera, `RELAY_ON LOW` que ya esta) -> Gonza y Sergio arman con `CABLEADO.md`.
+    **Nada commiteado** (orden de la tarea).

@@ -56,6 +56,127 @@ Doc de dominio + bitacora. El agente lo lee al arrancar y lo actualiza al cerrar
 
 - 2026-07-08 [BRIEFING GIMAP] — leer ../BRIEFING_EQUIPO_GIMAP.md y los 4 docs (PARTE_GIMAP, PRESUPUESTO_ENERGIA, PROTOCOLO_CALIBRACION, INGENIERIA_NODO_1ANO). Para vos: placa emisor bajo consumo (gateo puente + supercap cerca del LoRa para el pulso, sin boost) + placa receptor ESP32+LoRa 220V. Convergencia UTN Diseño y Manufactura/Tecnología.
 
+- 2026-09-02 (c) [GALGAS / DREYFUS] **DOSSIER en UN PDF, para el celular**:
+  `C:\Proyectos\galgas\hardware\NODO_GALGA_v3_revC_DOSSIER.pdf` (**18 paginas, 3,25 MB**, A4,
+  numerado, con marcadores) generado por `kicad\armar_dossier.py` + `kicad\pcb\metricas.py`.
+  Misma herramienta y misma regla que el dossier de Termovigia: **ningun numero se tipea a mano**.
+  - Contenido: portada con la banda roja PRELIMINAR - NO FABRICAR y los tres bloqueos nombrados |
+    indice | **resumen de UNA pagina** (la cadena galga -> ADS1220 ratiometrico PGA 128 -> ATmega328P
+    -> LoRa 433, con la pila de litio y los supercaps para el pulso de TX) | esquematico rev C |
+    **la placa en 3 paginas completas** (2D superior, 3D arriba, 3D abajo) con la tabla del gabinete |
+    layout (netclases con la cuenta de corriente, criterio del bloque analogico, corredor del ramal A
+    y su regla propia, decision de antena) | estado medido sin maquillar | veredicto de P6b y lo que
+    queda abierto | pendientes para fabricar con que se rehace si cae cada bloqueo | BOM de 35 lineas.
+  - **Sello PRELIMINAR al pie de las 3 paginas de la placa** (banda roja con los tres bloqueos), para
+    que una hoja impresa suelta no se confunda con la version final. Lo pidio el Director y es la
+    parte que mas se va a imprimir.
+  - **Una sola fuente de verdad, resuelta a pesar de los dos Python**: PyMuPDF vive en el Python del
+    sistema y `pcbnew` en el de KiCad, y no se hablan. `armar_dossier.py` **delega**: corre
+    `pcb/metricas.py` con el interprete de KiCad, que vuelca a `salida/metricas.json` las metricas
+    exactas del board (segmentos por capa y su largo, vias, huellas, segmentos de B.Cu dentro del
+    courtyard de U1/U2, la verificacion de `/E_REFN` y la BOM agrupada) y despues las lee. Las
+    metricas siguen saliendo del `.kicad_pcb`.
+  - **Tres cosas se corrigieron MIRANDO el PDF, no confiando en que estaba bien** (contact sheet de
+    las 18 paginas + 3 paginas renderizadas a 140 dpi):
+    (1) **el conteo de DRC estaba mal**: el reporte lista los pads sin conectar con severidad `error`
+    y ademas los cuenta en su propio bloque, asi que contar `; error` sobre todo el archivo los sumaba
+    dos veces -> el resumen decia "2 errores" donde hay **0**. Se cuenta solo dentro del bloque de
+    violaciones; (2) el PDF salia de **12,86 MB** porque el contenido vectorial del esquematico se
+    copiaba sin comprimir: con `deflate_images` + `deflate_fonts` + `clean` bajo a **3,25 MB**, y las
+    imagenes se reescalan a 2000 px de lado largo; (3) habia **dos paginas casi vacias** (el resumen
+    se desbordaba por cuatro lineas y la portadilla de la placa quedaba a medio llenar): el resumen
+    se aprieta con CSS propio hasta entrar en UNA pagina y la tabla del gabinete se mudo a la
+    portadilla de la placa, que es donde sirve. De 20 paginas a 18, todas llenas.
+  - Mejora del conversor markdown->HTML propio: las lineas seguidas de un mismo parrafo ahora se
+    **juntan**. Antes cada linea del `.md` era un `<p>` y el texto salia a los saltos: en el celular
+    se leia mal.
+  - Regeneracion desde cero verificada (borrando cache y JSON): 18 paginas, 3,25 MB. Sin commit.
+
+## 2026-09-02 (b) — GALGAS / DREYFUS: placa CERRADA, gerbers PRELIMINAR
+
+Con P6b aprobado. `C:\Proyectos\galgas\hardware\kicad\` — board, `LAYOUT.md`, `drc.rpt`,
+`salida\pcb_2d_top.png` + `pcb_3d_top/bottom.png`, `gerbers\` + `nodo_galga_v3_gerbers_PRELIMINAR.zip`
+(27 archivos: gerbers, PTH/NPTH drl con mapas, pos, BOM de 35 líneas). Sin commit.
+
+**Estado medido:** 55/55 componentes, 51 redes, **400 segmentos + 113 vías**,
+**DRC `--severity-all` = 0 errores**, **2 pads sin conectar**, **0 `silk_overlap`** (eran 27) y
+3 `silk_over_copper` (eran 24). Renders 2D y 3D top/bottom **mirados**.
+
+**Los 2 sin conectar tienen nombre: `U2.3` y `U2.5`, los GND del ATmega.** El pin 21 (tercer GND
+del mismo chip) sí está conectado y los tres están unidos internamente al lead frame: la placa
+funciona, lo que se pierde es inductancia de masa. **No se cerró por geometría, no por falta de
+intentos** — los cinco caminos probados y por qué falla cada uno están en `LAYOUT.md` §7. El
+hallazgo que los explica: **el relleno que queda DENTRO del anillo de pads de un TQFP es siempre
+una isla** (huecos de 0,25 mm a paso 0,8 contra 2 × 0,25 de clearance de zona), así que una vía de
+masa ahí adentro no conecta con nada. Fix de una línea para la rev D: sacar CAL_EN del carril
+oeste del micro.
+
+**Lo que pidió el Director, hecho:**
+- **Ruteo digital y de potencia completo**, incluido `/V_SC_MID` (las dos celdas en serie con
+  RB1/RB2 colgando del nodo del medio). Potencia a mano por carriles paralelos que no se cruzan:
+  +BATT por el norte (y = 50), /V_SC por el sur (y = 56,5).
+- **Serigrafía**: de 51 avisos a 0 solapes. Referencias reubicadas por búsqueda EN ESPIRAL
+  alrededor de cada componente (las 4 posiciones fijas chocan casi siempre en esta densidad), con
+  el dibujo de serigrafía de las huellas y los rótulos fijos reservados ANTES. 12 rótulos útiles:
+  título/versión/fecha/NS, pinout de la bornera de galga, ISP, serie, `ANT IPEX -> SMA`,
+  `PAD ANT: NO POBLAR`, polaridad de los supercaps y **`E-/REFN NO ES MASA`** en el cobre.
+- **G18 cerrado sin net-tie**, como ordenó el Director, con la medición como fundamento: la
+  derivación de REFP1 sale del ramal A a 2,4 mm de R1.1 → 6,7 nV de cobre compartido = 2 ppb.
+  La condición que el net-tie iba a imponer queda como regla escrita en `pcb/rutas.py`.
+- **Corredor del ramal A**: área con nombre en la placa + regla propia en
+  `nodo_galga_v3.kicad_dru` que **prohíbe POR RED** que el SPI y el DRDY entren en la franja. Un
+  keepout común no servía (echaría también al riel). El DRC lo verifica en cada corrida.
+- **Gerbers PRELIMINAR**, con los tres bloqueos y qué se rehace si cae cada uno (LAYOUT.md §11).
+
+**Corrección honesta sobre la costura de vías que yo mismo había propuesto:** con plano en una
+sola cara, una vía de costura NO conecta a nada en F.Cu — queda colgada y es decoración. Se probó
+con relleno en las dos caras y **salió peor**: en la zona densa F.Cu se parte en slivers y cada
+sliver que atrapa un pad SMD de masa deja ese desacople FLOTANDO (pasó con CA1, CB1, CM1, CM2, CM3).
+Lo que quedó: relleno en las dos caras + **una vía de masa al lado de cada uno de los 4 cambios de
+capa** (que es la costura que sí sirve) + grilla de ~10 mm en zonas libres + una vía por cada pad
+que el relleno no alcanza, encontradas con `pcb/cerrar_gnd.py`.
+
+**LA DEBILIDAD PRINCIPAL DE ESTA PLACA, dicha sin maquillaje:** 105 de los 400 segmentos van por
+B.Cu y **30 caen dentro del courtyard de U1 o U2**. El haz digital de FreeRouting corta el plano
+justo debajo del ADC de 24 bits. Se ve en el render inferior. Se intentó arreglar de dos maneras y
+las dos fallaron **por herramienta**: (a) declarar B.Cu `(type power)` en el DSN — el DSN sale
+bien pero con una sola capa de señal FreeRouting no converge; (b) rule areas prohibiendo pistas
+por B.Cu bajo U1/U2/U3 — anda para el DRC pero FreeRouting abre una ventana y no termina nunca.
+Queda para la rev D, a mano: son 6 redes cortas.
+
+**Cambios de placement de esta tanda, todos con motivo:** CM3 (AREF) y CM2 movidos porque sus pads
+de masa quedaban en bolsones; CM1 rotado 180 por lo mismo; RL1/LD1 rotados 180 para que los ánodos
+queden adyacentes (estaban en los pads lejanos y el LED pedía rodear los dos cuerpos); CI1 al este
+de U4 para que +BATT y /V_SC no se crucen; RGD1 rotado 90; los 4 agujeros M3 ahora tienen
+referencia HM1..HM4.
+
+**Trampas nuevas del harness (todas costaron tiempo real):**
+1. `ExportSpecctraDSN` devuelve False sin mensaje si hay huellas con la MISMA referencia — los 4
+   agujeros M3 tenían la referencia vacía y contaban como duplicados.
+2. **`ImportSpecctraSES` REEMPLAZA todas las pistas y vías.** Las pistas protegidas vuelven; las
+   vías NO. Hay que reponerlas después (`rutear.py --solo-vias`), y si se cambia una ruta hay que
+   re-correr FreeRouting o el `.ses` viejo la pisa.
+3. **KiCad le asigna a una vía nueva la red del cobre que toca**: dos vías de masa mías cayeron
+   sobre pistas del autorouter y se volvieron CAL_EN y PB0 en silencio.
+4. `pcbnew.VIATYPE_THROUGH` ya no existe; un `PCB_VIA` nace THROUGH y se posiciona con
+   `SetStart`/`SetEnd`.
+5. `EDA_TEXT.GetTextBox()` **pide un argumento** (`None` anda). Estimar la caja a mano da cajas
+   chicas y el DRC canta los solapes igual.
+6. `meta.version 1` en el `.kicad_pro` hace que KiCad **descarte `net_settings` en silencio** y
+   vuelva a su Default interno de 0,2 mm. Tiene que ser 3.
+7. FreeRouting **abre la ventana** de forma intermitente y el proceso no termina nunca
+   (`Get-Process java | select MainWindowTitle` lo delata). **No se arregla con
+   `-Djava.awt.headless=true`**: con eso arranca y no rutea nada (97 pads sin conectar). Matar el
+   java y volver a correr.
+8. Rotar una huella rota la posición de los pads pero **no su forma**: hay que sumarle la rotación
+   al ángulo de CADA pad. En un 0805 casi no se nota; en un TSSOP a paso 0,65 los pads quedan
+   apilados (61 errores de DRC).
+9. El heredoc de bash se rompe con contenidos largos aunque esté citado: para archivos de más de
+   ~100 líneas, tool de escritura.
+
+**Pendientes:** rev D — sacar CAL_EN del carril del micro (cierra los 2 sin conectar) y rehacer a
+mano el haz digital por F.Cu; fiduciales y test points; P3/CSC/P2/P10 antes de fabricar.
+
 ## 2026-09-02 — GALGAS / DREYFUS: ruteo del bloque analógico, netclases y antena (rev C, PRELIMINAR)
 
 `C:\Proyectos\galgas\hardware\kicad\` — `nodo_galga_v3.kicad_pcb`, `LAYOUT.md`, `drc.rpt`,
@@ -259,3 +380,69 @@ utas.py`, por pad), señales con FreeRouting, GND en las dos capas cosido.
     corrigieron mirando: logo negro sobre azul (placa blanca), BOM con 3 columnas caidas fuera de la hoja,
     imagenes centradas con pie que no entraba, mapas de taladro al 25 % de la hoja, y **`redes = 0`** (el
     `.net` de KiCad 10 pone `(net` y `(code` en lineas distintas).
+
+## 2026-09-02 — FRIOSEGURO KIT v1: plano de la PLAQUETA PERFORADA (no hay PCB)
+
+`C:\Proyectos\frioseguro\hardware\v1_modulos\plaqueta\` — `plano.py` (generador, fuente unica),
+`plano_componentes` / `plano_puentes` / `plano_soldadura` (.png + .pdf a escala 1:1),
+`tablas.md`, `verificacion_netlist.txt`, `ARMADO_PLAQUETA.md`, `VERIFICACION_5_UNIDADES.md`.
+**Sin commit** (orden). Trabajo distinto: **no se fabrica nada**, Gonza y Sergio sueldan 5
+plaquetas perforadas PE04 150 x 56 identicas, agujero por agujero.
+
+**Metodo (el mismo que el layout por script, aplicado a perfboard):** la grilla, el placement,
+los 42 puentes y los rotulos viven en TABLAS de `plano.py`; los tres planos, las tres tablas de
+coordenadas y la verificacion salen de ahi. Ninguna coordenada tipeada dos veces.
+**Verificacion real, no declarada:** union-find sobre islas + rieles + puentes + patas, contra
+`kit_v1_modulos.net`. **48 redes revisadas: las 11 con nombre tienen camino (OK), las 37
+`unconnected-*` son de un solo pin** (25 pines libres del DevKit + 12 contactos de rele que salen
+por la bornera del propio modulo). **179 agujeros ocupados, ninguno repetido** (el chequeo de
+doble ocupacion es el "chequear_solapes" del mundo perfboard). Renders MIRADOS y corregidos en
+3 iteraciones.
+
+**Grilla declarada** (14 filas x 57 columnas, paso 2,54): P/Q rieles de arriba **NO SE USAN**
+(los tapan las borneras) · A..E islas de 5 · canal · F..J islas de 5 · X = riel **GND** ·
+Y = riel **+3V3**. Borneras con los pines en **fila A**, DevKit a caballo del canal en **filas
+B y J** (columnas 39..57, USB al borde derecho = ventana del gabinete).
+
+**42 puentes** (el BOM estimaba ~70): 14 pelados cortos, 25 aislados, 3 gruesos de 0,5 mm2 para
+el +5 V. 20 de mas de 25 mm. El patron protoboard resuelve los otros ~28.
+
+**Lo que el placement resuelve gratis, y es el punto del diseno:** cada bornera y su pasivo caen
+en la MISMA isla vertical. C2/C3/C4 (100 nF) cruzan directo del borne de senal al borne de masa
+de su propia bornera (5,08 mm = 2 columnas): **cero puentes**. R1..R4 van de la fila J al riel
++3V3, 11,9 mm, todas iguales. Los 3 ramales de +5 V salen de UNA isla (`FJ2`) = la estrella desde
+J1 que pide `CABLEADO.md` 2.1, no una cadena.
+
+**TRES HALLAZGOS QUE BLOQUEAN LA COMPRA (para @hardware / Matias):**
+1. **7 borneras de 3 vias NO ENTRAN.** 7 x 15,24 = 106,7 mm de borde y el DevKit pide 51,5:
+   158 > 150. Van **3 de 3 vias + 4 de 2 vias = 86,4 mm** (que es justo el numero que el propio
+   BOM habia calculado en su 3.1). Corregir el renglon 2 del BOM.
+2. **La bornera comprada es de paso 5,00 mm y la grilla es de 2,54.** Cuenta: 2 vias -> 0,08 mm
+   de error (entra), **3 vias -> 0,16 mm (entra forzando el pin del medio)**, 4 vias -> no entra.
+   Si todavia no se compro, pedir **5,08 mm (KF128-5.08 / XY308-5.08)**. Es el mismo error del
+   banco de galgas (MX126-5,0) — segunda vez que aparece: **regla nueva: en perfboard, bornera
+   5,08 SIEMPRE**.
+3. **El gabinete de @diseno3d reserva `regleta = [100, 25]` y un carril propio para el ESP32.**
+   Con esta plaqueta el ESP32 va en zocalo SOBRE la plaqueta: hay que poner `regleta = [150, 56]`,
+   `regleta_ag = [134, 40.5]`, `regleta_alto = 25`, **eliminar el carril `esp*`** y alinear la
+   ventana USB al borde derecho de la plaqueta (USB a y ~ 27 mm del borde de borneras).
+   Separadores de **nylon**: el riel de +3V3 pasa a 4,7 mm del agujero M3 inferior.
+
+**Decisiones de layout con razon (no "que no se solapen"):**
+- Los rieles de ARRIBA se sacrifican a proposito: el cuerpo de la bornera los tapa y sus pines
+  no pueden ir sobre un riel (cortocircuitaria las 7 borneras entre si). Se perforan para el M3.
+- Los cabezales de rele fueron de la fila J a la **fila I** para que las patas de los 10 k
+  opcionales (fila J -> riel Y) **no pasen por encima del conector**. Un puente que cruza un
+  conector es una placa que no se puede desenchufar.
+- 3 puentes de +3V3 marcados AISLADO no por largo sino porque **cruzan el riel de GND**.
+- Debajo del DevKit los agujeros SI se usan por la cara de soldadura (el zocalo lo deja a 8,5 mm);
+  debajo de las borneras NO (el cuerpo apoya en la placa): las filas B y C de esas columnas
+  quedan muertas y el plano lo dice.
+- Pinout de JR1/JR2 elegido **simetrico-seguro**: invertido, el 5 V cae en VCC-opto y el 3,3 V en
+  JD-VCC -> los reles no accionan y no se quema nada.
+
+**Pendientes:** (a) **PASO 0**: Gonza confirma con el tester el patron real de la PE04 (filas,
+columnas, donde corta el riel) — si el corte no cae entre la columna 25 y la 31 hay que mover
+2 puentes; (b) medir con calibre si las tiras del DevKit estan a 25,4 mm (10 pasos) o 22,86 (9):
+si son 9, el zocalo baja a las filas **C y J** y se regenera; (c) medicion B del BOM 8.1 decide
+si se pueblan R5..R8; (d) los 5 cambios del `.scad` para @diseno3d.

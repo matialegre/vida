@@ -1,6 +1,27 @@
 # Lista de compra banco galgas — VERIFICADA link por link por @tester 2026-07-10 (v3)
 Decisión: ADS1220 (Texas) como ADC definitivo — NADA de AD7124/importación. Todo comprable en ML Argentina.
 
+> **SUPERSEDIDA EL 2026-09-02 (@hardware).** Esta lista sigue siendo valida como registro de lo que
+> **se compro** en julio, pero **esta incompleta**: le faltan las resistencias de precision, los
+> capacitores del filtro, la bornera 5,08, el perfboard y el cable apantallado -- sin eso el banco no se
+> puede soldar. Y **corrige un error**: el `HT7130A` **no** es el LDO del nodo (30 mA contra 87-120 mA de
+> la TX del RA-02); es el de la **Placa A**. Lista vigente y completa:
+> `C:\Proyectos\galgas\hardware\BRINGUP_BANCO.md` seccion H.
+> Estado de cada item de aca: **ADS1220 y ER14505 comprados pero LLEGADA NO CONFIRMADA**; INA219 y
+> HT7130A x2 confirmados.
+
+
+> ⚠ **SUPERSEDIDA EL 2026-09-02 (@hardware).** Esta lista sigue siendo válida como registro de lo que
+> **se compró** en julio, pero **está incompleta**: le faltan las resistencias de precisión, los
+> capacitores del filtro, la bornera 5,08, el perfboard y el cable apantallado — sin eso el banco no se
+> puede soldar. Y **corrige un error**: el `HT7130A` **no** es el LDO del nodo (30 mA contra 87–120 mA de
+> la TX del RA-02); es el de la **Placa A**. Lista vigente y completa:
+> `C:\Proyectos\galgas\hardware\BRINGUP_BANCO.md` §H.
+> Estado de cada ítem de acá: **ADS1220 y ER14505 comprados pero LLEGADA NO CONFIRMADA**; INA219 y
+> HT7130A ×2 confirmados.
+
+
+
 | Ítem | Link directo (producto verificado abierto) | Precio | Nota |
 |---|---|---|---|
 | ADS1220 CJMCU-1220 (ADC 24-bit) | https://www.mercadolibre.com.ar/ad-conversor-moducjmcu-1220-ads1220-adc-de-24-bits-i2c-l/p/MLA2062285574 | $14.315 | catálogo: confirmar buy box al comprar |

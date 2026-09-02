@@ -120,3 +120,114 @@ Encargo: autohospedar la plataforma. **Nada se ejecutó contra la nube ni se com
 
 **Falta y bloquea**: elegir host. **Falta y no bloquea**: dominio (`termovigia.com.ar` sin registrar; puente DuckDNS), contrato del webhook de OpenClaw, VAPID para push, reporte mensual PDF, y Realtime — el panel usa websockets que PostgREST no tiene (`MIGRACION.md` §5: arrancar con polling 5-10 s, después SSE con LISTEN/NOTIFY, ~50 líneas).
 
+## 2026-09-02 — TERMOVIGÍA: cuentas de personas y contrato del portal (Vercel → servidor propio)
+Encargo del Director: *"deployo en Vercel una página ligada a esta PC con cuentas y contraseñas para
+las personas"*. Mi parte = autenticación y modelo de acceso; el portal lo hace @frontend contra
+`C:\Proyectos\frioseguro\servidor\API_PORTAL.md`. **Nada se ejecutó contra una base ni se commiteó.**
+
+**Migración nueva `sql/070_cuentas_personas.sql`** (append-only, idempotente, no toca 000-060):
+- **bcrypt, no Argon2id** — decisión argumentada en la cabecera del archivo. Argon2 exigiría (a)
+  construir imagen propia de Postgres (`postgres:16-alpine` no trae argon2/pgsodium → duplica la deuda
+  de parcheo que SEGURIDAD.md ya cuenta como el costo real del autohospedaje), (b) `argon2-cffi` en el
+  api (dependencia con binario C en el camino de auth + el hash sale de la base), o (c) hashear en el
+  navegador (nunca). bcrypt de `pgcrypto` **ya está**, es el mismo que usa GoTrue → **los hashes de
+  Supabase se importan tal cual** con `password_algo='bcrypt'` (nadie resetea nada), y compara dentro
+  de Postgres igual que `device_key_hash`. Coste 12.
+- **El detalle que casi nadie mira: bcrypt trunca en silencio a 72 bytes.** Se hashea
+  `base64(sha256(clave))` (44 chars). Hay test que lo demuestra: dos claves de 80 caracteres que
+  comparten los primeros 72 NO abren la misma cuenta.
+- Roles: `org_members.role` owner/manager/auditor (ya existían en 020) + admin en `user_profiles`. Se
+  **aprietan** las policies de escritura de 030 (que eran "cualquier miembro de la org"):
+  `auth.puede_configurar()` (owner|admin) y `auth.puede_operar()` (owner|manager|admin). El auditor de
+  bromatología no escribe.
+- `auth.refresh_tokens` (SHA-256 del token, familia, rotación + **detección de reuso** → revoca la
+  familia entera), `auth.login_attempts`, bloqueo escalonado 5→15 min / 10→1 h / 15→24 h, y
+  `token_generation` para poder **revocar un JWT** (que por definición no se revoca) al cambiar la
+  clave o desactivar a alguien.
+- `auth.autenticar()` hace validación + bloqueo + registro **en una sola función**: evita el bug de
+  "validé bien pero me olvidé de contar el intento fallido" en algún camino del código. Incluye un
+  `crypt()` contra salt fijo cuando el usuario no existe, para que "no existe" y "clave mala" tarden lo
+  mismo (si no, se enumeran los mails de los clientes con un cronómetro).
+- Cerradas con RLS `events`/`notification_rules`/`notifications`, que 050 había dejado sin policy.
+
+**CLAIM EXACTO del JWT** (documentado en 070 y en API_PORTAL.md):
+`{sub, role:"authenticated", email, org_id, org_rol, es_admin, gen, typ:"acceso", iat, exp(15 min)}`.
+- `role` es el rol de **Postgres** (PostgREST hace `SET ROLE` con él): el rol de negocio va aparte en
+  `org_rol`. Hay un test que lo fija para que nadie lo "mejore".
+- **Regla de oro: `org_id` ACOTA, NUNCA OTORGA.** `user_org_ids()` se redefinió como
+  `org_members ∩ claim`; `is_admin()` como `claim AND user_profiles`. Un token con el `org_id` ajeno da
+  **cero filas**, no las del otro. Vale también si mañana se filtrara el secreto de firma.
+
+**`api/identidad.py` — el archivo delicado.** El api se conecta con el **dueño de las tablas**, que NO
+está sujeto a RLS (las tablas son ENABLE, no FORCE). Si el portal leyera con esa conexión vería a
+todos los clientes. `como_persona()` hace `SET LOCAL request.jwt.claims` + `SET LOCAL ROLE authenticated`
+—exactamente lo que hace PostgREST— dentro de la transacción del pool. Por eso las consultas de
+`rutas_portal.py` **no llevan `WHERE org_id`**: si el filtro dependiera de que el programador se
+acuerde, un día no se va a acordar. 070 concede la membresía de rol al dueño para poder hacer ese SET.
+
+**Endpoints nuevos**: `POST /auth/login` (limitador de **dos cubetas**: por IP y por email — con una
+sola, el ataque distribuido contra una cuenta pasa por el hueco de la otra), `/auth/refresh` (rota el
+token), `/auth/logout` (revoca de verdad; `{"todas":true}` cierra todos los dispositivos), `GET /yo`,
+`/auth/cambiar-clave` (cierra todas las sesiones), `/admin/usuarios` (alta/listado/reseteo/desactivar/
+desbloquear, **solo admin, sin registro público**), y los de datos: `/portal/resumen`,
+`/portal/camaras` (con última lectura y `estado` calculado en el SERVIDOR para que web, app y PDF digan
+lo mismo), `/portal/camaras/{id}/historial` (auto: cruda ≤7 días, `hourly_stats` más allá — 30 días
+crudos son 86.000 puntos para dibujar 900 px), `/portal/equipos` (expone `mudo` calculado por reloj:
+`is_online` lo escribe el equipo y queda en `true` para siempre si le cortan la luz de golpe),
+`/portal/eventos`, `/portal/alertas`, `POST /portal/alertas/{id}/reconocer`, `PATCH /portal/camaras/{id}`.
+
+**CORS**: `TV_ORIGENES_PORTAL` (lista exacta, **se rechaza `*`** — con `allow_credentials` el navegador
+lo ignora igual, así que aceptarlo no es "permisivo": es "roto y difícil de diagnosticar") +
+`TV_ORIGEN_PATRON` anclado para los previews de Vercel. **Decisión que hay que tomar antes del deploy**:
+con el portal en `*.vercel.app` la cookie del refresh es de terceros y Safari/Firefox la descartan →
+hace falta `TV_REFRESH_EN_CUERPO=1` y la sesión se pierde al recargar. Con `portal.termovigia.com.ar` +
+`api.termovigia.com.ar` (mismo sitio registrable) la cookie es `SameSite=Lax` y funciona en todos.
+**Otro motivo para registrar `termovigia.com.ar` antes del 1-oct.** `AJUSTES.revisar()` avisa en el
+arranque si quedó en la combinación mala.
+
+**SEGURIDAD.md §6 nueva**: por qué el access token va **en memoria** y no en `localStorage` (cualquier
+dependencia npm comprometida o un `dangerouslySetInnerHTML` se lleva la sesión entera, y un JWT no se
+revoca), por qué el refresh sí va en cookie `httpOnly` con `Path=/auth`, por qué CORS no protege el
+servidor (lo aplica el navegador; `curl` llega igual), y qué NO hay (MFA, recuperación por mail).
+
+**`wifi_password` (hallazgo abierto) — camino escrito en SEGURIDAD.md §4.2, tres pasos**: (1) ya hecho,
+el servidor la descarta y no loguea el cuerpo; (2) **@firmware: borrar la línea 296 de `supabase.h`** —
+es UNA línea, el servidor ignora los campos que faltan y los desconocidos, así que firmware viejo y
+nuevo conviven y no hace falta coordinar despliegue; seguir mandando `wifi_ssid`, que sirve para
+diagnosticar y no es secreto; (3) si algún día hace falta verificar la credencial cargada, comando
+puntual `WIFI_DIAG` que responde **enmascarada** (`Casa1234`→`Ca****34`). Recién **después** del paso 2
+se dropea la columna: hacerlo antes haría que PostgREST rechace la **lectura entera** de todo equipo
+con firmware viejo, y perderíamos temperaturas por proteger un dato que ya estábamos tirando.
+Las 7 columnas del firmware y `wifi_commands` ya estaban creadas en `sql/010` (sesión anterior) —
+verificado hoy: contra este esquema la lectura entra.
+
+**Evidencia**: **77 tests de lógica pura en verde** (`python -m unittest discover -s api/tests -t api`;
+eran 42 → +35: forma exacta del claim, contraseña inicial dictable —el test encontró una `Z` que se
+confunde con el 2 y se sacó del alfabeto—, generador que pasa su propio validador, hash del refresh,
+permisos por rol, y CORS incluido el patrón de previews sin anclar que dejaría pasar
+`...vercel.app.malo.com`). Los 18 `.py` compilan; los 8 `.sql` pasan el chequeo de dólar-quoting y
+paréntesis. **No hay Docker, psql ni fastapi en esta máquina**: nada se corrió contra una base.
+`api/tests_base/test_aislamiento.py` (25 tests) es la evidencia real del aislamiento — se **saltea con
+motivo escrito** si no hay base, para que "saltado" no se confunda con "pasó". Comando exacto en
+`api/tests_base/__init__.py`:
+`TV_DSN_TEST="postgres://termovigia:PASS@127.0.0.1:5433/termovigia" python -m unittest discover -s api/tests_base -t api -v`
+Cubre: tabla por tabla en los dos sentidos, claim `org_id` falsificado, `es_admin` falsificado, sin
+claims, cambio de identidad en caliente (el caso del pool), auditor que no escribe, bcrypt no truncado,
+bloqueo al 5º intento, y dos tests **contra el catálogo** (`pg_class`/`pg_policy`) que encuentran
+cualquier tabla futura sin RLS o con RLS y sin policy, sin que nadie tenga que acordarse de agregarla a
+una lista. Incluye `test_00` que verifica que `SET ROLE` funciona de verdad: sin eso, todos los demás
+pasarían en falso viendo todo como dueño de las tablas.
+
+**Archivos**: `sql/070_cuentas_personas.sql`, `api/identidad.py`, `api/rutas_auth.py`,
+`api/rutas_portal.py`, `api/logica/cuentas.py`, `api/tests/test_cuentas.py`, `api/tests_base/` (2),
+`herramientas/crear_usuario.py`, `API_PORTAL.md` (nuevo, 8 secciones con curl reales); tocados
+`api/principal.py` (CORS + routers; se quitó el `/auth/login` viejo, que daba 8 h sin refresh, sin
+`org_id` en los claims —la RLS no podía acotar por organización—, sin bloqueo y sin registro de
+intentos), `api/ajustes.py`, `api/tareas.py` (higiene de sesiones), `caddy/Caddyfile*`,
+`docker-compose.yml`, `.env.example`, `SEGURIDAD.md`, `LEEME.md` §10, `MIGRACION.md`.
+
+**Falta y bloquea el deploy**: elegir el host (sigue pendiente) y decidir dónde vive el portal (dominio
+propio vs `*.vercel.app` — cambia la configuración de la cookie).
+**Falta y no bloquea**: Realtime (polling 5-10 s mientras tanto, `MIGRACION.md` §5), push VAPID,
+reporte PDF. **Para @verificador**: correr `test_aislamiento.py` contra base real y los pasos 5 y 6 de
+`API_PORTAL.md` §8 (token basura y sin token → 401) antes de darle acceso a ningún cliente.
