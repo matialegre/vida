@@ -231,3 +231,246 @@ propio vs `*.vercel.app` — cambia la configuración de la cookie).
 **Falta y no bloquea**: Realtime (polling 5-10 s mientras tanto, `MIGRACION.md` §5), push VAPID,
 reporte PDF. **Para @verificador**: correr `test_aislamiento.py` contra base real y los pasos 5 y 6 de
 `API_PORTAL.md` §8 (token basura y sin token → 401) antes de darle acceso a ningún cliente.
+
+## 2026-09-02 (b) — TERMOVIGÍA: ruta Windows nativo + NOTIFICADOR (cambio de arquitectura)
+Dos encargos encadenados. **Nada se ejecutó contra la nube. Sin commit.**
+
+**1) Docker no es viable en la máquina destino.** El diagnóstico de allá: SVM
+deshabilitado en firmware → habilitar Docker exige BIOS + reinicio de la máquina que corre
+el ERP de 13 locales. Descartado con razón. Lo que SÍ hay: PostgreSQL 18 como servicio
+(data dir `D:\ERP MUNDO OUTDOOR\BASE DE DATOS`, puerto 2048, `max_connections=100` con ~40
+backends del ERP), Caddy por winget, Python, 80 y 443 libres. Escrita la **segunda ruta de
+despliegue** en `servidor\WINDOWS_NATIVO.md` + `servidor\windows\` (13 scripts .ps1). La de
+Docker NO se tocó: sigue siendo la buena para VPS/mini PC Linux, y `LEEME.md` ahora abre con
+un índice de **dos arquitecturas × dos rutas**.
+
+**2) A mitad de tarea, cambio de prioridad de Matías que simplifica todo**: el motivo real
+del servidor propio era **poder avisar por WhatsApp y mail**. No quiere ser el servidor
+público. Arquitectura de arranque:
+`equipos → Supabase → esta máquina TIRA (solo salientes) → avisa + copia local`.
+**Cero puertos abiertos, cero certificado, cero dominio, cero IP fija.** Todo Caddy/TLS/
+firewall entrante quedó recortado a §9 "para cuando se quiera exponer" (no borrado).
+
+**Decisiones con fundamento escrito**
+- **Postgres: segundo cluster con `initdb` sobre el binario de PG 18 del ERP** (no instalar
+  PG 16 aparte). Tabla comparativa en §2: lo que se evita es **mantener dos versiones de
+  Postgres** en la misma máquina; el precio es que comparten los .exe (un upgrade del ERP
+  arrastra, pero es evento planificado). Data dir `D:\Termovigia\pgdata`, puerto **5433**,
+  servicio `termovigia-pg` con `pg_ctl register` + `sc.exe failure` (3 reintentos), cuenta
+  `NT AUTHORITY\NetworkService`, y **`listen_addresses='localhost'` + `pg_hba` solo
+  127.0.0.1/::1 scram-sha-256 desde el minuto cero**.
+- **Tres redes independientes contra el error irreversible** (escribir en el cluster del
+  ERP): `preflight_windows.ps1` sale **2** si el data dir es / contiene / está contenido en
+  el de un servicio existente (lo saca del `ImagePath` `-D "…"`), si la ruta menciona
+  ERP / BASE DE DATOS, o si el puerto es 2048/8000/8010/8050/3456; `migrar.ps1` pregunta
+  `SHOW data_directory` antes de migrar; `AlmacenPostgres` lo pregunta antes de escribir una
+  fila. Probado acá: exit 2 en los dos casos.
+- **Servicios: Programador de tareas, NO NSSM ni sc.exe.** `sc.exe create` con un .exe común
+  muere con error 1053 (no es service-aware); NSSM es una dependencia más que no está. Se
+  sigue el patrón `ERP_Watchdog_8000` que Matías ya mantiene: `TV_Notificador` (al inicio),
+  `TV_Watchdog` (cada 5 min, **verifica 15 s después de arrancar**), `TV_Backup` (3:30).
+  Solo toca tareas `TV_*`.
+- **PostgREST SÍ tiene binario Windows** (verificado contra la API de releases): se fija
+  **v12.2.3**, la misma versión que el compose →
+  `https://github.com/PostgREST/postgrest/releases/download/v12.2.3/postgrest-v12.2.3-windows-x64.zip`
+  (ojo: el asset cambió de nombre — hasta v14 `-windows-x64`, desde v16 `-windows-x86-64`;
+  la última es v16.2). Se configura **solo por `PGRST_*`** (la doc dice que arranca sin
+  archivo de configuración) → ninguna contraseña de la base en disco. No hizo falta
+  alternativa; si no la hubiera, el trabajo extra sería exponer los GET del portal en el api
+  propio (≈6-8 h).
+
+**El notificador (`servidor\notificador\`, lo que ahora importa)**
+- `origen.py` tira de Supabase por PostgREST con `urllib` (cero dependencias nuevas).
+  **Marca de agua con solape de 120 s**: cubre la fila insertada con `created_at` anterior a
+  nuestro corte (reloj atrasado / commit tardío) que un `>` estricto se comería. Repetir es
+  inofensivo porque el guardado es `ON CONFLICT DO UPDATE`: **idempotente por construcción**.
+  La marca **se avanza al final**; si muere en el medio, se rehace el tramo.
+- `almacen.py` guarda **`espejo.filas(tabla, clave, orden, datos JSONB)`** en vez de tablas
+  espejo columna a columna. Motivo: el esquema de la nube cambia (el firmware ya manda 7
+  columnas que no estaban en el repo) y una copia con 40 columnas se rompería justo cuando
+  más se la necesita. Además `marcas`, `estado`, `entregas`, `descartes`, `vueltas`.
+- `reglas.py` (lógica pura): **silencio 30 min por (equipo, tipo)** —con excepción: una
+  alerta **más grave atraviesa** el silencio, que "puerta abierta" no tape "temperatura
+  crítica"—, **agrupación 120 s** en un solo mensaje, y **techo 6/hora por equipo** con
+  **un** aviso de contención. Se registra también **por qué NO salió** cada aviso
+  (`espejo.descartes`).
+- Canales con una sola interfaz y los reintentos en la clase base: `telegram.py`,
+  `correo.py` (SMTP; gotcha de la contraseña de aplicación de Gmail documentado),
+  `whatsapp.py` (POST HTTP genérico configurable). **Un canal se apaga vaciando su variable
+  del `.env`**, y hay test que lo fija. Si ningún canal entregó, **no se marca como avisado**
+  → se reintenta ("no salió" ≠ "se perdió").
+- `latido.py`: healthchecks.io (Hobbyist gratis). **El ping de éxito va DESPUÉS de una
+  vuelta buena**, nunca al principio: si no, un proceso que arranca y falla siempre seguiría
+  reportando "vivo".
+- `probar_canales.py`: un mensaje real por canal, distinguiendo "no configurado" / "falló
+  con este error" / "el servidor lo aceptó — andá a mirar que haya llegado".
+
+**HALLAZGOS**
+- **`delivered_via` NO existe** en `supabase/SETUP_COMPLETO.sql`: hay `telegram_sent`,
+  `sms_sent`, `push_sent` booleanos. El registro fino de por qué canal salió cada aviso vive
+  en `espejo.entregas`; opcionalmente se marca el booleano en la nube
+  (`NOTI_MARCAR_EN_NUBE`). Agregar `delivered_via` = migración nueva cuando se quiera.
+- **`core.autocrlf=true`** en el repo: un clon en Windows tiene los `.sql` con CRLF, y
+  `api/base.py` hashea el texto **normalizado** (Python abre en modo texto). `migrar.ps1`
+  replica esa normalización (`Get-Sha256Migracion`); sin eso, migrar por psql y después
+  arrancar el api daría "la migración cambió después de aplicada".
+- **Riesgo WhatsApp, con datos** (WebSearch 2026-09-02): automatizar una línea personal
+  (whatsapp-web.js / Baileys) viola los ToS y Meta banea; el detector 2026 suma el
+  **contador de mensajes sin respuesta**, que es el perfil exacto de un aviso de
+  temperatura; ~68 % de los negocios con herramientas no oficiales reportan al menos un
+  bloqueo en 12 meses. **Ese número está publicado en el sitio y en el folleto.** Oficial =
+  WhatsApp Business Cloud API con plantillas **utility**: Argentina ≈ **USD 0,0120 por
+  conversación de 24 h** (marketing 0,0618, auth 0,0220) y **desde el 1-oct-2026 Meta cobra
+  por mensaje**, no por ventana. **Recomendación: Telegram + mail como columna vertebral,
+  WhatsApp como extra apagable**, y API oficial cuando haya abonos que la paguen. Escrito en
+  `WINDOWS_NATIVO.md` §4.5.
+- **Contrato de OpenClaw (:3456) sigue SIN CONFIRMAR**: los 7 puntos a preguntar están en el
+  encabezado de `notificador/canales/whatsapp.py`, incluido el más traicionero — **cómo se
+  entera uno de que la sesión de WhatsApp se cayó**, porque estos servicios contestan 200 y
+  no mandan nada durante días (el adaptador ya trata un 200 con `"error"` en el cuerpo como
+  fallo).
+
+**Recomendaciones sobre la máquina del ERP (§11 del documento)**
+- `listen_addresses='*'` en el Postgres del ERP → pasar a `'localhost'`. **Hoy no hay
+  exposición real** (pg_hba solo loopback + sin regla de firewall para el 2048): es una capa
+  de defensa caída. **Requiere reiniciar el servicio** = segundos de corte para los 13
+  locales → ventana planificada. **Higiene, no urgencia.** Termovigía no lo toca.
+- **Router: borrar las redirecciones de 9000 y 9050**, que apuntan a esa máquina donde no
+  escucha nada. Hoy inofensivas; el día que cualquier proceso levante algo en 9000 queda
+  publicado en internet sin que nadie lo decida. No requiere ventana ni reinicio.
+
+**Evidencia (en ESTA máquina, que es Windows pero NO tiene el ERP; todo read-only salvo
+archivos propios)**: los **13 `.ps1` pasan el parser de PowerShell**;
+`preflight_windows.ps1` corrido de punta a punta (detecta correctamente que acá faltan PG y
+Caddy, y **aborta con exit 2** tanto con `TV_PGDATA` apuntando al ERP como con
+`TV_PG_PUERTO=2048`); `watchdog.ps1` y `copiar.ps1` ejercitados en sus caminos de falla con
+`TV_RAIZ` desviado al scratchpad (no se tocó nada de esta PC). **109 tests en verde**: 32
+nuevos del notificador (`python -m unittest discover -s notificador/tests -t .`) — que no
+duplique, que no pierda si estuvo apagado, que el solape se aplique, que el aviso no se
+marque si ningún canal entregó, que un canal caído no impida el otro, que un mensaje
+multilínea con comillas no rompa el JSON de WhatsApp — más los 77 de `api/tests`, que
+siguen pasando. **No hay Postgres ni Caddy acá**: `crear_cluster.ps1`, `migrar.ps1`,
+`instalar_postgrest.ps1`, `restaurar_prueba_nativo.ps1` y `tests.ps1 -ConBase` **no se
+corrieron contra una base**.
+
+**Para @verificador, en la máquina destino**: `preflight_windows.ps1` (esperar 0) →
+`crear_cluster.ps1` → `migrar.ps1` → **`tests.ps1 -ConBase`** (los 25 de aislamiento entre
+clientes son el punto que más importa) → `probar_canales.py` → `servicio.py --una` →
+`restaurar_prueba_nativo.ps1`. Nada se declara producción antes de eso.
+
+**Archivos**: `servidor\WINDOWS_NATIVO.md` (nuevo); `servidor\windows\` (13 .ps1 nuevos:
+config, preflight_windows, crear_cluster, instalar_api, instalar_postgrest, migrar,
+arrancar_notificador, watchdog, instalar_tareas, copiar, restaurar_prueba_nativo, firewall,
+tests); `servidor\notificador\` (nuevo: ajustes, origen, almacen, reglas, latido, servicio,
+probar_canales, canales/{base,telegram,correo,whatsapp}, tests/{reglas,canales,vuelta});
+`servidor\caddy\Caddyfile.windows` (nuevo); tocados `servidor\.env.example` (sección
+`NOTI_*`) y `servidor\LEEME.md` (índice de las dos arquitecturas y las dos rutas + nota en
+§1).
+
+## 2026-09-02 (c) — TERMOVIGÍA: PRIMER DESPLIEGUE REAL contra una base (Neon)
+Hasta hoy todo `servidor/` se había verificado con lógica pura porque **no había
+base**. Ahora sí: proyecto Neon `Termovigia` (`rough-sunset-46764733`,
+`aws-sa-east-1`, plan gratuito, **PostgreSQL 18.6**). Documento nuevo:
+`C:\Proyectos\frioseguro\servidor\NEON.md`. Nada de secretos commiteado: el DSN
+sale de `neon connection-string` y vive en `servidor\.env` (gitignoreado).
+
+**LO QUE SE HIZO (todo verificado, no declarado)**
+- **8 migraciones aplicadas en orden** (000→070) con el corredor de siempre
+  (`api/base.py`, mismo camino que Docker y Windows nativo — no se escribió un
+  segundo corredor). **29 tablas** en `public`, las 28 de negocio con RLS **y**
+  policy; 3 en `auth`; 3 vistas. Sin `psql` en la máquina: venv + `psycopg[binary]`.
+- **25/25 tests de aislamiento entre clientes en verde** contra Neon
+  (`api/tests_base/`, 47 s). Incluye el `test_00` que prueba que `SET ROLE`
+  actúa de verdad — sin eso los otros 24 pasarían en falso.
+- **Aislamiento probado también por HTTP**, con la api levantada contra Neon:
+  José ve sus 2 cámaras, Ana la suya; José pidiendo el historial de la cámara de
+  Ana → **404**; auditor haciendo PATCH de umbrales → **403**; sin token y con
+  token basura → **401**. Login completo: 401 con clave mala, 200 + JWT con la
+  buena, `/yo` devuelve identidad + organización + permisos.
+- **Datos de demo**: 2 clientes (carnicería con 2 cámaras / pescadería con 1),
+  1 equipo cada uno **con credencial bcrypt propia**, 97 lecturas de 24 h cada
+  uno, alerta resuelta y evento de descarche. 4 personas (2 owners, 1 auditor de
+  bromatología, 1 admin). Script nuevo `herramientas/datos_demo.py`.
+
+**TRES BUGS QUE SOLO PODÍA ENCONTRAR UNA BASE DE VERDAD**
+1. **`060_tareas_periodicas.sql` NO aplicaba**: `WITH viejos AS (SELECT … LIMIT n
+   UNION ALL SELECT … LIMIT n)` es SQL inválido (`syntax error at or near
+   "UNION"`; el LIMIT se lee como límite de la UNION entera). **Esa migración no
+   habría entrado en ninguna base, nunca.** Corregida con paréntesis por rama.
+   No viola append-only: no estaba aplicada ni registrada en ningún lado. Las
+   000-050 ya habían quedado aplicadas, así que la base nunca estuvo a medias.
+2. **El sembrado de los tests chocaba con el trigger de fan-out**: el `INSERT` en
+   `readings` dispara `repartir_lectura_por_sonda()`, que ya escribe
+   `probe_readings` con `ts = created_at`; dentro de una transacción `NOW()` es
+   siempre el mismo instante → el insert manual siguiente violaba la PK
+   `(probe_id, ts)`. 10 de los 25 tests morían en `setUp`. Ahora el test
+   **verifica el fan-out** en vez de duplicarlo.
+3. **Agujero de seguridad en `api/principal.py`**: la contraseña del rol
+   `authenticator` caía por defecto a **la del dueño sacada del DSN**. En Docker
+   es inofensivo; en Neon, con endpoint público, le regalaba credencial de login
+   a un rol que puede `SET ROLE service_role` (BYPASSRLS). Ahora solo se pone si
+   viene `POSTGRES_PASSWORD` explícita. Además `ALTER ROLE authenticator NOLOGIN`
+   en Neon: los 4 roles quedaron sin login y sin contraseña.
+
+**LO QUE NEON NO BANCA (dicho, no tapado)**
+- **`pg_cron` figura en el catálogo pero es inservible**: sólo se puede crear en
+  la base `postgres` y nuestros datos están en `neondb`. Cero cambios: `060` ya
+  había decidido planificar desde `api/tareas.py`. Verificado corriendo:
+  `hourly_stats: 12 filas` + retención, solas, al arrancar.
+- **Sin superusuario**, pero `neondb_owner` es miembro de `neon_superuser`
+  (CREATEROLE + BYPASSRLS) → `CREATE ROLE … BYPASSRLS`, `pgcrypto`, `citext`,
+  `SECURITY DEFINER` y `SET ROLE` funcionan todos. Nada de `ALTER SYSTEM` ni
+  `shared_preload_libraries`, que no se usan.
+- **PG 18.6 y no 16**: las 8 migraciones aplicaron sin un cambio (bcrypt de
+  pgcrypto incluido). Deuda anotada: `docker-compose.yml` fija `postgres:16` →
+  un `pg_dump` de Neon no restauraría ahí.
+- **Sin PostgREST** en esta ruta: el firmware tendría que entrar por
+  `POST /ingest`, no por `/rest/v1`. **Neon reemplaza el contenedor de Postgres,
+  no el stack**: api, PostgREST y Caddy siguen necesitando un host.
+- `LISTEN/NOTIFY` **sí** funciona en el endpoint directo (sirve para el SSE que
+  falta), pero mantener esa conexión abierta es justo lo que impide que la base
+  se suspenda (ver abajo).
+
+**LÍMITES DEL PLAN GRATUITO, CON NÚMEROS MEDIDOS** (`NEON.md` §7)
+Medido sobre la base real: `readings` 155,8 B de columnas (~300 B/fila con
+cabeceras e índices), `probe_readings` 79,0 B (~200 B/fila). Esquema + demo =
+10,9 MB. Techo duro **512 MiB por rama** (`branch_logical_size_limit_bytes`),
+PITR **6 h**, 10 ramas, 5 GB de transferencia.
+- **5 equipos cada 60 s = ~5,1 MB/día ≈ 155 MB/mes → ≈ 98 días (3 meses) hasta
+  chocar.** Con 1 sonda por equipo, ~4,5 meses.
+- **La retención por defecto NO entra**: en régimen, 90 días de `readings`
+  (194 MB) + **400 días de `probe_readings` (1 152 MB)** = 1,35 GB = 2,6× el
+  límite. Con 30/90 días queda en ~335 MB (68 %) y es sostenible; los 13 meses
+  de HACCP los cubre `hourly_stats` (~11 MB/año), que no se borra.
+- **El límite que muerde ANTES es el cómputo**: mínimo 0,25 CU y la base se
+  suspende sola, pero el pool (`min_size=2`) + `tareas.py` cada 60 s la
+  mantienen despierta 24/7 → 0,25 × 730 h = **182,5 CU-h/mes** contra los ~100
+  (o 50, según la revisión de precios de ago-2026 — **confirmar en la consola**)
+  del plan gratuito: la bolsa se agota en **~2 semanas**. Gratis alcanza para
+  demo/desarrollo (api levantada a demanda); producción 24/7 = **Neon Launch
+  USD 19/mes** (10 GB + PITR 7 días). Contra `COSTOS.md`: sigue ganando Supabase
+  Pro (USD 25) para producción porque trae Auth/Storage/Realtime/Edge; Neon gana
+  como demo/staging gratis y como plan B con datos propios.
+
+**Gotcha que costó una corrida**: el DSN de Neon trae un `&`
+(`channel_binding`). Sin comillas en el `.env`, un `set -a; . .env` lo corta ahí
+y el proceso se queda en "esperando la base (1/30)…" sin decir por qué.
+Documentado en `.env.example` y en `NEON.md` §1.
+
+**Restauración**: `neon branches create` antes de tocar nada (copy-on-write,
+instantáneo, gratis) = el reemplazo directo de "probar la migración contra una
+copia" que pide la doctrina; `neon branches restore production ^self@<ts>` para
+PITR de 6 h. **Falta y no se hizo**: `pg_dump` fuera de Neon — no hay
+herramientas cliente de PG 18 en esta máquina, y **un backup que no se restauró
+es un archivo**.
+
+**Archivos**: `servidor/NEON.md` (nuevo), `servidor/herramientas/datos_demo.py`
+(nuevo); tocados `servidor/sql/060_tareas_periodicas.sql` (fix del UNION),
+`servidor/api/principal.py` (contraseña de `authenticator`),
+`servidor/api/tests_base/test_aislamiento.py` (fan-out),
+`servidor/herramientas/crear_usuario.py` (lee `TV_DSN` del `.env`),
+`servidor/LEEME.md` (tres rutas), `servidor/.env.example` (sección Neon),
+`QUE_FALTA.md` (ítems 3 y 12).
+**Para @verificador**: `TV_DSN_TEST=<neon> python -m unittest discover -s
+api/tests_base -t api -v` (esperar 25 OK) + los pasos de `API_PORTAL.md` §8.
+Nada es producción hasta eso y hasta que se decida dónde vive el dato real.
