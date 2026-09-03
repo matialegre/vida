@@ -13,7 +13,7 @@ sobre el **eje de mando del REDLER RPRB3** —una por cada cadena, en posiciones
 sobre el equipo en marcha. Todos los números que siguen están **medidos muestra por muestra sobre
 los registros crudos**, que quedaron archivados sin modificación.
 
-**Los dos hechos centrales:**
+**Los tres hechos centrales:**
 
 **a) Con el REDLER funcionando se registraron dos eventos de cadena que se suelta —13:26:04 y
 13:35:33— y el sistema los declaró solo, en 4,4 y 2,8 segundos.**
@@ -21,20 +21,35 @@ los registros crudos**, que quedaron archivados sin modificación.
 En el primero, la señal empieza a moverse a las 13:26:03,3 y el receptor declara ALERTA a las
 13:26:07,8: **4,4 segundos**. El escalón mecánico dura 3,4 s, así que la alerta sale **1,0 segundo
 después de que el fenómeno terminó de producirse**. En el segundo evento, 2,8 s desde la mitad del
-escalón. Y algo que conviene decir: **ese tiempo lo fija nuestra propia configuración**, que exigía
-1,5 s de persistencia antes de alarmar para no alarmar por vibración. **Es un parámetro ajustable,
-no un límite del sensor.**
+escalón. Esos 4,4 s son **el equipo de febrero**: un prototipo alimentado de la red que medía en
+forma continua, con un cable de datos a una computadora al lado de la máquina. Es la prueba de que
+**el método detecta la falla**, y por eso está medido y escrito acá.
 
 **b) Por qué funciona: la galga del lado que se suelta sube ~19 mV y la del otro lado casi no se
 entera (+4 mV).** No hace falta interpretar una imagen: la máquina se desbalancea y el desbalance
 aparece en la diferencia entre las dos señales.
+
+**c) Lo que compromete el equipo definitivo, el que se instala en octubre: avisa dentro de los
+5 minutos de producido el corte, las 24 horas, sin que nadie tenga que mirar nada.**
+
+El equipo definitivo no lleva cables: va a pila, atornillado a la máquina, y **mide cada 5 minutos**
+en lugar de medir en forma continua. Ese es un intercambio elegido a propósito, y el fundamento es
+el propio comportamiento de la falla: **una cadena cortada no es un destello, es una condición que
+queda.** La carga se redistribuye sobre el eje y **se mantiene así hasta que alguien la repara** —
+en los datos de ustedes, el desbalance se sostuvo **22 minutos** sin volver solo. Detectarla dentro
+de los 5 minutos siguientes no cambia nada operativo, y a cambio **el nodo dura más de un año con
+una pila y no hay que tender un solo cable sobre una máquina en movimiento**. Si en algún punto de
+la planta hicieran falta segundos en lugar de minutos, es una decisión de diseño que se toma con
+números sobre la mesa (se gana tiempo de aviso y se paga en autonomía o en cableado): díganlo y lo
+evaluamos.
 
 **Los números, sin adornos:**
 
 | | |
 |---|---|
 | Eventos de cadena registrados con el motor en marcha | **2** (13:26:04 y 13:35:33) |
-| Latencia de detección | **4,4 s** y **2,8 s** — limitada por la persistencia configurada (1,5 s), ajustable |
+| Latencia **medida** (equipo de febrero, medición continua con cable) | **4,4 s** y **2,8 s** |
+| **Compromiso del equipo definitivo** (a pila, sin cables) | **aviso dentro de los 5 minutos**, las 24 horas, automático |
 | Amplitud del evento | galga del lado suelto **+19 mV**, la otra **+4 mV** |
 | Separación señal / ruido (motor en marcha) | **2,2×** por muestra suelta · **6,9×** promediando 2 s · **9,9×** promediando 10 s |
 | **Falsas alarmas** | **0 en 8.136 muestras = 27,2 minutos** de operación normal, en 5 tramos, uno de ellos de **6,3 min con el motor en marcha** |
@@ -86,12 +101,16 @@ inspección visual general de una línea, es una herramienta válida.
    filtros, mantenimiento periódico de limpieza) que hay que instalar y sostener.
 3. **La galga mide donde el eje se deforma; la cámara mira la consecuencia.** El sensor está pegado
    sobre el eje de mando, en el punto de engrane de la corona — donde la propia simulación del
-   GIMAP muestra que el eje más se deforma. Cuando una cadena deja de tirar, la carga se
-   desbalancea **en ese mismo instante** y el desbalance aparece en la señal. La cámara puede
-   detectar la cadena rota una vez que la rotura ya es visible.
-4. **La galga no depende de la luz, del polvo, ni de tener línea de vista.** No hay iluminación que
+   GIMAP muestra que el eje más se deforma. Cuando una cadena deja de tirar, la carga se desbalancea
+   sobre el eje **y queda desbalanceada hasta que se repara**: es una condición física medible en
+   cualquier momento, no un instante que hay que estar mirando para no perdérselo.
+4. **Y sobre todo: no hace falta que haya alguien mirando.** Una cámara resuelve el problema si hay
+   una persona atenta a la pantalla, o si se le suma un software de visión que es justamente lo que
+   falla con polvo, luz cambiante y vibración. Nuestro nodo **avisa solo, a las tres de la mañana,
+   con la planta vacía** — dentro de los 5 minutos de producido el corte.
+5. **La galga no depende de la luz, del polvo, ni de tener línea de vista.** No hay iluminación que
    ajustar ni encuadre que se desplace con la vibración del equipo.
-5. **Nuestro sistema avisa cuando se queda ciego.** En los ensayos se apagó a propósito uno de los
+6. **Nuestro sistema avisa cuando se queda ciego.** En los ensayos se apagó a propósito uno de los
    nodos y el receptor avisó **a los 10 segundos** (es el tiempo de espera de enlace configurado;
    se puede acortar). Una cámara tapada por polvo sigue mandando imagen —una imagen gris— y no
    avisa que dejó de ver, salvo que se le agregue la función de detección de oclusión mencionada
@@ -233,6 +252,24 @@ iniciativa propia suma credibilidad; que lo encuentre un ingeniero de ellos, la 
 en 4 h 44 min**, que es 4-5 veces el evento que hay que detectar (16-19 mV). Hasta acotar esa
 deriva, el detector por umbral absoluto sobre una sola galga es inusable y el diferencial A−B
 necesita re-cero periódico. Está anotado en `dominios/muestreador.md`.
+
+**LOS 5 MINUTOS — lo más importante que Matías tiene que llevar sabido a la reunión.**
+Los **4,4 s y 2,8 s de la §1 son del equipo de febrero**: alimentado de la red y midiendo continuo.
+**El nodo que se instala en octubre duerme 300 s entre mediciones** para durar más de un año con
+pila, y el despertar por interrupción **no está implementado** → la resolución real de detección
+del sistema que vamos a entregar es de **hasta 5 minutos**. Por eso el documento separa las dos
+cosas y **compromete 5 minutos, no 4,4 segundos**. Si prometemos 4,4 y entregamos 300, perdemos lo
+único que nos queda, que es la credibilidad.
+- **Si Dreyfus dice que necesita segundos y no minutos: es un cambio de diseño con costo de
+  autonomía** (medir más seguido, o despertar por interrupción, o alimentar el nodo desde la
+  planta y tender cable). Se evaluúa con números, no se promete en la reunión. **La decisión es de
+  ellos, informada** — y tiene que tomarse mañana o en los días que siguen, **no ser una sorpresa
+  nuestra en octubre**. En la §1 quedan invitados explícitamente a plantearlo ("díganlo y lo
+  evaluamos").
+- Si alguien pregunta por qué 5 minutos, la respuesta es la que ya está escrita en el documento y
+  es verdadera: **la falla persiste** (22 minutos en sus propios datos), así que el aviso dentro de
+  los 5 minutos no cambia nada operativo y es lo que permite que no haya cables sobre una máquina
+  en movimiento.
 
 **Huecos que faltan cerrar antes de imprimir (Matías):**
 1. **Las dos figuras van SÍ o SÍ en el PDF**: `01_deteccion_evento_principal.png` y

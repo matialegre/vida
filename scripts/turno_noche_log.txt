@@ -2322,3 +2322,37 @@ La decisión salió del handler a `logica/episodios.py`, módulo puro (stdlib, l
 **Dos cosas para un minuto tuyo:** encontré 4 hallazgos colaterales en la misma cadena que **no toqué** (el más feo: `probe_readings.org_id` nace NULL e invisible **para siempre** si el equipo reporta antes de asignarse a una organización — o sea, recién flasheado en el taller); y frioseguro tiene `TERMOVIGIA_KIT_V1.zip` y `TERMOVIGIA_SERVIDOR.zip` sin trackear que no deberían entrar al repo.
 ===== FIN mi� 02/09/2026 22:14:06,25 ===== 
 ===== TURNO NOCHE jue 03/09/2026  2:00:01,82 ===== 
+Listo. Una tarea, bien hecha.
+
+**→ lo hice yo (worker nocturno), aplicando doctrina de `@firmware` (código del nodo) y `@energia` (presupuesto de consumo). El hallazgo que no me correspondía decidir se lo dejé anotado a `@energia`.**
+
+## Tarea elegida: `C:\Proyectos\galgas` — firmware del nodo v3
+
+Elegí galgas porque las dos noches anteriores fueron frioseguro y datalogger, es P0 de octubre, la reunión con Juliano es el viernes 4, y `firmware/nodo_galga_v3/` es código escrito anteanoche con la rev D que **nadie había auditado** — ninguno de los 29 branches nocturnos abiertos de galgas lo toca.
+
+## Lo que encontré
+
+`vccProbePreparar()` abre el ADC del ATmega (`power_adc_enable()` + `ADEN`) y **nadie lo cierra**. En todo el firmware hay dos `power_adc_enable` y un solo `power_adc_disable`; el que falta es el del sondeo del riel.
+
+El ATmega no apaga el ADC solo en power-down (datasheet §14.5). O sea: el nodo dormía los **30 s de cada sondeo de `EST_ARRANQUE_FRIO`** con el convertidor y el bandgap polarizados. Ese camino se entra por `PORF` — el momento exacto de la instalación — y se repite hasta converger: típico ~75 s, **hasta ~216 s con celda pasivada**. El consumo parásito es del **mismo orden que los ~0,19 mA con los que el diodo recarga el supercap**: la rutina que existe para esperar a que el capacitor cargue se lo estaba comiendo mientras esperaba.
+
+Le pega justo a la función estrella de anteanoche, la que iba a hacer que "el instalador ya no espere, mida ni interprete". Y es la cuarta vez en tres días del mismo patrón en este nodo: compila, no cambia ninguna trama, anda perfecto en el banco, falla arriba del REDLER.
+
+## El arreglo
+
+El apagado va en `dormirSegundos()` — el único chokepoint por el que pasan **todos** los sleeps del nodo — y no en el que prende el ADC. Es la misma decisión que ya habías tomado con `rafagaPermitida()`: el guard en el punto único, para que el consumidor que se agregue mañana no lo saltee por olvido.
+
+## Verificado sin hardware
+
+- `tools/check_sleep_adc.py` (nuevo): **17 checks, 0 fallas**; **4/4 mutantes muertos**. El primer mutante reproduce el estado de `main` y el check lo **reprueba** — habría cazado el defecto, no sólo lo acompaña.
+- Compilación **real** de las dos variantes de encapsulado, sin warnings: +20 B de flash, 0 de RAM.
+- Desensamblado de `dormirSegundos()`: las escrituras a `ADCSRA` y `PRR` sobreviven a `-Os` y quedan antes del lazo (lección `g_mcusr_boot`).
+- `check_pinout_nodo_v3.py` sin regresión.
+
+**Pendiente de banco:** medir con amperímetro cuánto costaba de verdad (la cifra sale del datasheet, no de esta placa) y cronometrar un arranque en frío con celda pasivada. Se hace junto con la medición que ya debe `@energia` para la autonomía.
+
+**Hallazgo abierto que NO toqué:** los sondeos transmiten a +20 dBm sin pasar por `rafagaPermitida()`, así que al salir del arranque en frío el nodo dispara medición+TX pegada a la TX de confirmación. Probablemente no muerda con pila nueva, pero eso lo decide `@energia` con la curva de recarga — quedó anotado, sin cambiar comportamiento.
+
+**Branch:** `nocturno/local-2026-09-03-el-adc-que-no-se-apaga` (`fcaf2b9`, pusheado). Merge limpio.
+**Informe:** `diario/nocturno-local-2026-09-03.md` · **MATI-HQ** commiteado y pusheado (`7caff14`), `QUE_FALTA.md` de galgas marcado EN BRANCH.
+===== FIN jue 03/09/2026  2:10:23,94 ===== 

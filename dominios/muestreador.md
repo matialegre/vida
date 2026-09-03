@@ -13,6 +13,8 @@ Doc de dominio + bitácora. El agente lo lee al arrancar y lo actualiza al cerra
 |---|---|---|---|---|---|
 | galgas-supabase | ráfagas (ver act.md) | — | agregados | heredado legacy | pre-2026-07 |
 | galgas — detector A−B | 5 Hz alcanza (registro real de campo) | media móvil **2 s** + histéresis | — | Con motor ON el ruido por muestra pica 21,5 mV y pisa el evento (12–15 mV); promediando 2 s el peor ruido cae a 4,86 mV vs. 9,13 mV del evento. Umbral instantáneo = falsas alarmas. | 2026-09-02 |
+| galgas rev D — nodo ATmega+ADS1220 | **20 SPS**, ráfaga de **60 conversiones (3 s) cada 300 s** | ventana = la ráfaga; agregados media+σ+d_min/d_max | rechazo simultáneo 50/60 Hz del ADS1220 + filtro RC de entrada (fc dif. 796 Hz) | A 20 SPS el ADS1220 tiene su mejor ruido **y** el notch de red: 0,060 µε rms por conversión, **0,0077 µε** la media de 60. El fenómeno es de 0,397 Hz. **Muestrear 25× más lento que la gen-2 da 10× menos ruido.** Ciclo útil 1 % ⇒ se detecta **cambio de estado permanente**, no el transitorio (latencia hasta 300 s). | 2026-09-03 |
+| galgas rev D — detector | 1 valor por ciclo (300 s) | línea de base exponencial **τ ≈ 30 min (6 ciclos)**, **congelada** cuando el detector se arma; persistencia **3 ciclos** | — | El vagabundeo del cero A−B **no se separa del evento por frecuencia** (7,7 mV en 30 s y 10 mV en 2 min, contra un evento de 10,23 mV): se separa porque **el evento congela su propio cero**. Parámetros PROVISORIOS hasta `ENS-DERIVA` (DR-2) y P7. | 2026-09-03 |
 
 ## Bitácora
 - 2026-07-07 — Agente creado por Claude Fable. Próximo paso sugerido: banco con galga real + INA333, inyectar deflexión conocida y comparar contra field_captures.
@@ -221,3 +223,271 @@ calibración cableado el 2026-08-28 (`cal_model.h`) — el `k` real sigue sin me
   **PENDIENTE de medicion (marcado, no inventado):** (1) **La** — es el UNICO parametro sin respaldo experimental, se asumio 30 mH (rango 20-40); puente RLC o escalon a rotor trabado. (2) **Ke** con tacometro (`herramientas\medir_ke.py` ya hace el procedimiento). (3) **Un ensayo de LAZO ABIERTO** con `duty manual` + `TRAZA` a 50 Hz: con eso K y tau_m salen por respuesta al escalon sin depender del estimador, y de paso se mide el rizado real del lazo interno para confirmar el hallazgo en hardware.
 
   Otros numeros del banco: el estimador FEM se corre **+21,5 RPM (3,6 %)** si Ra sube 20 % por temperatura (coincide con la teoria I*dRa/Ke = +22 RPM) y ese error se transfiere entero a la velocidad real; rechazo de perturbacion 3 N*m: lazo abierto -95 RPM permanentes vs -1,0 RPM cerrado; sin integrador e_ss = 35 RPM ante 1,2 N*m; sin anti-windup 23,3 s de recuperacion contra 5,4 s. Rango de la placa: **61-310 V, 0,19-12 A, La >= 7 mH, tau_m >= 100 ms, solo excitacion independiente o iman permanente**. La amoladora Bosch pasa los cinco limites electricos y aun asi queda afuera por ser motor SERIE (Ke = f(i) rompe el estimador).
+
+## 2026-09-03 — FRIOSEGURO / CERRO MORO: hasta dónde llega un bus 1-Wire (la pregunta que define el precio)
+Entregable para cotizar el viernes 5-sep (6 reefers, 5 activos, Panamerican Silver, Santa Cruz).
+`C:\Proyectos\frioseguro\hardware\ALCANCE_1WIRE.md` (736 líneas) +
+`C:\Proyectos\frioseguro\hardware\test_1wire_bus\test_1wire_bus.ino`
+(**compila limpio para esp32:esp32:esp32 — 289.572 B, 22 % de flash, 6 % de RAM**).
+Biblioteca chequeada antes de escribir: `C:\Proyectos\biblioteca` **no tiene nada de 1-Wire/DS18B20**.
+
+**EL NÚMERO QUE MANDA — el máster de FrioSeguro está catalogado en 3 m, no en 100.**
+AN148 de Maxim/ADI (*Guidelines for Reliable Long Line 1-Wire Networks*) clasifica los másters y
+"pin de micro pelado + pull-up" tiene **radio y peso de ~3 m**. Los 200 m que todo el mundo cita
+son de otras dos categorías: FET con slew rate + 1 kΩ, o DS2480B con filtro R-C — **ninguna es la
+nuestra**. Y **AN148 declara alcance a 5 V y CAT5**: FrioSeguro corre a **3,3 V**, o sea fuera del
+alcance de la nota; sus números hay que derratearlos, no copiarlos.
+
+**LA CUENTA PROPIA (tau <= 7,2 us) — el límite es el TIEMPO DE SUBIDA, no la caída de tensión.**
+El máster muestrea dentro de los 15 us del flanco; dejando 10 us útiles, con VIH del ESP32 =
+0,75·VDD = 2,475 V ⇒ `tau_max = 10 us / ln(4) = 7,2 us`. Con CAT5 ≈ 50 pF/m + 25 pF por sonda:
+
+| pull-up | C máx | largo máx (2 sondas) | I de hundimiento @3,3 V |
+|---|---|---|---|
+| 4k7 | 1,53 nF | **~30 m** | 0,70 mA |
+| 2k2 | 3,27 nF | ~64 m | 1,50 mA |
+| 1 kΩ | 7,20 nF | ~143 m | 3,30 mA |
+| 680 Ω | 10,6 nF | ~211 m | **4,85 mA — fuera de espec (DS18B20: 4,0 mA @0,4 V)** |
+
+Dos consecuencias: (1) el **"~15 m con 4k7" que ya estaba escrito en `CABLEADO.md §2.3` tiene
+exactamente 2x de margen sobre el límite físico** — está bien puesto, no tocarlo para arriba sin
+medir; (2) **1 kΩ es el piso absoluto a 3,3 V**, bajar de ahí saca a la sonda de su hoja de datos.
+**Lo que NO limita**: la caída resistiva (2 sondas a 100 m = **25 mV**) ni la propagación (100 m
+ida y vuelta = **1,04 us** contra 15 us de ventana). En modo alimentado **la distancia se pierde
+por capacidad y rebotes, no por resistencia** — dato útil para no perseguir el problema equivocado.
+
+**LA ESTRELLA ES LA QUE ROMPE EL BUS, y es justo la que se arma.** AN148 lo dice dos veces en el
+mismo párrafo: *"the unswitched star topology is not recommended, and **no guarantees can be
+made**"*. El mecanismo es el que mata: en estrella **los rebotes recorren el PESO, no el radio**.
+Una base con 3 ramas de 25 m parece de radio 25 m y se comporta como 75 m. "Varias sondas largas
+saliendo de una base hacia distintos reefers" **es literalmente la definición de estrella no
+conmutada**. Salida que da la propia nota si aparecen distancias medias: **switches DS2409** (la
+estrella pasa a comportarse como lineal, una rama por vez) — anotado como plan B, no entra al viernes.
+
+**VEREDICTOS.** (a) 1 base para los 6: **descartar** — estrella grande + **bloqueante duro de
+firmware**: `entrega_scz/firmware/sondas.h` define `SONDAS_MAX 4` y `firmware_modular/config.h`
+`MAX_TEMP_SENSORS 6`; **12 sondas no entran ni con el bus perfecto**. (b) 3 bases de a 2 (la
+propuesta de Andrés): **cotizable, condicionada** — 4 sondas por bus es *exactamente* `SONDAS_MAX`;
+vale si cada rama <= 25 m y si los 2 reefers separados tienen base propia (**pueden ser 4 equipos,
+no 3**). (c) 1 base por reefer: **la correcta, y la única que no depende de ninguna medición**.
+**Conclusión que manda sobre todo: si igual hay que tirar cable, es mucho más seguro tirar 220 V
+y poner una base ahí que tirar el bus.** Llevar energía por 80 m es un problema resuelto; llevar
+1-Wire por 80 m es un problema intermitente, y el producto se vende porque avisa.
+
+**HALLAZGO PROPIO QUE NO SALE EN NINGUNA NOTA DE APLICACIÓN — las tierras.** Cada reefer es un
+contenedor metálico con su propia puesta a tierra, en un campamento con generador. Un cable de
+sonda del reefer A al B ata el GND de la sonda de B al GND del ESP32 de A por un conductor fino de
+CAT5. **Y DQ se mide contra ESE GND**: la diferencia de potencial entre tierras aparece sumada
+directo al dato, y el trenzado no la filtra porque no es modo común. Para mí es **el riesgo
+dominante de esta instalación**, más que la capacitancia — y no se puede reproducir en el banco de
+Bahía Blanca. Es el argumento técnico más fuerte a favor de una base por reefer.
+
+**LO QUE ENCONTRÉ EN EL FIRMWARE (pega en la instalación):**
+- **`firmware_modular/sensors.h` lee por `getTempCByIndex(0)`/`(1)` y fija `sensorData.sensorCount`
+  una sola vez en `initSensors()`.** Con dos sondas, si se cae la del índice 0, **la que sobrevive
+  pasa a ser el índice 0 y se reporta como "Sonda 1" sin que nada avise** mientras "Sonda 2" alerta
+  desconexión: **el número que llega al dashboard es de la otra sonda física**. Aceptable con una
+  sonda, inaceptable con dos. **Todo lo que vaya a Cerro Moro tiene que llevar la línea
+  `entrega_scz` (`sondas.h`, por ROM de 64 bits + NVS), no `firmware_modular`.**
+- **No se puede distinguir "sonda desconectada" de "bus con ruido", y la evidencia se está
+  tirando.** `DallasTemperature::getTempC()` devuelve `-127` tanto por falta de respuesta **como
+  por CRC malo del scratchpad** — `sondas.h` sólo mira el valor final y el comentario del código
+  dice "sin respuesta" cuando también es ruido. **La información existe una capa más abajo**
+  (`readScratchPad()` + `OneWire::crc8()`). Con eso sale un **discriminador de 4 estados**:
+  `reset()`=0 ⇒ **tronco cortado** · ROM ausente del SEARCH con bus vivo ⇒ **sonda desconectada** ·
+  ROM presente + CRC malo ⇒ **bus con ruido** (aviso de mantenimiento, NO alarma) ·
+  **85,00 °C con CRC bueno ⇒ la conversión no ocurrió = el canario del bus demasiado largo**
+  (hoy se descarta en silencio).
+- **`sondasEscanear()` alerta con UN SOLO scan fallido**, cada 30 s = 2.880 scans/día. Con p=3e-4
+  son ~0,9 falsas alarmas por día. **Hace falta histéresis de 3 scans, se elija la topología que se
+  elija.** Un bus marginal no se manifiesta como equipo roto: se manifiesta como equipo que grita
+  al pedo, que es lo que destruye la confianza en un producto de alarma.
+
+**PRUEBA DE BANCO (diseño, sin correr todavía).** Dos decisiones que la hacen viable: **separar la
+conversión de la comunicación** (los 750 ms no son lo que falla; lo que falla es
+`reset+MATCH ROM+READ SCRATCHPAD`, ~7 ms ⇒ 10.000 lecturas en ~70 s en vez de 2 h) y **medir el
+SEARCH ROM**, que AN148 nombra como el juez (*"a network that reliably performs searches can
+generally perform any other 1-Wire function reliably"*). Criterio: **CERO errores** — por regla de
+tres, 0/10.000 sólo permite afirmar p < 3e-4 al 95 %, y con ese p ya hay ~0,9 falsas alarmas/día
+por el punto anterior. Matriz de 8 configuraciones; **la que decide es #4 vs #6: mismo peso (60 m),
+misma electrónica, sólo cambia lineal vs. estrella** — si #4 aprueba y #6 reprueba, la estrella
+queda medida en casa y no citada. Si no hay 60 m de CAT5: **emular con capacitor concentrado**
+(1,5 nF ~ 30 m / 3,3 nF ~ 65 m / 5,6 nF ~ 110 m), **necesario pero NO suficiente** — reproduce el
+rise time y nada más (ni rebotes, ni estrella, ni tierras).
+
+**INCERTIDUMBRE QUE QUEDA DICHA, NO ESCONDIDA:** (1) las distancias **nunca se midieron** — es la
+variable que falta y va como lista de 8 preguntas para WhatsApp en §5 del doc; (2) el banco no
+tiene el ruido de Cerro Moro ni las tierras separadas; (3) el timing del DS18B20 varía con
+temperatura (AN148 §INCORRECT 1-WIRE TIMING) y una sonda a -20 °C no es una sonda a 20 °C; (4) los
+3,3 V están fuera del alcance de AN148. **La prueba sirve para DESCARTAR configuraciones, no para
+GARANTIZAR una** — por eso la recomendación se apoya en acortar el cable, no en demostrar que el
+cable largo anda.
+
+**Próximo paso:** correr la matriz de §6 con hardware (~4 h). Coordinar con **@comercial** las tres
+columnas de precio y con **@firmware** el discriminador + la histéresis (no bloquean el viernes).
+
+## 2026-09-03 — DREYFUS / ETAPA 5: la calibración, la probeta, y el cero que vagabundea igual que el evento
+Entregable: **`C:\Proyectos\galgas\hardware\CALIBRACION_REV_D.md`** (archivo nuevo y sólo mío,
+~94 KB, 11 secciones + 2 apéndices). **Sin commit.** Convierte el hueco declarado de la
+etapa 5 de `BRINGUP_BANCO.md` (*"el procedimiento y las tolerancias los define
+@muestreador"*) en procedimiento ejecutable. **No toqué ningún otro archivo.**
+
+**⚠ EL HALLAZGO QUE MANDA — el vagabundeo del cero es del mismo tamaño que el evento, y
+ninguna cadencia de re-cero lo saca.** Ayer dejé anotado *"la galga A derivó +75,5 mV en
+4,7 h = 4-5× el evento"*. Hoy fui a buscar **la escala de tiempo**, que es lo que decide si
+se puede corregir. Sobre las mismas capturas, aislando **ventanas SIN evento** (excluí los
+escalones de 13:26:04 y 13:35:33, el apagado del emisor A y el bloque 13:02-13:10) y
+promediando a 2 s, el cero de `A−B` se corre: **7,70 mV en 30 s · 7,92 en 1 min · 9,97 en
+2 min · 12,36 en 3 min · 14,19 en 5 min · 11,52 en 10 min · 8,68 en 15 min**, contra un
+**evento chico de 10,23 mV**. **Entre 30 s y 15 min NUNCA baja de 7,7 mV = 75 % del evento.**
+Y las pendientes por ventana **cambian de signo** (+43,3 / +5,9 / −9,3 / +45,4 mV/h): no es
+deriva monótona extrapolable, es **vagabundeo de banda ancha justo en la banda donde vive la
+detección**. Y no es ruido: σ por muestra 1,5-4,2 mV ⇒ promediando 2 s quedan 0,5-1,3 mV.
+**Consecuencia dura: cualquier pasa-altos que rechace esto rechaza también al evento. El
+re-cero periódico NO es la solución.** Lo que los datos de campo **no** pueden decir es si son
+la máquina o el instrumento — **en campo las dos hipótesis dan el mismo registro**. Por eso
+diseñé `ENS-DERIVA` con el control que las separa: **D0, puente resistivo falso (3 × 350 Ω en
+lugar de la galga), 24 h. En el banco no hay máquina: todo lo que se mueva es instrumento.
+Cuesta 3 resistencias y es el ensayo más importante de la etapa.**
+
+**El apareamiento A↔B, derivado y no inventado.** Medí en los mismos CSV la **excursión de
+modo común** `(A+B)/2`: **33,27 mV pp** en el bloque continuo de 56 min (9,46 mV en el tramo
+más quieto). Un desapareo de ganancia δ convierte modo común en falso diferencial; pidiendo
+que no supere el 10 % del evento chico (10,23 mV) sale **δ ≤ 3,07 %**. ⇒ **objetivo 1 % ·
+aceptación 2 % · rechazo > 3 %**. El "±2 %" que el protocolo de julio ponía como *"ej."*
+**resulta estar bien puesto**; ahora tiene derivación. El criterio es un **cociente
+adimensional** entre dos magnitudes de la misma escala, así que transfiere de la generación 1
+a la rev D aunque los mV de gen-1 no signifiquen nada en absoluto. *(Dato lateral: los
+eventos tienen componente de modo común de +11,7 y +11,2 mV, del mismo orden que la
+diferencial — el evento **no es puramente diferencial** y hoy esa información se tira.)*
+
+**El bloqueante del GF, acotado.** La cuenta: `ε_reportado/ε_real = GF_real/GF_supuesto` ⇒ **el
+error del µε es igual al error del GF, 1:1 y con signo +** (GF real 2,10 ⇒ todo 5 % alto).
+**El shunt-cal NO lo puede ver nunca**, por construcción (el escalón `ΔR/R = 2,000e-3` es
+puramente resistivo; el GF sólo entra al ponerle rótulo en µε). **`RCAL` no se toca: la
+corrección es un solo campo.** Por eso pido `cal_gf_x1000` explícito en EEPROM — con eso, el
+día que aparezca el GF verdadero **todo el histórico se re-escala y no hay que volver a la
+planta**. Y separé la urgencia real: **lo que rompe hardware es `Rg`, no `GF`** (si las galgas
+son de 120 Ω cambian pierna de referencia, `R1`, corriente y presupuesto de energía) ⇒ **el
+téster de 30 segundos es más urgente que la etiqueta**, aunque la etiqueta del lote sea el
+único camino al ±1 % (la probeta sólo llega a ±5,5 %).
+
+**La probeta `PROB-01`:** viga en voladizo, **acero** (no aluminio: las galgas vienen
+compensadas para acero, y el REDLER es de acero — sobre aluminio habría ~12 µε/°C de
+deformación aparente pura basura), planchuela **25 × 4 mm**, **L = 250 mm** ⇒ **179,4 µε/kg**;
+1 a 4 kg de agua en botellas = 179 a 718 µε. **Incertidumbre ±2,75 % (1σ) / ±5,5 % (95 %)**,
+dominada por `E` del acero (2,5 %). Tres cosas que valen la pena: **(a) el momento en la galga
+es `F·L` y NO depende de la mordaza** — estáticamente determinada, por eso funciona en un
+taller; **(b) el valor del mecanizado no es la forma, es que `h` esté MEDIDO y constante a
+±0,02 mm, porque `h` va al CUADRADO** (0,1 mm sobre 4 = 5 % de error, el doble del término de
+E); **(c) las dos galgas van en la MISMA sección y la MISMA cara, lado a lado** ⇒ `ε_A = ε_B`
+exacto por geometría y **las ±5,5 % de la probeta se cancelan enteras en el cociente: el
+ensayo de apareamiento queda con incertidumbre ≈ 0.** También el límite físico que hay que
+entender: **1000 µε en acero SON 205 MPa**, así que no existe probeta de acero común que
+llegue ahí con margen — la probeta va hasta ~700 µε y **el punto de 1000 µε lo pone el
+shunt-cal**. Son complementarios, no redundantes. Convergencia UTN: Diseño y Manufactura
+(plano + tolerancia funcional justificada con una cuenta), **Medidas Electrónicas 2** (el
+presupuesto de incertidumbre y la distinción patrón/verificación es literalmente el programa
+de la materia), Resistencia de Materiales.
+
+**⚠ Dos defectos encontrados leyendo el firmware (no eran el pedido, aparecieron):**
+1. **`cal_k_ue_lsb` de `cfg_nodo.h` no lleva la ganancia del PGA a la que se midió**, y
+   `ads1220BuscarGanancia()` **elige la ganancia por ráfaga**. Calibrada en G=128, una ráfaga
+   que caiga en G=64 **sale 2× mal y nada lo avisa** — y la ganancia baja justo cuando el
+   puente se desbalancea, o sea **cuando algo está pasando**. Arreglo: guardar `k` referida a
+   **G=1** y dividir por la ganancia real.
+2. **No existe campo de OFFSET/tara.** `CfgNodo` tiene `vref_mv`, `k_div_ppm`,
+   `cal_k_ue_lsb`, `cal_valida`: **el paso 2 del protocolo no tiene dónde escribirse.** Es el
+   gemelo del hallazgo del 2026-08-28 (allá la calibración se escribía y no la leía nadie;
+   acá ni siquiera hay dónde escribirla).
+   *(@firmware subió `CFG_VERSION` a 2 hoy mismo para `nodo_id`, y los dos defectos siguen
+   vigentes ⇒ mi pedido pasa a ser un bump **2 → 3**, reusando su migración, que está bien
+   hecha: lee la v1 con su propio tamaño y valida su CRC.)*
+
+**⚠ Corrección a `BRINGUP_BANCO` H3.7 (para @hardware):** el criterio *"`R1` dentro de ±10 Ω
+de la galga, si no el PGA×128 satura"* **satura**: `(1/4)(10/350)·3,0 V = 21,4 mV` contra el
+límite de PGA de **20,3 mV** (C4). Está **5 % del lado equivocado** y sin margen para la
+pretensión del pegado. Valor exacto de saturación **±9,47 Ω** ⇒ **criterio corregido ±5 Ω**.
+No cuesta un componente: es elegir mejor el par dentro del lote de 50 que ya se compra.
+Traducción útil: **1 % de desapareo `R1`↔galga = 5000 µε de offset**, sobre 13 500 disponibles.
+
+**Los 5 pedidos de §5.2, repriorizados — y un de-bloqueo:** §5.3 pone "los puntos 1 y 2
+resueltos con @comms" como precondición para arrancar la etapa 5. **Es falso para el banco**:
+con el nodo en la mesa hay consola serial y `CAL_EN` se acciona desde el código. **El
+imprescindible real es el modo banco** (sin él la curva de la probeta son ~7 h de espera pura
+contra 20 min), y **el shunt-cal por downlink es imprescindible para la PLANTA, no para el
+banco**. Contrapropuesta que creo mejor que el comando a demanda: **auto-shunt-cal cada 6 h**
+— no depende del downlink (que es lo que falla justo cuando uno quiere diagnosticar) y **da un
+registro continuo de salud de la cadena**: cero corrido + `paso` estable = mecánica; `paso`
+corrido = cadena. **Cuesta +10,5 mAh/año = +0,68 %** del presupuesto (cada 1 h serían 4,05 %).
+**Pendiente de firma de @energia.**
+
+**Temperatura:** **alcanza el sensor interno del ADS1220** (`TS=1` en Config Reg 1, hoy en 0)
+para lo que pide el protocolo y para diagnosticar la deriva de la **electrónica**; cuesta 3
+conversiones = +5 % de la medición. **NO alcanza** para compensar la galga (está en el REDLER,
+a 5 m de cable del die). Para eso la solución correcta **no es un sensor**: es **media puente
+con galga dummy** sobre el mismo acero, reemplazando a `R1` — cancela la deformación aparente
+sin modelo y de paso compensa la dilatación del REDLER. Cuesta una galga y 2 hilos más en el
+conector (@esquematico), y **queda condicionada al resultado de DR-3**. Veredicto para §5.2
+punto 5: **no hace falta hardware nuevo en el nodo.**
+
+**Reconciliación con @comms (trabajó en paralelo, lo leí al cerrar).** Su C2.1 ya trae
+`desvio`, `d_min`/`d_max`, `ganancia`, `flags` con `modo_banco` y `shunt_cal_activo`, y la
+`0xA5` de volcado crudo sólo bajo comando y en modo banco. **Cubre el grueso de mi pedido y en
+un punto es mejor que lo mío**: yo había pedido NO mandar min/max por la lección del legacy
+(nunca se usaron), pero los suyos son **deltas contra la media**, y eso da `pp` *y* detección
+de saturación asimétrica. **Me corrijo y lo acepto.** Queda pedido reducido a tres: **(1) un
+bit de `tara_valida` separado de `cal_valida`** — el estado normal de un nodo recién instalado
+es "tengo `k`, no tengo tara" y hoy es indistinguible de "listo"; propongo que `cal_valida`
+pase a 2 bits comiéndose `b2 trama_corta`, **que es redundante porque el receptor ya la
+distingue por `len`**; **(2) `temp_c10`**; **(3) las constantes de calibración en la `0xA4`**
+(+10 B en una trama que sale una vez por arranque = airtime nulo en régimen). Y le contesté
+por escrito su pregunta: **media+desvío+mín+máx alcanzan**; el volcado lo necesito **una vez
+por nodo** y **por serial**, para ver el transitorio de arranque del puente, buscar una rampa
+de **autocalentamiento** dentro de los 3 s (8,6 mA sobre la galga saldría como falsa deriva en
+todo) y confirmar que no hay residuo de 50 Hz que el desvío promedie sin delatar.
+**Escala: FIJA** — la única adaptación es el PGA y ya viaja en el byte 13; una segunda escala
+adaptativa sería un segundo lugar donde perder el factor, que es el defecto 1 duplicado.
+
+**Otro chequeo que nadie había hecho:** la **fuga en OFF del shunt-cal**. Un camino resistivo
+`R` en paralelo con el brazo activo produce `ε = Rg/(GF·R)`; para que quede bajo 0,1 µε hace
+falta **R > 1,75 GΩ** — exigente sobre perfboard con restos de flux, y le pide algo al `Iceo`
+del 2N3904. Ensayo gratis (leer, limpiar con isopropílico, releer) y separa "el cero se mueve"
+de "la placa está sucia". Va **antes** de cualquier conclusión sobre deriva.
+
+**CRONOGRAMA — etapa 5: 8 días de trabajo / 12-15 de calendario.** Sin probeta: **5 d de
+trabajo / 6,5 de calendario** (lo domina `ENS-DERIVA`, 2 corridas de 24 h). Con probeta:
+**+3 d de trabajo / +7-11 de calendario**, dominado por la **tornería (3-7 d)**.
+**Las 3 cosas para hacer YA:** (1) 🔴 **el plano de la probeta sale el LUNES 7-SEP junto con
+la compra** — es el único ítem de largo plazo que Matías controla; si sale después, la probeta
+**se vuelve el camino crítico**; (2) 🔴 **pedirle a GIMAP la etiqueta de las galgas esta
+semana** — si no son de 350 Ω hay re-ingeniería analógica y hay que saberlo **antes** de
+comprar `R1`/`R2`/`R3`; (3) modo banco + EEPROM v3 + temperatura **se pueden hacer ahora**,
+son firmware puro y no dependen de que la placa exista.
+
+**Nota de arquitectura que cambia el problema respecto de la generación 1:** la rev D mide
+**3 s cada 300 s (ciclo útil 1 %)** ⇒ la latencia de 4,4 s que medí ayer pasa a ser **hasta
+300 s**, y **el evento deja de ser "el escalón de 3,4 s" para ser "el nuevo nivel
+permanente"** (sirve para cadena cortada, **no** para golpeteo intermitente). Y **el ruido
+dejó de ser el problema**: la media de 60 conversiones del ADS1220 tiene **0,0077 µε** ⇒ SNR
+de miles. **Todo el problema del sistema es deriva y apareamiento.** La estrategia que dejo
+escrita es **doble escala de tiempo con congelamiento**: línea de base exponencial τ≈30 min
+que **sólo corre cuando el sistema se declara quieto**, y que **se CONGELA en cuanto la señal
+supera el umbral de armado** ⇒ *la deriva no se distingue del evento por la forma: se
+distingue porque el evento congela su propio cero*. Más persistencia de 3 ciclos, un segundo
+detector absoluto de escala larga, y el auto-shunt-cal como tercer canal de diagnóstico.
+Si `ENS-DERIVA` dijera que el vagabundeo es instrumental e irreducible, **la salida de
+emergencia ya está respaldada con datos**: usar la **σ intra-ráfaga** en vez del nivel (en
+campo σ de A−B crece **4×** durante el evento, y σ **no tiene cero** ⇒ es inmune a la deriva).
+
+**Lo que NO pude fundamentar y queda escrito (§11 del doc):** el GF real, `Rg` real, **P7
+(umbrales del evento en µε con la máquina real — sigue siendo mío y sigue abierto; DR-1 y DR-2
+están calculados contra un evento SUPUESTO de 20 µε)**, el error de ganancia del PGA entre
+escalones y la exactitud del sensor de temperatura (los dos, tabla del SBAS501D: no los cito
+de memoria), la `Vce_sat` del 2N3904 como llave del shunt (**C27 fijó el criterio para MOSFET
+y la rev D pasó a BJT: hay que rehacerlo**), `E` del acero, y **si los 7,7 mV son máquina o
+instrumento** — que es el ensayo D0.
+
+**Nota de método:** todo el análisis reusó `evidencia_campo/generar_evidencia.py::cargar_todo()`
+en vez de reescribir el parser (las tres trampas del formato ya estaban resueltas ahí).
+`data/field_captures` **sólo lectura, nada escrito** (`git status` de `data/` limpio).

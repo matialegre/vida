@@ -269,3 +269,137 @@ coinciden, es un bug de @backend — avisá, no lo adivines. Lo que conviene sab
   todos. Está soportado en los dos casos; escribí el cliente para que ande igual en ambos (§5).
 - Cuando tengas la URL real del portal, pedile a @backend que la agregue a `TV_ORIGENES_PORTAL` o el
   navegador corta todo por CORS con un "Failed to fetch" que no dice nada.
+
+---
+
+## 2026-09-03 — EMSICA: feedback del cliente aplicado (header, buscador, nav, marcas×línea)
+
+Repo: `C:\Proyectos\emsica-web` (Next 16.3.2, App Router, Tailwind 4, `trailingSlash`).
+Árbol dejado SIN commitear a pedido del Director. `npm run build` OK (229 páginas
+estáticas, 42 s), `npx tsc --noEmit` limpio, `npx eslint .` sin errores.
+
+### Qué se hizo (pedido textual del cliente, mismo día)
+
+- **Header sin teléfono.** Se sacaron los tres `tel:` (barra de utilidad, nav y botón
+  de llamar del móvil). Verificado por curl: 0 ocurrencias de `tel:` en el `<header>`.
+  `empresa.telefono` NO se tocó: sigue vivo en footer, /contacto/, página de marca,
+  CTA y JSON-LD.
+- **Logo más grande**: `h-[34px] md:h-[41px]` → `h-[46px] md:h-[58px]`, `min-h` del
+  renglón 72→84 px. Footer 41→58 px para que no quedara desbalanceado.
+- **Buscador nuevo** (`components/Buscador.tsx`): combobox + listbox ARIA, flechas /
+  Enter / Escape, sin acentos ni mayúsculas al comparar, sin dependencias nuevas.
+  Va donde estaba el teléfono; en móvil la lupa reemplaza al botón de llamar y se
+  come el renglón del header al abrirse. También arriba del catálogo de /productos/.
+- **Nav definitivo** (`components/MenuPrincipal.tsx`, cliente): PRODUCTOS · MARCAS ·
+  SERVICIOS · Novedades · Clientes, desplegables **al click** (antes hover CSS), uno
+  por vez, Escape + click afuera + cierre al navegar. "Representadas" desaparece del
+  nav (el redirect de next.config queda).
+  - Panel **Productos** = mega-menú tipo Fluke: columnas por categoría con las 161
+    líneas de `content/lineas.ts`; cada línea → `/productos/<categoria>/#<linea>`.
+  - Panel **Marcas** = dos paneles (marcas a la izquierda, líneas de la marca activa
+    a la derecha, cambia con hover Y con foco); cada línea → `/marcas/<marca>/<linea>/`.
+  - Móvil: `<details>` anidados, con las líneas montadas recién al abrir.
+- **Ruta nueva `/marcas/<marca>/<linea>/`** (~170 páginas SSG): H1 "Multímetros
+  digitales Fluke", migas, imagen de la línea (o placeholder tipografiado), CTA
+  externo al fabricante (`target=_blank rel=noopener`, aviso para lector de pantalla),
+  CTA propio a /cotizar/, modelos del catálogo relevado, otras líneas de la marca y
+  la misma línea de otras marcas. Sumadas al `sitemap.ts`.
+- **Páginas de categoría con contenido real**: `/productos/<cat>/` ahora renderiza en
+  SSR sus líneas con `id` (50 en instrumentos-de-medición), destino de las anclas del
+  mega-menú. Antes eran páginas flacas.
+- **5 marcas nuevas** del docx (`waron`, `anderson-negele`, `hengstler-dynapar`,
+  `gems-sensors`, `bindicator`) con `fuente: "generico"`.
+- **Footer y contacto por ÁREA, no por persona**: se fue el bloque Jorge Piñeiro y su
+  casilla personal de todo el repo (footer, /contacto/, /cotizar/, CTA, formulario,
+  JSON-LD y `linkMail()`). Fuente única nueva: `empresa.areas` en `lib/site.ts`.
+- **Carrusel de marcas también arriba**, versión chica: prop `alto="sm" | "md"` en
+  `components/CarruselMarcas.tsx` (no un componente duplicado), banda fina sobre el
+  hero de la home.
+
+### Lo que hay que PEDIRLE A EMSICA (bloquea calidad, no build)
+
+1. **El mail real del laboratorio.** `laboratorio@emsica.com.ar` es lo que dictó el
+   cliente ("después paso mails, etc.") y está publicado sin haberlo probado. Si
+   rebota, el sitio está publicando una casilla muerta. Marcado con TODO en `lib/site.ts`.
+2. **Teléfonos/internos por área** (hoy Ventas y Laboratorio comparten el conmutador).
+3. **Texto y logo de las 5 marcas nuevas** (anotado en `content/productos/_PENDIENTES.md`).
+4. Confirmar si Hengstler y Dynapar son una representación conjunta o dos marcas.
+
+### Deuda / decisiones a revisar
+
+- El índice del buscador (161 líneas + 32 marcas) viaja en el HTML de todas las
+  páginas: **20,8 KB crudos / 5,2 KB gzip por copia, y hay 2 copias** (una en el
+  payload de RSC y otra en el DOM del mega-menú, que es la que queda indexable).
+  Medido, no estimado. Si molesta al LCP, la salida es servir el índice como JSON
+  estático y traerlo al primer foco — no achicar el contenido.
+- `content/enlaces-fabricante.ts` quedó como **stub vacío** con las firmas del
+  contrato; lo llena el agente que sourcea URLs e imágenes. Mientras esté vacío, el
+  CTA externo cae al `fuente` del catálogo de la marca (Fluke ya resuelve a
+  fluke.com/es-ar/productos) y la imagen cae al placeholder.
+- `content/lineas-marca.ts` se **borró**: quedaba como segunda fuente de verdad de lo
+  mismo que `content/lineas.ts`.
+- La página de marca linkea sus líneas a `/marcas/<marca>/<linea>/` (no al ancla de
+  categoría, como decía el encargo previo a la corrección G): con la página
+  marca×línea existiendo, mandar al ancla era mandar al lugar equivocado.
+- Falta pasada visual real: todo lo verificado acá es HTML servido por curl. Cierre
+  con @qa-visual / @verificador pendiente.
+
+### Addendum mismo día — sub-títulos en el mega-menú (punto H)
+
+`content/lineas.ts` se regeneró con `grupo` + `ordenGrupo` y `gruposDeCategoria()`.
+Aplicado en los tres lugares donde se muestran líneas:
+
+- **Mega-menú Productos**: encabezado de categoría (font-cond, filete azul, link a
+  `/productos/<cat>/`) → sub-título de grupo en estilo `etiqueta` → líneas. **27
+  grupos** en el HTML servido. Cambió la regla de corte de columnas: la categoría
+  AHORA sí puede repartirse entre columnas (con 50 líneas, forzarla entera
+  desbalanceaba todo el panel) y lo que no se parte es cada grupo
+  (`break-inside-avoid`) ni el título de categoría de su primer grupo
+  (`break-after-avoid`).
+- **`/productos/<cat>/`**: una `<section>` por grupo con `<h3>` y las líneas en
+  `<h4>`. Los `id` de línea NO cambiaron (50 en instrumentos-de-medición, verificado).
+  Los `id` de los encabezados de grupo se slugifican (`grupo-hvac-y-ambiente`): un
+  `id` no puede llevar espacios ni acentos.
+- **Móvil**: el sub-título es encabezado de sección dentro del `<details>` de la
+  categoría, NO un tercer `<details>` — con dos niveles abiertos, un tercero es
+  inmanejable con el pulgar.
+- **Buscador**: el resultado de tipo Línea muestra el rastro "Categoría › Grupo".
+  Las marcas salieron del texto visible (hacían el renglón ilegible) pero siguen
+  siendo buscables: escribir "fluke" encuentra sus líneas igual.
+
+**Costo medido del campo nuevo en el índice**: 20,8 → 24,6 KB crudos, **5,16 → 5,42 KB
+gzip por copia (+268 B, +5,1%)**. Con las 2 copias por página: 10,3 → 10,8 KB gzip.
+Barato para lo que compra.
+
+## 2026-09-03 (b) — emsica-web: el mega-menú que el cliente abrió estaba roto (los dos paneles), SIN commit
+Repo `C:\Proyectos\emsica-web` (Next 16 + Tailwind 4). Sobre el trabajo sin commitear de la sesión de la mañana. **Solo se tocó `components/MenuPrincipal.tsx`** (+ un test nuevo). `content/lineas.ts` NO se tocó (es generado); `Header.tsx` tampoco hizo falta.
+- **BUG 1 — Marcas no scrolleaba ("se pierden un montón de marcas, no se puede bajar con la ruedita")**. El panel tenía `max-h-[62vh]` en un **`grid`** cuya fila era `auto`: con alto máximo pero fila de `max-content`, el contenido se sale del recuadro blanco y **se derrama sobre la página**. Las columnas tenían `overflow-y-auto` pero nunca llegaban a tener alto acotado, así que la rueda no tenía nada que scrollear. Fix: panel = `flex flex-col overflow-hidden` con techo real, cuerpo `min-h-0 flex-1 grid-rows-[minmax(0,1fr)]`, y cada columna `min-h-0 overflow-y-auto overscroll-contain`. **`min-h-0` es la pieza que hace obedecer todo**: sin eso, un ítem de flex/grid nunca se achica por debajo de su contenido y el techo es decorativo.
+- **BUG 2 — Productos "tan enorme que no se puede ver nada"**. El problema real no era el tamaño: era el layout de `columns`, que repartía las 6 categorías entre 4 columnas y dejaba los grupos (TEMPERATURA, NIVEL, MANIFOLDS…) **huérfanos de su categoría** — nadie podía saber si "Manifolds" cuelga de Válvulas o de Medición de proceso — y encima solo entraba 1 de las 6. Ahora Productos usa **el mismo patrón de dos paneles que Marcas**: izquierda las 6 categorías con su conteo de líneas, derecha los grupos de la categoría activa con su título arriba. Cambia con hover/foco (Tab), igual que Marcas.
+- **Alto real, no `vh` a ojo**: el header es sticky y su alto cambia con el scroll, así que un `62vh` fijo miente. La clase `max-h-[calc(100vh-140px)]` cubre el primer cuadro y un efecto mide `window.innerHeight - panel.getBoundingClientRect().top - 16` (piso 280 px) en apertura, resize y scroll. Los tres paneles (Productos, Marcas y también Servicios) tienen techo y scroll propio.
+- **Título de categoría/marca `sticky`** dentro del panel derecho: apareció mirando la captura de "Instrumentos de medición y ensayo" (50 líneas) — al scrollear, el título se iba y volvía el defecto de fondo. Con sticky, el grupo que estás mirando nunca queda huérfano.
+- "Lubricantes y grasas" (grasas de Sealweld que faltaban): el buscador la encuentra con **"grasa" y con "grasas"** sin tocar nada — el índice normaliza y busca por substring, y el singular es prefijo del plural.
+- **Evidencia**: `npx tsc --noEmit` limpio, `npx eslint .` 0 errores (7 warnings preexistentes en `tests/qa/*.mjs` de la sesión anterior), `npm run build` verde. **Playwright contra `next start`: 81 asserts OK / 0 FAIL** en 1366×768, 1920×1080, 1440×900 y 1280×720 — panel dentro del viewport en los 4, lista de marcas scrolleable (1749 > 552 px a 1366), la rueda mueve la lista y **la página de atrás no se mueve** (`overscroll-contain`), se llega a la marca **nº 32 (Bindicator)**, hover cambia de categoría y cambian los grupos, Escape / click afuera / un solo panel / teclado intactos, consola sin errores; buscador "grasa" y "grasas"; móvil 390×844 con los `<details>` anidados sanos y sin scroll horizontal. El test queda en el repo: `tests/qa/megamenu-fix.mjs`. Capturas miradas una por una en `C:\Users\Pandemonium\.claude\jobs\f2eb7f23\tmp\qa-emsica\fix\`.
+- **SIN commit y sin deploy** (pedido explícito). Lo pendiente de la mañana sigue sin commitear en el repo.
+- **GOTCHA del harness**: quedó un `next start` de la sesión anterior ocupando el **puerto 3111** (PID 592). El `next start` nuevo falla con EADDRINUSE **en segundo plano** y curl sigue devolviendo 200 — o sea, se verifica contra un build VIEJO sin darse cuenta. Se detectó porque el HTML servido no tenía el `data-mega` nuevo. Se verificó en 3112/3113 (ya cerrados). Antes de verificar: revisar el log del server, no solo el 200.
+
+## 2026-09-03 — Paradise (Eduardo): llegaron las FOTOS REALES del local y son la cara del sitio
+Repo `C:\Proyectos\tienda-cosmetica`, solo la vitrina pública (`src/Tienda.jsx`, `src/index.css`, `index.html`, README). **Cero lógica de negocio tocada**: ni `crear_pedido`, ni `vender_local`, ni stock/precios, ni auth, ni `Local.jsx`/`Admin.jsx` (el único match de "precio" en el diff es la re-indentación del bloque de destacados al moverlo). **Sin commit y sin deploy** (los decide Matías). Las fotos quedan **en el repo** (`public/local/`, WebP 1350×1800 + `-sm` 675×900), NO en Supabase Storage: la base de hoy es prestada del kiosco y se migra, y lo que vive en el repo se muda solo con el deploy. Rutas relativas `/local/...`.
+- **El choque logo/foto, resuelto sacando el logo**: el hero tenía `logo-paradise.png` (la palabra PARADISE) a tamaño gigante. La foto del arco YA dice PARADISE en letras doradas de bronce → se sacó el `<img>` del logo del hero y **la foto es el título**. El `h1` quedó solo con el claim ("Tu belleza, comprada desde casa.") + un `sr-only` "PARADISE — " para que buscadores y lectores de pantalla igual tengan la marca en el h1. El wordmark del header (chico, sobre crema, es navegación) y el del pie **no se tocaron**.
+- **La trampa de esta tarea: la foto es 3:4 y el hero es apaisado.** Primer intento — foto a sangre en toda pantalla — se veía bárbaro en el celular y **espantoso en escritorio**: a 1440×557 el `cover` recorta una franja del 29 % de la foto, el arco se partía al medio, la "P" desaparecía y el texto caía justo encima de las letras. Solución: **dos encuadres, un solo DOM**. Celular (<768): foto a sangre con `object-position: 50% 20%` (las letras viven en el tercio superior) y velo degradado abajo, el texto blanco encima. Escritorio (≥768): **nada de sangre** — la foto va enmarcada en el arco del logo (`.marco-foto-hero`, mismo `border-radius` que `.arco`) en `aspect-[3/4]`, o sea **cero recorte**, a la derecha, y el texto al lado sobre el crema con el resplandor dorado. Los mismos elementos cambian de color por breakpoint (`text-white md:text-[#3d2b1a]`, etc.), no hay bloque duplicado ni dos `h1`.
+- **El corte es `md` (768), no `sm` (640)**, y esto fue un bug encontrado midiendo: con el corte en `sm`, a 640 px la columna de texto quedaba de **160 px** (640 − padding − 400 de foto). Se pasó a `md` + foto de 320 px en md y 400 en lg.
+- **"Nuestro local"**: sección nueva **después de la grilla**, a propósito — arriba empujaba el catálogo abajo del pliegue. 5 fotos en arcos (la firma del logo), primera a lo ancho en celular, 3 columnas en tablet, 5 en escritorio, con títulos en versalitas doradas. Los destacados (la arcada vieja) siguen vivos pero **solo desde `sm`**: en el celular ocupaban 240 px arriba del catálogo y los mismos productos ya están en la grilla.
+- **⚠️ HALLAZGO: tres nombres de archivo NO describen la foto.** Mirando las seis fotos una por una: `pared-dermocosmetica.webp` es en realidad **el salón** (isla redonda + lámparas de mimbre), `salon-interior.webp` es **el mostrador** curvo con la planta, y `mostrador.webp` es **la pared de dermocosmética**. `arco-paradise`, `arco-lateral` y `pared-maquillaje` sí. Los archivos se dejaron como están (los generó el pipeline de fotos) y lo correcto vive en `FOTOS_LOCAL` de `Tienda.jsx` (con el comentario que lo explica): los `alt` y los títulos describen **la foto real**, no el nombre. Un `alt` que miente es peor que no tener `alt`.
+- **Performance**: `srcset`/`sizes` en TODAS las fotos del local (la `-sm` de 675 px en celular, la grande en escritorio — verificado cuál sirve el navegador en cada ancho), `width`/`height` 1350×1800 en todas (cero salto de layout), `loading="lazy"` en las 5 de la galería y `eager`+`fetchPriority="high"` solo en el hero, más un `<link rel="preload" as="image" imagesrcset>` en `index.html` para que la foto del hero (el LCP) se pida antes que el JS.
+- **Evidencia — `tests/fotos_local.mjs`** (queda en el repo, `node tests/fotos_local.mjs [url]`, sale 1 si falla). Playwright contra `vite preview` del build de producción, **8 anchos (320/390/414/640/767/768/1024/1440): TODO OK**. Gates: la foto del hero carga y no es lazy, `object-fit: cover`, **cero `logo-paradise.png` dentro del hero**, sin scroll horizontal, nada fuera de pantalla (se exceptúan marquesina, chips y carrito cerrado, que están afuera a propósito), 0 errores de consola, las 5 fotos con lazy+width/height+alt largo, la variante correcta del `srcset`, y **en celular la primera tarjeta del catálogo arriba del pliegue**: 666 < 700 a 320 px, **746 < 844 a 390 px**, 776 < 896 a 414 px. Capturas de hero y galería miradas una por una en los 8 anchos (`%TEMP%/hero_*.png`, `local_*.png`).
+- `npm run build` verde (CSS 44,2 kB → 8,9 gzip; el JS no se movió: +0,8 kB).
+- **Pendientes / para el que siga**: (1) los QA viejos `tests/rd12_anchos.mjs` y `tests/rv1_anchos.mjs` buscan `.hero-paradise`, que ya no existe (la clase se borró de `index.css` al quedar sin uso) — van a fallar contra el sitio nuevo, son del hero anterior; (2) el WhatsApp flotante tapa el título de la primera foto de la galería en celular; (3) `fotos-originales/` (8,4 MB de originales sin comprimir) quedó sin trackear en el repo — decidir si va al `.gitignore` antes de commitear; (4) cierre con @verificador sobre el deploy, y que @diseno mire el recorte del hero en la franja 640-767 px (tablet chico, foto a sangre) que es donde más zoom tiene.
+
+## 2026-09-03 (c) — Paradise: re-sincronizar la galería después de regenerar los WebP, y el WhatsApp que tapaba un título
+Repo `C:\Proyectos\tienda-cosmetica`, solo vitrina pública. Tocado: `src/Tienda.jsx`, `tests/fotos_local.mjs`, `tests/PLAYBOOK.md`, `README.md`, y se borraron `tests/rd12_anchos.mjs` y `tests/rv1_anchos.mjs`. **Cero lógica de negocio** (ni `crear_pedido`, ni `vender_local`, ni stock/precios/auth, ni `Local.jsx`/`Admin.jsx`). **Sin commit y sin deploy.**
+- **Por qué había que resincronizar**: el Director regeneró los WebP desde `fotos-originales/` con el mapeo corregido, así que **el contenido de tres archivos cambió después** de que se escribiera el código: `salon-interior` ahora es el salón (isla + 3 lámparas de mimbre), `mostrador` el mostrador curvo con la planta y `pared-dermocosmetica` los estantes de skincare. Miré las seis imágenes una por una antes de tocar nada (no me fié de la lista que venía en el encargo): coinciden. Ahora **nombre de archivo, título y `alt` describen la misma foto** y el comentario que explicaba la vieja discrepancia se borró — ya no aplicaba y desinformaba. En su lugar quedó la regla operativa: si se regeneran las fotos, mirarlas de nuevo.
+- **El orden visual NO cambió** (salón a lo ancho primero, después maquillaje/dermocosmética/mostrador/entrada): se reordenó la lista para que cada entrada apunte a su archivo, no para rediseñar. Un `alt` corregido: la góndola de la entrada es de accesorios y **bijouterie**, no de lentes.
+- **Los dos QA obsoletos se borraron, no se parchearon.** `rd12_anchos.mjs` y `rv1_anchos.mjs` eran sondas exploratorias del rediseño de agosto: apuntan a `.hero-paradise` (clase que ya no existe), pegan contra **producción**, escriben en un scratchpad de una sesión muerta y **no devuelven código de salida** — no eran tests, eran instrumentos de una autopsia. Lo que sí chequeaban (sin scroll horizontal, nada clipeado, 0 errores de consola por ancho) ya está cubierto por `fotos_local.mjs` en 8 anchos y con `exit 1`. Queda anotado en `tests/PLAYBOOK.md`, cuya sección "REDISEÑO" arranca ahora con un aviso de OBSOLETO para que nadie vuelva a buscar `.hero-paradise`.
+- **Bug del WhatsApp flotante, medido antes de tocar**: el FAB ocupa x=16..64 abajo a la izquierda; en celular la galería va a 2 columnas y el título centrado de la columna izquierda pasa **justo** por esa esquina — tapaba "MAQUILLAJE" a 390 y a 414 px (verificado en captura: se comía la M). **Ninguna posición del botón lo arregla**: el título recorre todas las alturas al scrollear, y a 320 px el texto arranca en x=37, o sea pasa por la esquina sí o sí. Achicar el botón tampoco (a 320 sigue chocando) y moverlo a la derecha empeora (ahí el título es más largo). Fix: el botón **se esconde mientras la sección `#local` pisa su franja**, y solo por debajo de 640 px. Es un tramo continuo (no parpadea) y en ese tramo el WhatsApp del pie queda a la vista. Desde 640 no hace falta: con 3/5 columnas el título más a la izquierda arranca en x=86. Se enganchó también al `resize`, no solo al `scroll`.
+- **Evidencia**: `npm run build` verde (CSS 44,26 kB / 8,92 gzip; JS 491,58 kB / 139,17 gzip, +0,24 kB por el handler). `node tests/fotos_local.mjs` contra `vite preview` del build de producción: **TODO OK en los 8 anchos** (verificado que el preview servía el bundle nuevo, `index-BqeDbINo.js`, antes de creerle). **Dos gates nuevos en el harness**: (1) por cada `<figure>`, el título y una palabra clave del `alt` tienen que corresponder al archivo que está al lado — si alguien regenera las fotos y no mira, el test se pone rojo; (2) el FAB de WhatsApp no puede solapar ningún `figcaption`, barriendo 6 posiciones de scroll de la sección. Capturas miradas: celular 390 (galería arriba y abajo, y el catálogo con el FAB presente) y escritorio 1440 — los cinco títulos coinciden con la foto de al lado en ambos.
+- **`fotos-originales/` sigue sin trackear y SIN gitignorear**, a propósito: entra en el commit que decida Matías (8,4 MB, es el compromiso de portabilidad con Eduardo).
+- **Pendiente**: el commit y el deploy los decide Matías; cierre con @verificador contra producción cuando se despliegue (`node tests/fotos_local.mjs https://tienda-cosmetica-vert.vercel.app`, el harness acepta URL). Sigue abierto de la sesión anterior: que @diseno mire el recorte del hero en 640-767 px.
