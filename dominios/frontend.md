@@ -147,6 +147,31 @@ Matías abrió la versión de la mañana en el celular: **"es espantoso, entré 
 - El WhatsApp real (`+54 9 2920 591019`) ya estaba en `assets/config.js` y no se tocó; entró en el mismo commit.
 - **Pendiente**: (1) cierre con @verificador sobre el deploy; (2) `termovigia.com.ar` sigue sin registrar (pasos en `README.md` §5); (3) INPI; (4) **no se publicó el folleto como página** a propósito — tiene precios y el sitio no puede publicarlos: si se quiere el enlace "ver folleto", primero hay que hacer una versión sin tarifa.
 
+## 2026-09-03 — emsica-web: el teléfono sale del flujo de cotización (feedback del cliente) + análisis de "Obturadores"
+Repo `C:\Proyectos\emsica-web`. **SIN commit y SIN deploy** (pedido explícito). Producción sigue siendo https://emsica-web-alpha.vercel.app/ con la versión anterior.
+
+**1) Teléfono fuera de la cotización (mismo criterio que ya se aplicó al header): la conversión va por formulario o mail.**
+- `app/cotizar/page.tsx`: la tarjeta lateral "¿Preferís hablar?" (tel + horario + mail) pasó a "¿Preferís escribirnos?" — mail del área de Ventas + horario en vivo (`EstadoHorario`), sin `tel:`. Se sacó el import `empresa` (quedaba sin uso y lo canta eslint).
+- `components/CtaConsulta.tsx` (el bloque "¿Necesitás una cotización?" que cierra producto/marca/servicio/categoría): se sacó el tel del renglón de contacto y el botón "Llamar (0291) 456-2159" pasó a "Escribirnos por mail" (`mailto:`). Es el CTA de cotización: entra en el pedido.
+- **NO se tocó** (a propósito, es SEO local y sacarlo hace daño): footer, `/contacto/` como página de datos de la empresa (incluida su meta description con el número), y el NAP del JSON-LD de `lib/seo.ts` (Organization + ContactPoint + LocalBusiness). Tampoco el campo "Teléfono" de `components/FormularioConsulta.tsx`: **ese es el teléfono del VISITANTE**, es cómo Jorge devuelve la consulta.
+- **Evidencia**: `npx tsc --noEmit` limpio; `npx eslint .` **0 errores** (7 warnings preexistentes, todos en `tests/qa/*.mjs` sin tocar); `npm run build` verde; `next start` + curl sobre el HTML servido, separando cuerpo / footer / JSON-LD:
+  - `/cotizar/` y `/cotizar/?producto=…` → **cuerpo visible: `tel:`=0, "456-2159"=0, "4562159"=0**; JSON-LD del head: 3 ocurrencias del número (intacto); footer: 2 `tel:` (intacto).
+  - `/servicios/calibracion-de-instrumentos/` y `/marcas/fluke/` → "Llamar (0291) 456-2159" ya no aparece; sí "Escribirnos por mail".
+- **Gotcha del harness**: el primer curl daba el teléfono todavía presente. No era el código: había un `next start` **de otra sesión** ocupando el 3111 y mi server no levantó (`EADDRINUSE` en el log, que yo no estaba leyendo). Se rehizo en el 3187. *Siempre leer el log del server antes de creerle al curl.* Ese proceso del 3111 sigue vivo y no es mío.
+
+**2) Casos dudosos que DEJÉ como están (decisión de Matías / del cliente)** — todos siguen mostrando el teléfono:
+- `app/gracias/page.tsx`: "Si es urgente, llamanos" + el número grande. Es la pantalla inmediatamente posterior a enviar la cotización, o sea flujo de cotización puro — pero está `noindex` y no es parte de lo que se pidió por nombre.
+- `components/PaginaProducto.tsx` (2 `tel:`): "Consultas técnicas" bajo el botón Solicitar cotización, y la tarjeta lateral. Es el §4.7.3 de DISENO.md ("hablar con un técnico"), no el pedido de cotización.
+- `app/page.tsx` (2), `app/marcas/[slug]/page.tsx`, `app/servicios/[slug]/page.tsx`: tel en la barra de utilidad del home y en la tarjeta NAP de marca/servicio — esa tarjeta NAP es justamente el activo de SEO local, no se toca sin orden.
+
+**3) "Obturadores" = ONIS. Confirmado, y NO hace falta una línea nueva.**
+- En el repo ya está: `content/productos/onis.json` (scrape del 2026-08-28 de `onislineblind.com/industrial-piping-products/`) tiene la familia **"Obturadores de línea de accionamiento rápido" → Quick Action Line Blind (QLB)**, y además D3B, QDC y QFC. Y `content/lineas.ts` (generado del DOCX del cliente, **no editar a mano**) tiene 3 líneas de Onis, entre ellas `dispositivos-mecanicos-de-cegado-rapido-y-aislamiento-positi` = "Dispositivos mecánicos de cegado rápido y aislamiento positivo de tuberías (Quick Action Line Blind)". **Ese es el obturador, con otro nombre.**
+- Fuente del fabricante: el sitio en castellano de ONIS titula la sección **"OBTURADORES DE ACCIÓN RÁPIDA - QLB"**, y el catálogo ES en DirectIndustry lo publica como "Obturador de tubería por disco ciego - QLB". Los distribuidores hispanoamericanos (SITEC) hablan de "obturadores ONIS".
+- **Sealweld y Val-Tex quedan descartados**: sus catálogos (también en el repo) son sellantes, lubricantes/grasas, limpiadores, bombas de inyección y fittings. "Sellador" ≠ "obturador"; las grasas de esos dos ya están en la línea `lubricantes` = "Lubricantes y grasas".
+- **Recomendación** (a confirmar por Matías con Jorge, NO aplicada): renombrar el **nombre visible** de esa línea a "Obturadores de línea de acción rápida (Quick Action Line Blind)" — la palabra del propio fabricante y la que usa el cliente — **manteniendo el slug**, porque `/marcas/onis/dispositivos-mecanicos-de-cegado-rapido-y-aislamiento-positi/` **ya responde 200 en producción** (verificado con curl) y cambiar el slug rompe una URL viva. El cambio va en el DOCX/generador, no a mano en `content/lineas.ts`.
+- **Hueco detectado de paso**: el catálogo scrapeado de Onis tiene 4 familias y `content/lineas.ts` sólo 3 — falta **D3B (Double Block Bleed and Blind)**, que es el otro producto de obturación de Onis. Si Jorge quiere "Obturadores" como grupo, ahí hay una segunda línea real que hoy no está en el mega-menú.
+
+
 ## 2026-09-02 (c) — TERMOVIGÍA: el sitio se veía ROTO en el celu de Matías y el bug NO estaba en el código
 Commit `e175fdf` en `main` de `frioseguro`, pusheado, en producción: **https://termovigia.vercel.app/**
 Matías abrió el sitio en Chrome Android: "un desastre total" — links azules subrayados sin estilo, sin botones, "Escribinos por mail" con el WhatsApp ya cargado, y el mail repetido dos veces en contacto.
@@ -403,3 +428,136 @@ Repo `C:\Proyectos\tienda-cosmetica`, solo vitrina pública. Tocado: `src/Tienda
 - **Evidencia**: `npm run build` verde (CSS 44,26 kB / 8,92 gzip; JS 491,58 kB / 139,17 gzip, +0,24 kB por el handler). `node tests/fotos_local.mjs` contra `vite preview` del build de producción: **TODO OK en los 8 anchos** (verificado que el preview servía el bundle nuevo, `index-BqeDbINo.js`, antes de creerle). **Dos gates nuevos en el harness**: (1) por cada `<figure>`, el título y una palabra clave del `alt` tienen que corresponder al archivo que está al lado — si alguien regenera las fotos y no mira, el test se pone rojo; (2) el FAB de WhatsApp no puede solapar ningún `figcaption`, barriendo 6 posiciones de scroll de la sección. Capturas miradas: celular 390 (galería arriba y abajo, y el catálogo con el FAB presente) y escritorio 1440 — los cinco títulos coinciden con la foto de al lado en ambos.
 - **`fotos-originales/` sigue sin trackear y SIN gitignorear**, a propósito: entra en el commit que decida Matías (8,4 MB, es el compromiso de portabilidad con Eduardo).
 - **Pendiente**: el commit y el deploy los decide Matías; cierre con @verificador contra producción cuando se despliegue (`node tests/fotos_local.mjs https://tienda-cosmetica-vert.vercel.app`, el harness acepta URL). Sigue abierto de la sesión anterior: que @diseno mire el recorte del hero en 640-767 px.
+
+
+## 2026-09-03 (c) — emsica-web: "esta muy vacio todo lo de Marcas" + imagencitas en el buscador (SIN commit)
+
+Repo `C:\Proyectos\emsica-web`, sobre el arbol sin commitear de las dos pasadas
+anteriores del dia. Lo que ve el cliente: https://emsica-web-alpha.vercel.app/
+(el deploy lo hace Matias; **no se commiteo nada**, por pedido).
+
+### El reclamo y que se hizo
+El cliente mando la captura del panel Marcas con **Riken Keiki** activa: 5 renglones
+de texto arriba y dos tercios de blanco abajo. Le pasa a la mayoria de las marcas
+(de las 26 con lineas cargadas, 17 tienen 5 o menos).
+
+- **Cabecera de marca**: logo (`LogoMarca`, con su fallback tipografiado) + nombre +
+  **rubro** de `content/marcas.ts` + "Ver la marca →". Antes era solo el nombre suelto.
+- **Cada linea es una tarjeta con miniatura** (`components/Miniatura.tsx`): la foto de
+  `getEnlace(marca, linea).imagen` a la izquierda (64 px si la marca tiene ≤8 lineas,
+  48 px si tiene mas), `rounded` + `object-cover`. **Nunca un hueco**: sin foto va el
+  icono de la categoria (`IconoCategoria`) y, si la categoria no tuviera icono, las
+  iniciales. Las tres variantes miden lo mismo, asi la grilla no queda dentada.
+- **Sub-titulos por categoria** dentro del panel de la marca (`porCategoria()`, el mismo
+  truco de "cortar cuando cambia" que ya usaba `porGrupo`): da estructura vertical y
+  evita repetir "Deteccion de gases y fugas" en las 5 tarjetas de Riken Keiki.
+- **Pie con `mt-auto`**: se apoya en el borde de abajo del panel, con el conteo
+  ("5 lineas de producto de Riken Keiki") + boton primario "Ver la marca <X> →" +
+  "Solicitar cotizacion de <X>". Es lo que hace que el blanco del medio se lea como
+  aire de composicion y no como pagina a medio cargar.
+- **Panel Productos**: misma cabecera (icono P&ID de la categoria + conteo + "Ver la
+  categoria →") y el mismo pie. **Compromiso medido**: ahi las miniaturas solo se
+  dibujan si la categoria tiene **≤12 lineas** (Areas clasificadas: 10, que era el caso
+  vacio). Instrumentos de medicion tiene 50: la lista compacta agrupada ya llena el
+  panel y montar 50 fotos por cada categoria que se pasa con el mouse no se paga.
+- **Buscador** (`components/Buscador.tsx`): cada sugerencia lleva miniatura de 36x36 a
+  la izquierda — Marca → su logo; Linea → la foto de la primera de sus marcas que la
+  tenga; Producto → la foto de la ficha; Servicio → un icono de llave. Sin foto, el
+  icono de su categoria. `alt=""` en todas (el nombre esta al lado y es el enlace).
+- `/cotizar/` acepta ahora `?categoria=<slug>` y precarga el nombre de la categoria: lo
+  necesitaba el pie del panel Productos y, sin agregarlo, ese parametro se hubiera
+  ignorado en silencio.
+
+### El numero que pedia el brief (MEDIDO, no estimado)
+Playwright sumando el `body()` de toda respuesta de imagen, contra `next start`:
+- **home al cargar: 108,8 kB en 11 imagenes, y CERO de `/lineas/`** — o sea, el
+  mega-menu **no agrega un solo byte de imagen a la carga de la pagina**. Esos 108 kB
+  son el logo + la foto del hero + los logos del carrusel, que ya estaban.
+- **abrir el mega-menu Marcas: 0 kB / 0 imagenes** (la marca activa por defecto es
+  Pepperl+Fuchs, que todavia no tiene fotos).
+- **pasar a Fluke — el peor caso, 28 lineas y 25 fotos: 13,3 kB**. Riken Keiki 14,3 kB
+  (5 fotos), Testo 3 kB (0 fotos, todo iconos).
+- abrir Productos 0 kB; Areas clasificadas 6,8 kB (1 foto); Instrumentos (50) 0 kB.
+- buscador: 6,3 kB ("fluke") y 10 kB ("multi").
+- **sesion entera** (home + 3 marcas + 2 categorias + 2 busquedas): **173 kB / 62 img**.
+Lejos del techo de 200 kB por apertura que fijaba el brief. La clave es que el panel
+monta **una marca/categoria por vez** (ya era asi) y que `hidden` + `loading="lazy"`
+hace que el navegador no pida nada hasta que el panel se muestra.
+- **Costo en HTML**: el campo nuevo `x` del indice pesa **5.321 bytes crudos / 1.729
+  gzip, UNA sola vez por pagina** (vive en el payload RSC, no en el DOM del menu). Va
+  comprimido a proposito: `"<marca>|<linea>"` cuando el archivo es el derivable
+  (`/lineas/<marca>-<linea>.webp`, que hoy son los 116) y `"<marca>|<linea>|<ruta>"`
+  cuando no — asi el formato **no depende** de una convencion de nombres que @frontend
+  no controla: si el que sourcea cambia un nombre de archivo, la ruta real gana. Home
+  entera: 262,7 kB crudos / 33,8 kB gzip.
+
+### Dos bugs que solo se veian midiendo
+1. **`w-9` no son 36 px en este sitio.** La base tipografica es 17 px (DISENO.md §4.3),
+   asi que `w-9` = 2,25 rem = **38,25 px**. La caja del logo en el buscador estaba en
+   `w-9` y las de las fotos en px: el texto de la fila de la marca arrancaba 2,25 px
+   corrido respecto de las demas. Ahora todas las miniaturas miden en px.
+2. **Filas de altura despareja en el buscador (56 a 94 px).** Al meter la miniatura el
+   texto perdio ancho y los nombres largos envolvian a 2-3 renglones. Se arreglo con
+   `truncate` en las dos lineas + listbox mas ancho (`min-w-[320px] sm:min-w-[380px]` —
+   el `sm:` no es decorativo: a 390 px el header mide 358 y 380 desbordaba).
+
+### Evidencia
+- `npx tsc --noEmit` limpio · `npx eslint .` **0 errores** (los mismos 7 warnings
+  preexistentes de `tests/qa/*.mjs`) · `npm run build` verde, **229 paginas**.
+- **`tests/qa/miniaturas.mjs` (nuevo, queda en el repo): 43 OK / 0 FAIL** a 1366x768 —
+  0 filas sin miniatura en Riken Keiki (5), Fluke (28) y Testo (22, sin ninguna foto),
+  el pie con su conteo y su CTA de cotizacion en las tres, alto de fila del buscador
+  parejo (56-56 px), el texto de todas las filas arrancando en la misma x, flechas del
+  teclado intactas, movil 390 sin desborde, consola sin errores.
+- **Regresion: `tests/qa/megamenu-fix.mjs` 81 OK / 0 FAIL** contra el build nuevo (los
+  dos tests aceptan ahora `QA_URL`). El titulo del panel sigue siendo un `<h3>` a
+  proposito — lo estaba por accesibilidad y ese test lo usa como selector.
+- **Capturas miradas una por una** en
+  `C:\Users\Pandemonium\.claude\jobs\f2eb7f23\tmp\qa-emsica\fix2\`:
+  `marcas-riken-keiki-1366` (la del reclamo), `marcas-fluke-1366` (28 lineas, el caso
+  lleno), `marcas-testo-sin-fotos-1366`, `productos-areas-clasificadas-1366`,
+  `productos-instrumentos-50-lineas-1366`, `buscador-multi-1366`, `buscador-fluke-1366`,
+  `buscador-movil-390`.
+- **El gotcha del `next start` viejo se cumplio**: habia uno vivo en el 3111 y otro
+  quedo pegado en el 3121 — el segundo arranque fallo con EADDRINUSE y, de no mirar el
+  log, hubiera testeado el build anterior. Se mata por PID
+  (`netstat -ano | grep :3121` → `taskkill //PID <pid> //F`) antes de cada corrida.
+  Anotado en `tests/PLAYBOOK.md` con los selectores nuevos y las trampas 12-15.
+
+### Lo que queda
+- **No se toco `content/enlaces-fabricante.ts`** (es de otro agente). **Faltan fotos de
+  6 marcas**: Testo (22 lineas), Warom (6), Pepperl+Fuchs (5), Sealweld (5), Ohaus (3)
+  y Kistler-Morse (1). Se ven con el icono de su categoria — correcto, pero un panel de
+  22 iconos iguales (Testo) es lo mas flojo que quedo. Es lo primero para el que sourcea.
+- El menu **movil** sigue sin miniaturas, a proposito: son `<details>` anidados que se
+  navegan con el pulgar y no hay que pagar imagenes ahi.
+- Sin commit y sin deploy (pedido explicito). Cierre con @verificador sobre el deploy.
+
+## 2026-09-03 (d) — Paradise: los 3 bugs del @tester, y el harness que los había dejado pasar
+Repo `C:\Proyectos\tienda-cosmetica`, solo vitrina pública. Tocado: `src/Tienda.jsx`, `src/index.css`, `index.html`, `tests/fotos_local.mjs` + los nuevos `tests/lib_medir.mjs`, `tests/lib_png.mjs`, `tests/repro_bugs.mjs`, y `tests/PLAYBOOK.md`. **Cero lógica de negocio** (ni `crear_pedido`, ni `vender_local`, ni stock/precios/auth, ni `Local.jsx`/`Admin.jsx`). **Sin commit y sin deploy.**
+
+**ESTA SESIÓN RETOMÓ UN TRABAJO CAÍDO A LA MITAD.** Lo primero fue medir, no codear: correr los repro exactos del tester contra el build actual antes de escribir una línea. Resultado: **el agente anterior ya había arreglado los tres bugs y reescrito el harness entero**; se cayó justo después, sin llegar a verificar nada ni a documentarlo. Lo que estaba hecho y lo que faltaba, explícito:
+- **Ya hecho por el agente caído** (encontrado, verificado, no rehecho): `useWhatsAppFlotante()` con la regla general de "solo donde no hay letras debajo del disco"; el esqueleto de carga de la grilla + `useCerca()` (IntersectionObserver propio) para el lazy; el velo `.hero-texto` atado al texto con `calc(100% - 80px)` y la volanta en crema; `lib_medir.mjs`/`lib_png.mjs` (método de los glifos: capturar con el texto normal y otra vez en `transparent`, los píxeles que cambian SON las letras); `fotos_local.mjs` reescrito tapando los 6 agujeros; `repro_bugs.mjs`. El `index.html` con `imagesizes` corregido también era suyo.
+- **Lo que puse yo**: la verificación completa (nadie la había corrido), dos agujeros que quedaban en el harness, y la calibración del velo.
+
+**Los tres bugs, medidos DESPUÉS del arreglo** (build `index-CjrrGEPM.js` / css `index-CANCltiI.css`, `vite preview :4188`):
+- **BUG 1** · repro 1024x800 `scrollTo(0,2670)`: **0 píxeles de letra** bajo el disco. Repro 390x844 `scrollTo(0,2070)`: **0**. Barrido de scroll completo paso 30 px en 320/390/430/640/1024/1280/1440: **0 posiciones con glifos tapados de 154/156/158/169/112/115/112**, y el botón sigue siendo útil (visible en el 99 % de las posiciones pasado el hero — un gate nuevo, porque "no tapa nada" se cumple trivialmente escondiéndolo para siempre). Con CPU emulada 6x más lenta: cero tareas largas.
+- **BUG 2** · medido por RED con DPR 3: el primer load pide **una sola** foto (la del hero) en 390/dpr3, 390/dpr1, 1024/dpr1 y 1440/dpr2; las 5 de la galería bajan recién al llegar a `#local`. CLS 0,0193 a 390 (igual que el baseline del tester) y 0,0771 a 1440.
+- **BUG 3** · contraste sobre los píxeles reales: peor texto chico **7,49 a 320 px** y 7,63 a 390 (AA pide 4,5); peor texto grande 5,74 (AA pide 3). Antes: 1,00 en el peor punto.
+
+**Lo que completé yo, con lo que se aprendió midiendo:**
+1. **El velo estaba a 0,96 y mataba la foto — y esa foto ES la marca.** El fix funcionaba pero dejaba el arco con las letras doradas PARADISE casi invisible en celular, justo lo contrario de la decisión de la sesión anterior ("se sacó el logo del hero porque la foto es el título"). Barrí el alfa midiendo el contraste real (0,96 / 0,85 / 0,75 / 0,65 / 0,55 / 0,45): con 0,65 el peor caso raspaba AA (4,82) y con 0,55 no llegaba (3,48). **Queda en 0,78**: la foto se ve entera y el peor texto mide ~1,6x lo que AA exige. El criterio de Matías (legibilidad antes que delicadeza cromática) se cumple sin pagar la marca — no había que elegir.
+2. **Dos agujeros que le quedaban al harness nuevo**, los dos en `contrasteReal()` y los dos del mismo tipo: *el test decía OK sobre las líneas que no eran el problema*.
+   - Recorría solo `e.childNodes`, así que **todo texto envuelto en un `<span>` quedaba sin medir**: se escapaban la mitad dorada del h1 (`comprada desde casa.`, `#EBCB7C` sobre la foto) y el horario del hero. Ahora `TreeWalker` sobre todos los descendientes. Al destaparlo, la línea dorada dio 5,74 — pasa, pero **nadie la había medido**.
+   - **`Range.getClientRects()` ignora el recorte de `sr-only`**: el `<span class="sr-only">PARADISE — </span>` mide 1x1 con `clip-path: inset(50%)` pero el rect del rango vuelve 140x32, así que el harness medía contraste de texto que **nadie ve**. Se filtra por la caja del elemento, no por la del rango.
+3. **Verificación de contenido, con los ojos**: miré la captura de la galería a 1440 y comparé una por una contra la tabla del tester — EL SALÓN (isla + lámparas de mimbre), MAQUILLAJE (espejo ovalado), DERMOCOSMÉTICA (protectores solares), EL MOSTRADOR (mostrador curvo + planta), LA ENTRADA (arco de costado). Coinciden. Esto importa porque la tabla `HUELLAS` (dHash) del harness solo vale si está anclada a fotos que alguien miró: si se regeneran los WebP hay que volver a mirarlos ANTES de actualizar las huellas, si no el test se vuelve circular otra vez.
+4. **Regresión de tienda**: 14 productos, ficha con "Stock disponible", agregar al carrito → drawer "TU PEDIDO", 0 errores de consola, y el FAB recibe el clic donde se muestra.
+
+**Evidencia**: `npm run build` verde (CSS 44,50 kB / 8,98 gzip; JS 493,67 kB / 140,00 gzip). `node tests/fotos_local.mjs http://localhost:4188/` → **TODO OK, exit 0** (5 secciones: red/DPR, contenido por dHash, estructura en 8 anchos, WhatsApp a nivel glifo en 7 anchos + los 2 repros, contraste AA). `node tests/repro_bugs.mjs` con los repro textuales del tester. Capturas miradas una por una: hero 320/390-dpr3/1440-dpr2, galería 320/1440, y los dos repro del botón.
+
+**Compromisos aceptados, que alguien tiene que saber** (no son bugs escondidos):
+- El FAB puede quedar **sobre la foto** de una tarjeta de producto (se ve en `wa_repro_390_y2070.png`). Tapa imagen, nunca precio ni texto. Y **se esconde mientras se scrollea** y reaparece 140 ms después de frenar: es la regla, no un glitch. Si a @diseño no le gusta el parpadeo, se cambia la regla — **no el umbral del test**.
+- Las `<img>` de la galería **no están en el DOM** hasta que la sección se acerca (`useCerca`): los `alt` no los ve un crawler que no scrollea. Es el precio de que el lazy signifique algo; el `<span class="arco">` reserva el alto, así que no hay salto.
+- El número del velo (0,78) **depende de la foto del hero**. Si se cambia la foto, hay que volver a correr la sección 5 del harness.
+
+**Pendiente**: commit y deploy los decide Matías; cierre con @verificador contra producción (`node tests/fotos_local.mjs https://tienda-cosmetica-vert.vercel.app`). Sigue abierto de sesiones anteriores: que @diseño mire el recorte del hero en 640–767 px, y `fotos-originales/` sin trackear y sin gitignorear a propósito.

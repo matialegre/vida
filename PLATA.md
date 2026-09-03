@@ -71,7 +71,7 @@ Principio: **los agentes de IA hacen todo lo que no requiera cuerpo o confianza 
 | Lead | Estado | Próximo paso |
 |---|---|---|
 | **Venado Tuerto (Santa Fe)** — cámaras frías con exigencia de registro, 600 km, desarrollo a medida | **Propuesta v5 LISTA PARA MANDAR** (2026-08-31): `C:\Proyectos\frioseguro\comercial\venado-tuerto\` · marca **Termovigía** · PDF de **4 páginas A4** verificado · **entrada $200k inicial + $32k/mes** · mediano $1,05M/$1,74M inicial + $166k/$211k por mes | **Matías manda PDF + mensaje — mié 2-sep.** Pendiente sin bloquear: contrato servicio+comodato e INPI |
-| Panamerican Cerro Moro (reefer) | Instalado 21-ago (fw 2.6.21), sin contrato ni cobro | Definir abono/servicio/referencia — vie 5-sep |
+| Cerro Moro (6 reefers; comprador = "una empresa" del campamento vía Andrés, NO Panamerican) | Instalado 21-ago (fw 2.6.21), sin contrato ni cobro. **Propuesta v2 (3-sep)**: 3 módulos × 2 reefers, USD 4.100 + USD 220/mes, tres formas de pago (A/B/C) — `comercial/PROPUESTA_PANAMERICAN_CERRO_MORO.md` | Matías aprueba números + manda WhatsApp a Andrés (metros por par + canalización) — vie 5-sep |
 | Comercios Bahía | Sin visitas todavía; bloqueado por flasheo placa WiFi | Director fija fecha |
 
 ## Bitácora
