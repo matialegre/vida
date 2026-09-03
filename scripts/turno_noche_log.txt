@@ -2291,3 +2291,34 @@ El **efecto**: ningún Pico ejecutó esto. Falta ver el rollback ocurrir con un 
 
 ⚠️ Dos cosas para un minuto tuyo: el árbol sucio de datalogger sigue ahí (tercera noche, ya no bloquea pero es trabajo colgando), y al mergear con `07-17-b-ssid-casing` hay que quedarse con su `from wifi_nets import NETS` y borrar el `NETS = [...]` literal.
 ===== FIN mi� 02/09/2026  2:14:32,73 ===== 
+===== TURNO NOCHE mi� 02/09/2026 22:00:01,89 ===== 
+Listo. Segundo turno de la noche, cerrado.
+
+## Qué elegí y por qué
+**frioseguro / `servidor/`** — PLATA, prioridad #1. El turno anterior de esta noche fue datalogger (octubre). El `servidor/` de Termovigía se desplegó contra Neon hoy y **ninguno de los 31 branches nocturnos abiertos lo toca**: código nuevo sin auditar, cero riesgo de colisión.
+
+## El bug
+`/ingest` abría una alerta `probe_fault` cuando una sonda mandaba `-127`/`85`… y **nadie la cerraba nunca**. `resolver_silencios()` cierra los `device_silence` de la nube; para `probe_fault` no había equivalente en ningún `.sql` ni `.py` (grepeado, no supuesto).
+
+Dos consecuencias, la segunda peor:
+1. El panel del cliente dice "La sonda 1 no responde" para siempre, aunque haya vuelto a los dos minutos.
+2. **Esa alerta abierta era la memoria de "ya avisé"**: el `NOT EXISTS` queda falso para siempre, así que la **segunda caída de esa sonda no avisa nunca más**.
+
+Cuarta aparición del patrón *el estado avanza y no vuelve* (`lastSupabaseSync` 08-26, `faultAlerted1` 08-29, `lastTelegramAlert` 09-01-b). Las tres anteriores fueron firmware; ésta, servidor.
+
+## Qué hice
+La decisión salió del handler a `logica/episodios.py`, módulo puro (stdlib, la regla del paquete) con la máquina abrir/reabrir/cerrar. Dos cosas que aparecieron al escribirla y son bugs evitados: **`AUSENTE` no es `OK` ni `FALLA`** (un equipo de 2 sondas no manda `temp3`/`temp4` — tratarlo como falla daría dos alertas eternas por equipo, como sano cerraría episodios reales), y una **ventana de reapertura de 15 min** para que una sonda que flapea sea un episodio y no un aviso por minuto. **No toca SQL: no hay migración que aplicar.**
+
+## Verificación
+- **66 tests OK** (42 previos + 17 de la decisión + 7 del puente con conexión falsa).
+- `check_episodios_sonda.py --mutants` → **43 checks, 0 fallas, 14 mutantes muertos**.
+- Contra `main` el checker **reprueba con 27 fallas**, incluido "FALTA EL CIERRE" — es lo que le da valor al resto.
+- La app real importa con FastAPI del venv del servidor.
+
+**Sin verificar:** ningún Postgres ejecutó este SQL — no hay Docker ni `psql` ni `psycopg` en esta máquina, y la base de Neon es producción recién desplegada, no se toca de noche. Son ~10 min con `docker compose up`; los 4 pasos están en el informe.
+
+**Branch:** `nocturno/local-2026-09-02-b-la-sonda-que-vuelve` (`640f4fb`, pusheado). Informe en `diario/nocturno-local-2026-09-02-b.md`, QUE_FALTA ítem #20, doc largo en `servidor/EPISODIOS_SONDA.md`. Worktrees borrados; el checkout de frioseguro quedó idéntico a como estaba.
+
+**Dos cosas para un minuto tuyo:** encontré 4 hallazgos colaterales en la misma cadena que **no toqué** (el más feo: `probe_readings.org_id` nace NULL e invisible **para siempre** si el equipo reporta antes de asignarse a una organización — o sea, recién flasheado en el taller); y frioseguro tiene `TERMOVIGIA_KIT_V1.zip` y `TERMOVIGIA_SERVIDOR.zip` sin trackear que no deberían entrar al repo.
+===== FIN mi� 02/09/2026 22:14:06,25 ===== 
+===== TURNO NOCHE jue 03/09/2026  2:00:01,82 ===== 
