@@ -629,3 +629,78 @@ la explicación de §9.1.
 ADS1220 y ahora `M5`) son **todas del mismo tipo: escribir sin chequear lo que ya existía en el documento
 de al lado.** Antes de minar una etiqueta nueva o de afirmar qué decidió otro, **hay que abrir el archivo
 del otro.** Cuesta un `grep`.
+
+## 2026-09-03 — GALGAS: **C-4 (medir `Rg`) congela $16.009 de la compra del lunes** + el puente falso `D0`
+Dos hallazgos de **@muestreador** (`CALIBRACION_REV_D.md`), los dos de resistencias, los dos baratos ahora
+y carísimos después. Escribí **sólo** en `MODULOS_REV_D.md` (**§13 nuevo**, más punteros en §6.4, §9 y
+§12.6.5) y acá. **No toqué** `CALIBRACION_REV_D.md`, `COMMS_REV_D.md`, `BRINGUP_BANCO.md`,
+`ENERGIA_REV_D.md`, `NOTAS_*` ni `kicad/`. Sin commit.
+
+**1. `C-4` — la cuarta confirmación bloqueante, y me corrige un énfasis mío.** Yo venía pidiendo a GIMAP
+*"cantidad, tipo y **factor de galga**"*. @muestreador tiene razón: **lo que rompe hardware no es el `GF`,
+es `Rg`.** El `GF` es una etiqueta (si da 2,10 cambia un número en EEPROM); **`Rg` es un circuito**.
+**Nadie midió nunca la resistencia real de las galgas de GIMAP y todo el diseño asume 350 Ω.** Cuesta
+**30 segundos con un téster** y es la única de las cuatro confirmaciones que puede tirar componentes ya
+comprados a la basura.
+
+**2. Rehice la cuenta de `Rg` = 120 Ω y encontré el número que la vuelve bloqueante dura:**
+corriente del puente **8,57 → 25,0 mA**, o sea **83 % del máximo absoluto de la llave low-side del
+ADS1220** (30 mA, pág. 8) contra el 29 % de hoy — **un componente al 83 % de un límite de hoja de datos,
+en el camino de la señal.** Además: caída en la llave 47 → **138 mV** · aporte del puente al consumo
+medio 86 → **250 µA** ⇒ **autonomía ~2,52 → ~1,40 años (−44 %)**, justo después de que Matías eligiera
+las dos pilas para duplicarla · `RCAL1` **174,65 k → 59,88 kΩ**. Dos cosas que **no** cambian, y conviene
+saberlo: la **sensibilidad sigue en 1,50 µV/µε** (`dV = Vexc·GF·e/4` no depende de `Rg`) y la impedancia
+de fuente **baja a 60 Ω**, lo que **afloja 2,9×** el requisito de fuga de C12 (único lado bueno).
+
+**3. `|R1 − Rg| ≤ 5 Ω`, no ±10 Ω.** Reproduje la cuenta de @muestreador: ±10 Ω da **21,43 mV contra el
+límite de 20,3 mV del PGA a G=128 → satura**; el punto exacto es **±9,47 Ω**. **H3.7 está 5 % del lado
+equivocado.** Y le agregué lo que faltaba, que es de compra: **con el par `330 (1 %) + 18 (1 %)` el peor
+caso da `2,00 + 3,48 + 0,30 = 5,78 Ω` y NO entra.** ⇒ **el criterio no se cumple comprando, se cumple
+SELECCIONANDO**: por eso el renglón 7 es un pack de **50** y no de 5. Regla de armado escrita: *no existe
+"el R1"; se miden los 50 y para cada nodo se elige el más cercano a la galga de ESE nodo*, y los dos
+valores medidos van a la planilla del nodo. **Gratis, y es la diferencia entre G=128 y G=64.**
+⚠ H3.7 sigue diciendo ±10 Ω — **yo no toco ese archivo**; que lo corrija quien lo tenga asignado, citando §13.3.
+
+**4. Renglón nuevo: 3–6 resistencias 0,1 % para el puente falso `D0`** (techo $6.000). Es *"el control
+decisivo y cuesta 3 resistencias"*: decide si el vagabundeo del cero es la máquina o nuestro instrumento
+(criterio DR-5: si la electrónica sola deriva > 0,5 µε en 24 h, el problema es la placa). **Para mí es el
+ensayo que valida o destruye mi propia advertencia de §6.4** —la EMF térmica de las patas axiales, 1–3
+µV/°C ≈ 1 µε por °C de gradiente—: **yo la escribí como riesgo teórico y `D0` la mide. Si da mal, el
+layout que estoy pidiendo se rehace ANTES de fabricar.** Recomiendo **6 y no 3**: permite correr `D0` en
+los dos nodos en paralelo y baja el `ENS-DERIVA` de ~2,5 a ~2 días. **Es el único renglón de precisión que
+SÍ se paga sin saber `Rg`** (prueba el instrumento, no el sensor), con el límite declarado de que **si
+`Rg` = 120 hay que repetir `D0` a 120 Ω**, porque el autocalentamiento —que es lo que alimenta la EMF
+térmica— no es el mismo.
+
+**La lista del lunes:** se **CONGELAN los renglones 7 y 8** ($10.978 + $5.031 = **$16.009**) hasta C-4.
+**No se cancelan: se pagan apenas haya número y llegan al día siguiente.** Todo lo demás se paga.
+Clave: **el renglón 6 (kit de 30 valores × 600, $14.900) es agnóstico a `Rg`** —cubre RS1/RS2, RGD1, el
+divisor, las bases de 100 k **y `RCAL1` por combinación**, valga 174,65 k o 59,88 k— así que **no se
+congela**. Y **el renglón más caro y más olvidable de toda la compra, el cable apantallado de $44.990,
+tampoco depende de `Rg`**.
+
+| Escenario | Antes | **PAGABLE EL LUNES sin `Rg`** | Congelado |
+|---|---:|---:|---:|
+| MÍNIMO | $162.238 | **$146.229** (techo con `D0`: $152.229) | $16.009 |
+| Núcleo peor caso | $247.539 | **$231.530** | $16.009 |
+| RECOMENDADO | $342.371 · techo $357.020 | **$326.362** · techo **$347.011** | $16.009 |
+| COMPLETO | $360.267 · techo $374.916 | **$344.258** · techo **$364.907** | $16.009 |
+
+> **El lunes se paga el 90,1 % del MÍNIMO y el 95,3 % del RECOMENDADO sin saber `Rg`.** Lo que queda
+> afuera son **dos renglones**, y son exactamente los dos que se tiran si la galga no es de 350 Ω.
+> **No hay excusa para postergar la compra entera por C-4.**
+
+**Desbloqueo, por orden:** (1) **medir las galgas — 30 s, $0**, y si el número llega antes del lunes no se
+congela nada; (2) si GIMAP no contesta, **comprar las BF350-3AA** (renglón 22, $17.896) resuelve C-4 por
+definición (publican 350 ± 0,3 Ω) — pero **no exime de medirlas** y **$17.896 para destrabar $16.009 sólo
+cierra si además hacen falta las galgas**; (3) **lo que NO se hace: comprar las de 330 Ω "por las dudas"**.
+
+**Sin impacto de componente, anotado igual:** **`nodo_id` en EEPROM** ⇒ no hay jumpers ni DIP-switch y
+**los dos nodos son físicamente idénticos** — bueno para fabricación, malo para trazabilidad: **hay que
+etiquetar cada caja por fuera**. **Enlace a 433,500 MHz** ⇒ **verificado que NO cambia la antena**:
+433,500 cae dentro de la ISM 433,05–434,79 MHz, para la que están hechas la helicoidal del renglón 26 y
+el pigtail. Lo dejo escrito para que el que compre antenas en el futuro no lo re-abra.
+
+**Pendiente @hardware:** (a) **C-4, es lo primero de todo**; (b) precios reales cuando ML se desbloquee
+(D0, BAT85, portapilas siguen con techo declarado); (c) que alguien corrija H3.7 en `BRINGUP_BANCO`;
+(d) las de siempre: ESR del Itytarg 2,2 F, MCP1700-**3002**, M1/M2 con calibre.
