@@ -92,6 +92,133 @@ Doc de dominio + bitacora. El agente lo lee al arrancar y lo actualiza al cerrar
     se leia mal.
   - Regeneracion desde cero verificada (borrando cache y JSON): 18 paginas, 3,25 MB. Sin commit.
 
+## 2026-09-02 (d) — GALGAS / DREYFUS: **rev D, la placa se rehizo entera** (120 x 90, TODO PASANTE)
+
+`C:\Proyectos\galgas\hardware\kicad\` — `nodo_galga_v3.kicad_pcb`, `LAYOUT.md` (rehecho, no
+parchado), `drc.rpt`, `salida\` (2D top/bottom, 3D top/bottom, `.glb`, `.step`, `verificacion.json`),
+toolchain en `pcb\`. **La rev C entera se archivó en `revC/`** con un LEEME (H-15 de @verificador:
+convivía con el netlist rev D y un cold-start podía abrir la placa vieja creyéndola nueva).
+**Sin gerbers y sin commit** (orden). Dossier: `hardware\NODO_GALGA_v3_revD_DOSSIER.pdf`,
+**16 páginas, 3,11 MB**.
+
+**Estado medido (cierre):** 57/57 componentes, 50 redes, **338 segmentos + 28 vías**,
+**DRC `--severity-all` = 0 errores, 0 pads sin conectar, 0 avisos, 0 errores de huella** —
+el reporte no tiene una sola línea de violación.
+`pcb/verificar.py` (nuevo): **0 fallos, 1 aviso**. Renders 2D y 3D **mirados**, más un zoom al bloque
+analógico y un contact sheet de las 16 páginas del dossier.
+
+**CIERRE (mismo día, después del reporte): el DRC quedó en CERO DE TODO.** Los 2 avisos que quedaban
+eran uno solo repetido y no eran míos: la huella del reed dibujaba la línea del alambre **hasta el centro
+del pad** (±11,43, o sea 0,90 mm dentro del cobre, una vez por pata). @esquematico lo cerró **sin número
+fijo**: `SILK_FIN = pr − PAD_SW1/2 − 0,13`, derivado de la geometría, así que cuando caiga `DE-14`/`M5`
+con el reed real medido y cambie `PASO_SW1`, el corte se recalcula solo. Re-importada la huella y rehecha
+la placa con `sh pcb/todo.sh`:
+**`Found 0 DRC violations` · `Found 0 unconnected pads` · `Found 0 Footprint errors`.**
+Medido sobre el board: los extremos quedan a **1,03 mm del centro del pad = 0,070 mm de aire** entre el
+borde de la línea y el borde del pad. Zoom de la zona del reed mirado (`salida/zoom_reed.png`): la línea
+llega hasta casi el pad, no quedó cortada de más, y `SW1` + `REED: FIJAR CON RTV` se leen.
+**Nota fina para @esquematico:** los 0,13 mm son al EJE de la línea; con el ancho de 0,12 el aire real es
+0,07. Pasa porque este proyecto tiene `min_silk_clearance = 0`; si alguien la sube a 0,15 el aviso vuelve.
+El valor a prueba de balas sería `SILK_FIN = pr − PAD/2 − 0,13 − ancho_linea/2`.
+El netlist no cambió: 57 componentes / 50 redes, conectividad idéntica (`DIFF_REDES_revC_revD.txt`).
+
+### Lo que mandó el layout: L10, que no estaba en la lista original
+@verificador (H-2) encontró que **la restricción más dura faltaba**, y de paso corrigió un hallazgo
+previo suyo: no es el Kelvin de `REFP1` (58 ppm = 0,06 µε, ganancia, se calibra), es que
+**`R1.1` y `R2.1` tomen `+3V0` en el MISMO punto**: 20 mΩ de cobre entre las dos tomas = 85 µV =
+**56,7 µε de cero corrido**, con 0,22 µε/°C de deriva. **Tolerancia para 1 µε: 0,35 mΩ.**
+- **Estrella de excitación**: el nudo (52,30 · 24,50), con `R1.1` y `R2.1` llegando por ramales
+  **espejados de 3,53 mm exactos**. Como las dos ramas consumen la MISMA corriente (3,0 V/700 Ω =
+  4,29 mA), dos ramales iguales dan dos caídas iguales y **la asimetría se cancela exactamente**.
+  Medido por script: **0,000 mm → 0,00 µε**. El Kelvin de AVDD/AIN0 sale de ese mismo nudo.
+- **Estrella de retorno**: (49,81 · 8,00). `R3.2` entra con un ramal de 4,00 mm y de ahí sale el
+  Kelvin a `REFN1`. Lo de aguas abajo (20 mm con 8,6 mA) es ganancia, no cero.
+- **El ramal A no lleva nada más**: ni un pull-up. `RR1` se mudó al lado del ISP y se alimenta por el
+  corredor este **justamente para no colgarse del Kelvin** (el A* quería conectarlo ahí: falló, y
+  fue una suerte que fallara — quedó como ruta a mano).
+
+### Tres decisiones de placement que son el orden de los pines, no estética
+1. **`U1` (CJMCU) a 270°**: sus 4 pines analógicos quedan en el extremo OESTE de las dos filas y los
+   digitales en el ESTE. Cero cruces entre el filtro y el ADC.
+2. **`U2` (DIP-28) a 90°** y con el `cx` elegido para que **`U1.15/16` caigan justo sobre `U2.18/17`**:
+   MISO y MOSI son dos bajadas rectas de 20 mm sin un codo.
+3. **`U3` (RA-02) a 270°**: la fila del SPI mira al micro y `3V3/RST/DIO0` al norte, donde está la
+   franja libre con `CR1/CR2`; el IPEX queda en la esquina NE, contra la pared del SMA.
+4. Y el que resolvió el abanico del sur: **los destinos al sur del micro se colocaron EN EL ORDEN DE
+   SUS PINES** (RR1/J3 al oeste, reed al SO, LED y radio al este). Con eso el abanico se dibuja con
+   carriles paralelos y quedan sólo dos cruces topológicamente inevitables.
+
+### Los tres carriles del bloque analógico
+Las tres alturas de los pines de `J1` (E− 17,46 · S+ 22,54 · A 27,62) SON los tres carriles, y cada
+uno **pasa por debajo del cuerpo de vidrio de sus dos clamps**, entre los pads: el carril no esquiva
+a los diodos, los atraviesa por su nodo. Eso permitió los 6 clamps EN el conector (C31) sin deformar
+nada. La columna de precisión es un solo eje `x = 46`, seis resistencias, ordenadas por cómo entran
+y salen las redes (`NODO_B` un tramo de 10 mm entre tres pads contiguos, `NODO_A` otro de 5).
+`CD1` quedó **centrado entre los dos carriles**: derivaciones de 7,5 mm exactos a cada lado.
+
+### La doctrina de capas que cambió respecto de la rev C (y es lo que arregla su debilidad)
+En una placa **toda pasante**: (a) una red entre dos pads pasantes se tiende entera por B.Cu **sin
+una sola vía** — el costo no es eléctrico, es el TAJO al plano; (b) los 38 pads de masa pasantes
+**cosen F.Cu con B.Cu**, así que un tajo en B.Cu queda puenteado por el relleno de F.Cu.
+→ **F.Cu**: todo lo analógico, los rieles de +3V0 y el SPI. **B.Cu**: plano + las señales lentas.
+→ Dos **rule areas** prohíben pistas de B.Cu bajo el ADC y bajo el radio: medido, **0 y 0 tramos**.
+**La debilidad principal de la rev C (30 segmentos cortando el plano bajo el ADC de 24 bits) está
+resuelta.** Aceptado y declarado: 8 tramos bajo el zócalo del micro.
+
+### El router A* de Termovigía, cosechado y arreglado
+El abanico digital del sur es **river routing**, no criterio: lo cerró `pcb/rutear_astar.py` (copiado
+de `frioseguro/.../pcb/rutear_astar.py`, adaptado a 120×90 y origen 0,0) sobre la base hecha a mano,
+con las rule areas puestas. **21-25 enlaces según la corrida**. Tres arreglos que valen para la biblioteca:
+1. **Una rule area vale para LAS CAPAS QUE DECLARA, no para las dos.** El original bloqueaba
+   `m[:, ...]`, así que los keepouts de B.Cu bajo los módulos dejaban a sus pads **sin una sola celda
+   libre en F.Cu**, y el router informaba `grupo sin celda libre` sin decir por qué.
+2. Si el A* devuelve un camino **degenerado** (0 tramos y 0 vías) el `while` no progresa y queda en
+   **bucle infinito** hasta `MAX_PARES`. Hay que declarar el par abierto y seguir.
+3. `CLR = 0,30` no deja pasar entre pads de header a 2,54 (0,84 mm de aire entre bordes): con 0,24
+   entra una pista de 0,3 con 0,39 a cada lado.
+
+### Bug propio nuevo del generador (familia de los cinco anteriores)
+**Un courtyard dibujado como CÍRCULO se guarda con `(center)` y `(end)`: leer sólo esos dos puntos da
+una caja del ANCHO DEL RADIO, no del diámetro.** Los electrolíticos radiales D5.0 quedaban declarados
+de **4,55 × 1,60 mm (el tamaño de sus PADS)** en vez de 5,5 × 5,5 → `chequear_solapes` decía "sin
+solapes" y el DRC cantaba `courtyards_overlap`. Arreglado en `courtyard_bbox()`: para `fp_circle` se
+calcula el radio y se usa centro ± r.
+
+### Serigrafía: la regla que faltaba
+`rotular.py` evitaba solaparse con otra serigrafía, pero **no con los PADS**. En una placa que se
+puebla a mano, tinta sobre el cobre donde va el estaño es un defecto real, no cosmético: agregando
+los bounding boxes de todos los pads a la lista de ocupados, los avisos pasaron de **11 a 2** (y los
+2 que quedan son de la huella del reed, §arriba). 57/57 referencias colocadas, **0 escondidas**.
+Rótulos nuevos en cobre: `E-/REFN NO ES MASA`, el pinout de la galga, `PAD ANT: NO POBLAR`,
+`SIN ANTENA NO ALIMENTAR`, `REED: FIJAR CON RTV`, `D4 = UNICO SMD` y —el que más importa—
+**`J4: +C1 GND +C2 GND — 2 CELDAS EN PARALELO CON DIODO — NO PUENTEAR`**.
+
+### Herramienta nueva: `pcb/verificar.py`
+El DRC dice si la placa es **fabricable**; esto dice si es **la placa que se diseñó**. Chequea sobre
+el board ruteado: las dos estrellas (largo real de cada ramal recorriendo el cobre), que `/E_REFN` no
+tenga zonas ni pads de más, B.Cu bajo U1/U3, las 8 distancias de desacople, L1 (calor vs. precisión,
+mismo eje, misma columna), la simetría del filtro y la mecánica. **Devuelve 1 si algo falla** →
+entra en el DoD de cualquier revisión futura.
+
+**Propiedad honesta del entregable, encontrada al re-correr:** la placa **se regenera** con un comando,
+pero **no es bit a bit reproducible**. Tres pasadas sobre la misma entrada dieron 338, 349 y 351 segmentos:
+lo ruteado a mano es determinista, lo que cierra el A* no. Por eso `pcb/verificar.py` corre en cada pasada
+y entra en el DoD: **lo que se garantiza no son las coordenadas, son los criterios**, y se vuelven a medir
+sobre el board cada vez (las dos estrellas dieron 3,53/3,53 mm y 0,00 µε en todas las corridas).
+Está escrito en `LAYOUT.md` §12.1 y en el dossier, y el número de tramos de B.Cu bajo el zócalo del micro
+**ya no se tipea**: sale de `salida/verificacion.json`.
+
+**Renombre de @esquematico, anotado para no citar mal:** `D1`…`D14` de `NOTAS_REV_D.md` pasaron a
+**`DE-1`…`DE-14`** para no chocar con los designadores reales (`D11 D12 D21 D22 D31 D32`, que quedan
+intactos en la placa). Los nombres viejos siguen valiendo como alias; el mapeo está al principio de C40.
+Lo que me bloquea sigue siendo lo mismo con otro nombre: **DE-1 = M1** (RA-02) y **DE-2 = M2** (CJMCU).
+
+**Pendientes:** **M1** (separación entre filas del RA-02 con adaptador: 17,8 mm = paso 2,54 y esta
+huella sirve; 14,0 = módulo pelado y hay que panelizar un adaptador) y **M2** (calibre al CJMCU).
+Ninguna cambia una red: cambian los 32 agujeros de los dos módulos. **Hasta que estén, no hay
+gerbers.** Para @esquematico: la línea de serigrafía del reed. Para @diseno3d: `LAYOUT.md` §10 (tabla
+de agujeros y conectores) + el `.step` y el `.glb` ya exportados.
+
 ## 2026-09-02 (b) — GALGAS / DREYFUS: placa CERRADA, gerbers PRELIMINAR
 
 Con P6b aprobado. `C:\Proyectos\galgas\hardware\kicad\` — board, `LAYOUT.md`, `drc.rpt`,

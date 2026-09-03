@@ -463,3 +463,148 @@ Doc de dominio + bitacora. El agente lo lee al arrancar y lo actualiza al cerrar
     la etiqueta de las 5 fuentes -> @firmware aplica `PINOUT_V1.md` (`MAX_RELAYS 4`, `PIN_RELAY_3 18`,
     `PIN_RELAY_4 23`, DHT fuera, `RELAY_ON LOW` que ya esta) -> Gonza y Sergio arman con `CABLEADO.md`.
     **Nada commiteado** (orden de la tarea).
+
+- **2026-09-02 — @esquematico: DREYFUS/galgas — REV D del nodo de galga. La placa entera, en PASANTE y con MODULOS.**
+  Repo `C:/Proyectos/galgas/hardware/`. Todo por el generador (`kicad/generar_nodo_galga.py`), **nada a mano sobre el
+  `.kicad_sch`**. Reemplaza a la rev C que @verificador habia aprobado esta manana (P6b). **Sin commit** (ordenado).
+  - **Entregables**: `kicad/nodo_galga_v3.kicad_sch` rev D (57 componentes, 50 redes, **243 cables / 52 uniones / 8
+    etiquetas locales / 1 sola red por etiqueta global** = 2 % contra el 15 % que permite la doctrina) ·
+    `kicad/nodo_galga_v3.net` · `kicad/erc_revD.rpt` **0/0 con `Ignored checks: None`** ·
+    `kicad/DIFF_REDES_revC_revD.txt` (red por red) · `kicad/nodo_galga_v3.pdf` + `.svg` + `render_esquematico.png` ·
+    **`NOTAS_REV_D.md` nuevo (C30-C40, con la simulacion numerica del ciclo)** · `NOTAS_CALCULO.md` **seccion 11**
+    (no se toco nada anterior) · huellas propias `galgas.pretty/CJMCU-1220` y `CP_Radial_PB-5R0V105-R_P11.80mm`,
+    **generadas desde el mismo script, con la cota a MEDIR como UNA variable de Python**.
+  - **El diff de redes encontro DOS defectos electricos que el ERC 0/0 no ve** — es por esto que esta en el DoD:
+    (1) el riel `/V_SC` terminaba en `x=u(102)` y el `PWR_FLAG` + la entrada del LDO quedaban en una red huerfana
+    `Net-(U4-VI)`; **el ERC callaba porque el propio flag "alimentaba" esa red**. (2) **`RPU1` colgaba de la linea de
+    MOSI, no de la de `CS`** (`Net-(J2-Pin_4) + RPU1.2` en el diff). Las dos corregidas y re-verificadas.
+  - **Mirar el PDF encontro otras cuatro** que ninguna herramienta ve: el cable de PD7 corria por el primer renglon de
+    la tabla de pines (**cable a traves de texto**); el valor de D31 impreso **encima del simbolo de masa** de RGD1
+    (texto contra simbolo: el chequeador compara texto contra texto); el bajante de CLK **cruzaba** AVSS y DGND
+    (resuelto reordenando el pin CLK al final de la columna del simbolo, no moviendo cables); y el bloque 5 metiendose
+    en el **cuadro de rotulo** — el mismo vicio (d) de la rev C, ahora resuelto de raiz: **el interlineado se CALCULA**
+    para que la ultima linea caiga arriba de 372 mm.
+  - **Q2 y RG1 SALEN, y verifique el razonamiento antes de sacarlos** (es una pila de litio): con un Schottky por celda,
+    la celda invertida queda con 7,2 V en inversa sobre su propio diodo y **la malla de 367 mA que Q2 nunca cubrio
+    desaparece**. Lo que queda es la **fuga inversa**: BAT85 `IR <= 2 uA a 25 V/25 C` de hoja, ~22 uA a 60 C, contra el
+    limite de 10 uA de la quimica. **Riesgo residual DECLARADO en la hoja**, con mitigacion de procedimiento (las dos
+    pilas juntas, del mismo lote, polaridad verificada con tester).
+  - **Schottky elegido: BAT85 (DO-35), no 1N5819.** El criterio es la **fuga GARANTIZADA por hoja**, no la tipica
+    (misma doctrina que cerro P9): BAT85 **2 uA max a 25 V**; el 1N5819 solo garantiza **1 mA a 40 V** (100 veces el
+    limite) y sus 3 uA salen de una curva tipica que a 75 C da 130 uA. Una propiedad de seguridad de litio no se compra
+    con un tipico.
+  - **Correccion al numero que se le presento a Matias: el diodo cuesta 224 mV, no 175.** Los 175 estan calculados a la
+    corriente de **reposo**, y ese no es el punto de operacion: **el supercapacitor integra el consumo pulsado**, asi
+    que sobre un ciclo el diodo pasa la corriente **MEDIA** (0,177 mA). Simule el ciclo de 300 s con la **ecuacion del
+    diodo** ajustada a los maximos de hoja: `V_SC` en reposo = OCV - 224 mV, estable en los cinco casos.
+    Autonomia honesta **~2,43 anos** (no 2,52).
+  - **Y el numero que ordena todo (C37)**: a fin de vida (OCV 3,20 V, R_int 20 ohm, ESR_DC 1,0) **VOUT minimo = 2,643 V**.
+    Contra el piso de 2,00 V (`BODLEVEL=110` **a 4 MHz**) sobran **643 mV**; contra 2,90 V (`BODLEVEL=101`) **faltan
+    257 mV**. El nodo transmite hasta **OCV 2,56 V** con los fusibles bien y solo hasta **3,46 V** con los fusibles mal:
+    **900 mV de OCV = la meseta entera de la pila**. Escrito en negrita en el bloque 6.
+    Y **R3 (transmitir 30 s despues de medir) ya solo vale 6 mV**, no 47: con 1 F la medicion hunde la mitad y el diodo
+    hace lenta la reposicion. Se mantiene porque es gratis, pero **la ultima TX la salvan los fusibles, no la espera**.
+  - **Dos cuentas donde diferi de @hardware, con el numero al lado** (no las tome por orden):
+    (a) **`RGD1` VUELVE A 100 k, no sigue en 1 M.** El 1 M era correcto para el MOSFET (IGSS 100 nA vs Vgs(th) 0,8 V);
+    con el BJT lo que manda es la fuga del PIN del ATmega (1 uA) contra Vbe: `1 uA x 1 M = 1,0 V > 0,6 V` y **el
+    shunt-cal quedaria ENCENDIDO durante el POR** — justo el modo de falla que G5 cerro, reintroducido por el cambio de
+    tecnologia. (b) **`RB_Q1` = 22 k, no 100 k**: `Vce(sat)` de un BJT saturado **no tiende a cero**, tiende al voltaje
+    de offset (`Vt·ln(1+1/betaR)`), y lo que entra al error no es Vce sino **Vce/Ic** = resistencia efectiva en serie con
+    RCAL1. Con 100 k son 22 mV = 1298 ohm = **7,4 ue** de error de ganancia del escalon; con 22 k son 5,3 mV = **1,8 ue**,
+    y la corriente de base solo circula durante la calibracion. Es sistematico y se mide en el bring-up; su deriva de
+    25 a 60 C es 0,2 ue.
+  - **Clamps de entrada: los puse EN EL CONECTOR, no detras de RS1** como proponia @hardware, y el motivo es un numero:
+    la impedancia del nodo es **175 ohm** ahi y **1175 ohm** despues de RS1, o sea que el mismo diodo cuesta **6,7 veces
+    mas error de cero**. Ademas `NODO_A` y `E_REFN` no admiten resistencia serie (una lleva la excitacion y la otra es
+    REFN1), asi que dos de las tres lineas van clampeadas en el conector por obligacion. **Y la cuenta fina que no
+    estaba en ningun lado**: con el puente excitado el nodo esta a `AVDD/2`, los DOS diodos quedan en inversa con casi
+    la misma tension y **sus fugas se restan** -> al error entra el DESAPAREAMIENTO, no la suma (2,9 ue con 1N4148, no 5,8).
+  - **C34, para @firmware**: el divisor de pila cuelga de `+BATT`, o sea **despues de los diodos**. Si deja
+    `VBAT_MV_AGOTADA = 3050` mV el corte efectivo se va a **OCV 3,27 V** y se tira meseta. **3050 -> 2850 mV** y
+    **3350 -> 3150 mV**, y la lectura **en reposo, antes de encender el puente** (a 10,4 mA el diodo cae 377 mV en vez
+    de 224). Mas `V_BAT_SENSE` a **ADC3/PC3/pin 26** con `DIDR0` y sin pull-up, y `PC2` a masa **por 1 k** (`RSTRAP1`):
+    no directo, porque el firmware maneja PC2 como salida.
+  - **`RSC1` = 15 ohm y 1 W**: disipa **0,38 W durante ~20 s (4,6 J)** en la carga inicial y **eso no estaba anotado ni
+    en C8 ni en C16**. Pico 160 mA totales = 80 mA por celda (40 % del pulso maximo). Y el checklist sigue valiendo:
+    `V_SC > 3,0 V a los 46 s`.
+  - **Huellas propias con UNA variable**: `SEP_FILAS_CJMCU = 20.32 mm` y `PASO_CSC = 11.80 mm` en el generador, con
+    "PENDIENTE DE MEDIR (M2)" escrito en el `descr` del `.kicad_mod`. Cuando Matias pase el calibre se cambia **un
+    numero** y se regenera; nadie edita un `.kicad_mod` a mano.
+  - **Gotcha nuevo para la doctrina**: `Transistor_BJT:2N3904` es un simbolo `extends`; la copia aplanada que embebe el
+    generador **no coincide byte a byte** con la libreria y el ERC lo reporta como `lib_symbol_mismatch`. Se usa el
+    padre `Q_NPN_EBC` con el valor "2N3904" (mismo dibujo, misma numeracion E-B-C). Y los filtros de huella importan:
+    `Device:C_Polarized` filtra `CP_*`, asi que la huella propia del supercap se llama `CP_Radial_...`.
+  - **Proximo**: **@verificador** re-audita con `DIFF_REDES_revC_revD.txt` -> **@pcb** rutea con `nodo_galga_v3.net`
+    rev D (restricciones de layout en `NOTAS_REV_D.md` C39; **M1 y M2 lo siguen bloqueando**) -> **@firmware** C34 y C37
+    -> **@hardware** BAT85 x2, 1N3595 x6, RSC1 15R 1W, RB_Q1 22k, zocalo torneado DIP-28, y **2 ADS1220 (no 3: el
+    receptor no mide)**.
+
+- **2026-09-02 (b) — @esquematico: rev D, cierre de H-1 y H-2 de `VERIFICACION_REV_D.md`.** Aprobada con observaciones
+  por @verificador (cold-start reproduce el `.kicad_sch`, el simbolo y las dos huellas **byte a byte**; 50/50 redes
+  iguales; ERC 0/0 generado por el; `/E_REFN` disjunto de `GND`; 0 desajustes simbolo-huella en los 57 componentes;
+  y **me dio la razon en las dos cuentas donde diferi de @hardware**, rehaciendolas). Los dos hallazgos que bloqueaban
+  el layout quedan cerrados. Sin commit. **No toque `.kicad_pcb`, `LAYOUT.md` ni `gerbers/`** (@pcb esta trabajando ahi).
+  - **H-1 — `SW1` tenia una huella peligrosa y se me habia perdido una pendiente de medicion. Aceptado sin discutir.**
+    El reed de vidrio de 14 mm con la huella del axial de 1 W (`P15.24`) obliga a doblar el alambre a **0,62 mm del
+    sello de vidrio**, que es exactamente el modo de falla que yo mismo habia escrito en negrita tres centimetros mas
+    arriba en la hoja. Una huella que desmiente un aviso escrito es peor que no tener el aviso.
+    **`PASO_SW1 = 22,86 mm`** (9 x 2,54, en grilla) -> **4,43 mm de alambre libre por lado**. Huella propia
+    `galgas:REED_D2.7mm_L14.0mm_P22.86mm`, generada por `escribir_reed()` desde el mismo script, con el **`descr`
+    explicando por que el paso no es libre** (para que nadie la "optimice" dentro de un año) y con el **courtyard
+    cubriendo tambien los alambres** (+-12,33 mm), no solo el vidrio. **El paso resuelve el DOBLADO; el RTV a lo largo
+    del tubo resuelve la RESONANCIA: son dos cosas distintas y hacen falta las dos.**
+    **El hallazgo de metodo lo hago propio**: de las tres piezas cuya cota hay que medir, dos estaban declaradas
+    (M2 CJMCU con su variable y su `descr`, M1 RA-02) **y la del reed se habia perdido**. Ahora es la tercera variable
+    (`PASO_SW1` + `CUERPO_SW1`) y **`M5`/`D14` en C40**. `CUERPO_SW1 = (14,0 x 2,7)` sigue siendo `[SUP]`: @hardware da
+    la parte, Matias mide, se cambia **un numero** y el nombre de la huella y el `descr` se recalculan solos.
+  - **H-2 — faltaba la restriccion de layout mas importante, y corrige el G18 de la rev C.** `L10` agregada a C39, con
+    su cuenta en **C39.1**: 20 mohm de cobre entre las tomas de `+3V0` de `R1` y de `R2` son
+    `4,25 mA x 20 mohm = 85 uV = **56,7 ue de CERO CORRIDO**`, tolerancia para 1 ue = **0,353 mohm**, deriva
+    **0,22 ue/C** (del mismo orden que la EMF termica de `L1`, y esta no se calibra sola). En cambio los mismos
+    20 mohm entre el tope del puente y la toma de `REFP1` -que es adonde apuntaba G18- son **58 ppm = 0,06 ue de
+    GANANCIA**: despreciable y calibrable. **G18 senalaba el nodo equivocado.**
+    **Corolario que le sirve a @pcb: no hace falta partir `+3V0` con un net-tie.** Con que `R1.1` y `R2.1` caigan en el
+    mismo pad (idem `R3.2` y `J1.3` sobre `E_REFN`, y la toma Kelvin de `REFP1`/`REFN1` en esos mismos puntos) el
+    problema desaparece, porque no hay corriente entre las dos tomas. Es colocacion, no un componente.
+  - **`L10` tambien quedo escrita en la hoja** (bloque 5, cuatro renglones con los numeros), porque es la restriccion
+    que decide el cero de la placa y no puede vivir solo en un `.md`.
+  - **Mirar el PDF otra vez encontro dos cosas mas**: la ultima linea del bloque 5 caia **justo sobre el borde del
+    marco** y salia tachada (el objetivo del calculo automatico de interlineado baja de 372 a **368 mm**), y al
+    condensar las notas en la pasada anterior habia quedado **una frase cortada** ("...y un zocalo de" sin
+    continuacion). Las dos corregidas.
+  - **Evidencia re-corrida**: `verificar_sch.py` **TODO OK** (108 refs anotadas, 57 huellas, ERC **0/0 sin chequeos
+    apagados**, netlist sin advertencias) · `chequear_solapes_sch.py` **0 solapes** · `erc_revD.rpt` con
+    `Ignored checks: - None` · netlist, PDF, SVG y `render_esquematico.png` regenerados · `DIFF_REDES_revC_revD.txt`
+    rehecho (50 redes, sin cambios de conectividad respecto de la version aprobada: **lo unico que cambio en el
+    netlist es la huella de `SW1`**).
+
+- **2026-09-02 (c) - @esquematico: rev D, trazabilidad de rotulos y el aviso de serigrafia de @pcb.**
+  Sin commit. Solo se toco `hardware/kicad/generar_nodo_galga.py` (+ lo regenerado) y `hardware/NOTAS_REV_D.md`.
+  **No** se tocaron `.kicad_pcb`, `LAYOUT.md`, `gerbers/`, `MODULOS_REV_D.md`, `ENERGIA_REV_D.md` ni
+  `VERIFICACION_REV_D.md`.
+  - **Mis decisiones `D1`..`D14` de `NOTAS_REV_D.md` pasan a `DE-1`..`DE-14`** (uno a uno, sin reordenar).
+    Choque real que levanto @hardware barriendo etiquetas: `D1`-`D4` son **designadores de componente** de esta
+    misma placa (los clamps de la galga y el ESD del riel), y en mi propio documento conviven con `D11`, `D12`,
+    `D21`, `D22`, `D31` y `D32`, que tambien son refdes. **El que se mueve es el rotulo de documento, no el
+    refdes**: un designador vive en el netlist, el BOM, la serigrafia y la guia de armado. Coincido con el
+    criterio de @hardware de no renumerar los suyos.
+  - **Las citas ajenas siguen encontrandose**: agregue el mapeo como recuadro al principio de C40, con los dos
+    casos citados desde afuera explicitos - **`D14` = `DE-14`** (la cota del reed, citada junto a `M5` en
+    `VERIFICACION_REV_D.md` y en el plan maestro) y **`D5` = `DE-5`** (citado como "D5 de C40" en
+    `NOTAS_CALCULO.md` 11.3, que no podia editar). **El nombre viejo queda como alias valido y la nota es lo
+    que lo garantiza.**
+  - Anotadas en el mismo recuadro las convenciones que se acordaron para no repetir el enredo: **`M5` sigue
+    siendo mio** (@hardware movio su prueba de ruido del ADC a `M16`); los `C*` se citan **con el dueno**
+    adosado ("calculo C6" contra "contradiccion C6 de @diseno"); y **`C-1`/`C-2`/`C-3` con guion** son las tres
+    confirmaciones de conteo del bring-up, **no** los calculos `C1`/`C2`/`C3`.
+  - **Cerrado el aviso de serigrafia de @pcb** (eran 2 avisos del DRC, el mismo defecto una vez por pata): la
+    linea que representa el alambre en `REED_D2.7mm_L14.0mm_P22.86mm` llegaba hasta **-11,43 / +11,43**, o sea
+    el CENTRO del pad, y entraba 0,90 mm en el cobre. Ahora termina en **+-10,40**, con el borde del pad en
+    **+-10,53**: **0,13 mm de aire**. Y no quedo como numero fijo: sale de la geometria
+    (`SILK_FIN = pr - PAD_SW1/2 - 0,13`), asi que si cambia `PASO_SW1` o el pad, el corte se recalcula solo.
+    Verificado con un chequeo geometrico propio (extremos de serigrafia contra el radio de cada pad):
+    **serigrafia fuera de todo pad**.
+  - **Evidencia re-corrida**: `verificar_sch.py` **TODO OK** (ERC **0/0** con `Ignored checks: - None`, 108 refs
+    anotadas, 57 huellas) - `chequear_solapes_sch.py` **0 solapes** - netlist, PDF y `render_esquematico.png`
+    regenerados - `DIFF_REDES_revC_revD.txt` rehecho: **50 redes, conectividad identica a la version aprobada**
+    (el cambio es solo de serigrafia dentro de la huella, no toca el netlist).

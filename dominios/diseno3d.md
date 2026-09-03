@@ -1,5 +1,104 @@
 # Bitácora @diseno3d — diseño mecánico 3D
 
+## 2026-09-02 (b) — v1 rev B: la plaqueta de @pcb entra al gabinete + PORTADO EL FIX A v2
+
+Dos tareas del Director. Las dos cerradas.
+
+### 1. Gabinete v1 rev B — alinear con la plaqueta PE04
+
+@pcb cerró `hardware/v1_modulos/plaqueta/` (48 redes verificadas) y eso reemplazó
+los dos supuestos que yo tenía abiertos. Cambios en
+`hardware/v1_modulos/gabinete/termovigia_v1.scad`:
+
+| | rev A (supuesto mío) | rev B (dato de @pcb §8) |
+|---|---|---|
+| plaqueta | área reservada 100 × 25 | **PE04 150 × 56**, 4 M3 a **134,0 × 40,5** |
+| ESP32 | carril propio en el piso | **zócalo SOBRE la plaqueta** — carril eliminado |
+| reeds de puerta | 3 PG en la pared izquierda | **a la pared de abajo** (sus bornes están en la plaqueta) |
+| prensacables abajo | 4 | **7**, en el orden de las borneras |
+| tornillos de la plaqueta | acero | **NYLON** (riel +3V3 a 4,7 mm de un agujero) |
+
+**TAMAÑO FINAL: cerrado 192,5 × 138 × 46 mm**, interior útil 182 × 127,5 × 38.
+La base ocupa **188 × 161,5** en la cama. Base 155,1 cm³ (~122 g PETG, 9-10 h),
+tapa 93,2 cm³ (~73 g, 6 h), tapón USB 1,2 cm³. Los 3 STL `Simple: yes /
+Volumes: 2` y **1 componente conexa** medida sobre la malla. **Cero soportes.**
+
+**Detalle que no era obvio y que casi se me pasa: el patrón de los 4 M3 de la
+plaqueta NO está centrado en Y** (4,8 y 45,3 de una placa de 56). Si lo modelaba
+con un `±sep/2` centrado, los 4 postes quedaban 3 mm corridos y ninguno de los
+tornillos entraba. Se modela con `plaq_ag_c = [75, 25.05]` (centro del patrón
+respecto de la esquina), no con un centrado.
+
+**Lo que aprendí midiendo el resultado: el ancho de la caja ya no lo manda ni la
+plaqueta ni los relés, lo mandan los 7 prensacables.** El propio `.scad` lo
+imprime: `int_x lo manda: plaqueta 168,5 | prensacables 182 | reles 138,2`.
+Consecuencia práctica que hay que saber: **con `n_rele=1` la caja NO se achica**.
+Lo que la achica es sacar prensacables (2 sondas + 2 puertas → 179 × 138).
+
+**Y una limitación física que conviene decir en voz alta**: los prensacables no
+pueden quedar uno debajo de su bornera. Siete PG7 necesitan **157 mm** de pared
+y las 7 borneras ocupan **91 mm** de plaqueta. El ORDEN sí es el mismo
+(5V·S1·S2·S3·P1·P2·P3, izquierda a derecha, como pide @pcb), pero los cables se
+abren en abanico en la franja de 14,5 mm entre la pared y la plaqueta. Para eso
+están las anclas de precinto, y la correspondencia quedó escrita en
+`IMPRESION_V1.md` §4.
+
+**Dos cosas que salieron de MIRAR los renders, no del código:**
+1. **La oreja de abajo quedaba justo debajo del prensacable de la punta**: el
+   destornillador de pared entraba por z=0..4 y a 11..33 mm de altura estaba el
+   cuerpo hexagonal del PG7. Se corrieron a las esquinas
+   (`oreja_off_x = ext_x/2 − 10`): el tornillo queda a 2,3 mm del hexágono.
+   Hay `assert`. *(Antes de eso ya había pasado algo parecido: con las orejas en
+   ±X la base medía **216 mm** y no entra en una cama de 220 con margen de
+   trabajo; ahora el `.scad` elige solo el par de paredes.)*
+2. El rótulo grabado del piso se salía de la caja: 47 caracteres a 4 mm son
+   108 mm y la caja tiene 127,5. Se acortó a `PLAQUETA PE04 - BORNERAS ABAJO` y
+   se corrió para no tallar la base de una columna.
+
+Se agregó `ventana_pared()` / `perfil_ventana()` a `lib_modulos.scad`: ventana
+rectangular con las esquinas de arriba a 45°, para que el puente sea de 7 mm y
+no de 13 (la ventana USB). Y el rótulo del piso que dice de qué lado van las
+borneras, que es el error de armado más caro de cometer.
+
+### 2. Portado el bug del agujero ciego a v2 — ERA EL CAMBIO MÁS IMPORTANTE DEL DÍA
+
+En `hardware/v2/gabinete/termovigia_gabinete.scad`, `agujero_pared(d, pared + 2)`
+extruye **CENTRADO** en el plano de la pared: con `pared = 3` penetraba 2,5 de
+los 3 mm y dejaba **0,5 mm de membrana del lado de adentro**. Los 6
+prensacables, el pasamuro SMA y la ventana USB de la v2 eran **agujeros
+CIEGOS**: se habrían impreso 5 cajas a las que no entra un cable.
+
+Corregido a `2 * pared + 4` en las 5 llamadas y **re-exportados los 3 STL**
+(`base_estandar`, `base_premium`, `tapa`), los tres `Simple: yes / Volumes: 2`.
+Anotado en `v2/gabinete/IMPRESION.md` como **rev. c** con recuadro rojo y la
+orden de tirar cualquier STL bajado antes de hoy.
+
+**Evidencia dura (no "compiló bien")**: sobre `base_estandar.stl`, en la banda de
+altura de los prensacables (z de 11 a 34) hay **0 vértices en y = −62,5** — que
+era el fondo de la cavidad ciega — y **1227 vértices en y = −62,0**, la cara
+interior de la pared: la boca del agujero ahora está abierta hacia adentro. El
+mismo chequeo en la base de v1 da **2183 vértices** sobre su cara interior.
+
+*La lección para la próxima*: `linear_extrude(center = true)` en una herramienta
+de corte es una trampa. El largo de un corte pasante se dimensiona contra el
+espesor de la pared **por los dos lados** (`2*pared`), nunca "pared + un poquito".
+Y el defecto no lo caza ningún `assert` ni el conteo de volúmenes de CGAL: la
+pieza sigue siendo un sólido perfecto, sano y cerrado — solo que inservible.
+Lo cazó dibujar la misma pieza dos veces con la cabeza puesta.
+
+**MEDIR CON CALIBRE (actualizado, sigue siendo corto)**: (1) módulo de relé:
+3 medidas + separación de agujeros; (2) la PE04 real (¿es 150 × 56?);
+(3) alto de la tira hembra del zócalo y del electrolítico de pie; (4) conector
+USB del DevKit y cuánto sobresale del borde de la plaqueta; (5) los PG7/PG9
+reales del cajón — **son 7 en una sola pared, si la tuerca es más grande la caja
+crece**; (6) qué es la fuente de 5 V. Tabla completa en `IMPRESION_V1.md` §7.
+
+**Próximo paso**: medir esas 6 → recompilar → mirar `renders/interior_modulos.png`
+→ imprimir **UNA sola base** como prueba de encastre (plaqueta con sus 4
+tornillos, relé, los 7 prensacables, que llegue el cable USB) antes de las
+otras 4. Sin commitear (orden del Director).
+
+
 ## 2026-09-02 — GABINETE TERMOVIGÍA **v1 "MÓDULOS CABLEADOS"** (los 5 de demo)
 
 **Cambio de estrategia del Director**: no se fabrica la PCB Base v2 todavía; los
