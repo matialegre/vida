@@ -106,7 +106,7 @@ Facturación en dólares estadounidenses. De abonarse en pesos, se toma el tipo 
 
 **Lo que hay que saber.** El sistema avisa; no garantiza la mercadería ni reemplaza la revisión del reefer. Sin energía en el módulo no mide: lo que avisa en ese caso es la nube, diciendo que dejó de reportar. La entrada de defrost necesita que el reefer tenga una señal o un contacto accesible; si alguno no lo tiene, esa entrada queda libre y el resto funciona igual. Las 2 salidas a relé vienen en el módulo; la sirena o baliza que se conecte no está incluida. Cada módulo necesita llegar a la red del campamento. El tendido del cable entre los reefers de cada par de adentro lo hace el cliente. En los pares de adentro, si un módulo se queda sin energía quedan **dos** reefers sin vigilancia hasta que vuelva; en los de la intemperie, uno. Los plazos de los hitos 1 y 2 suponen que el montaje en sitio se hace dentro de la ventana prevista, que depende de personal del campamento.
 
-*Contacto en sitio: Andrés Leiva Chavez · Contacto comercial: Matías Alegre — Ingeniería Electrónica, UTN Facultad Regional Bahía Blanca · Grupo de investigación GIMAP · Termovigía, Bahía Blanca · 2920 59-1019 · alegrematias08@gmail.com · termovigia.vercel.app*
+*Contacto en sitio: Andrés Leiva Chavez · Contacto comercial: Matías Alegre — Ingeniería Electrónica, UTN Facultad Regional Bahía Blanca · Grupo de investigación GIMAP · Encargado de proyectos de sistemas, Montagne · Mundo Outdoor · Termovigía, Bahía Blanca · 2920 59-1019 · alegrematias08@gmail.com · termovigia.vercel.app*
 
 — — — — — — — — — — corte: lo de abajo NO se manda — — — — — — — — — —
 

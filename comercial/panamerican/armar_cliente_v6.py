@@ -293,6 +293,7 @@ def armar(d, logo_svg):
       '  <div class="cta">Se puede ver en vivo antes de decidir.<span>Contacto en sitio: '
       'Andr&eacute;s Leiva Chavez</span></div>\n'
       '  <div class="line">Mat&iacute;as Alegre &mdash; Ingenier&iacute;a Electr&oacute;nica, UTN Facultad Regional Bah&iacute;a Blanca &middot; Grupo de investigaci&oacute;n GIMAP<br>'
+      'Encargado de proyectos de sistemas &mdash; Montagne &middot; Mundo Outdoor<br>'
       'Termovig&iacute;a, Bah&iacute;a Blanca &middot; 2920 59-1019 &middot; alegrematias08@gmail.com &middot; <b>termovigia.vercel.app</b></div>\n</div>\n')
     a(pie(2, 2))
     a('</section>\n\n</div>\n</body>\n</html>\n')
