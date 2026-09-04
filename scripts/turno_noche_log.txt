@@ -2397,3 +2397,48 @@ El branch **sale de `backend/neon-primer-despliegue-2026-09-02`, no de `main`**:
 
 Dos cosas para un minuto tuyo: `datalogger` sigue con el árbol sucio y su branch del 08-31 **sin un solo commit**, quinta noche. Y no toqué `dominios/backend.md` a propósito — hay otro proceso editando este repo ahora mismo (`PLATA.md`, `comercial/`, `dominios/comercial.md` aparecieron modificados durante la sesión) y commitear esa bitácora se habría llevado puesto trabajo en curso ajeno.
 ===== FIN jue 03/09/2026 22:22:51,99 ===== 
+===== TURNO NOCHE vie 04/09/2026  2:00:01,88 ===== 
+Listo. Una tarea, hecha entera y verificada hasta donde se puede sin la placa.
+
+**→ @comms + @firmware** (lo hice yo directo, es un defecto de una función y el harness que lo fija) sobre `C:\Proyectos\datalogger`.
+
+## Qué elegí y por qué
+
+El firmware `firmwares/nodo-gimap/` es **el código más nuevo del portfolio y nadie lo auditó** — se escribió anoche a las 23:01 y el último commit del cuartel dice "listo para enchufar". Es lo próximo que vas a conectar. Rotación: los tres turnos anteriores fueron frioseguro, galgas y frioseguro.
+
+## El defecto
+
+**El nodo no reconectaba el WiFi.** `red.conectar()` se llama una sola vez, en el arranque; después el loop no vuelve a mirar el enlace nunca más, y `_broadcast()` hacía `except Exception: pass`. Tres hechos juntos:
+
+- el **CYW43 del Pico W no se reasocia solo** — perdido el AP queda desasociado hasta que alguien llame a `connect()`;
+- **UDP broadcast no acusa recibo**, y sobre una interfaz caída `sendto()` puede ni tirar;
+- el **LED seguía en `OK`** = "conectado y midiendo" según la tabla del propio README.
+
+Un router que se reinicia dejaba al nodo **midiendo para adentro, para siempre, avisando que estaba todo bien**. En el banco de vibraciones, un ensayo perdido que no se repite. Es el reverso de tu regla "un visor sin datos no miente": acá el que mentía era el nodo.
+
+**Ata un cabo abierto del PORTFOLIO**: *"se murió a los 276 s, causa sin determinar"*. Desde la PC no hay diferencia entre un nodo muerto y uno mudo. Ahora hay tres hipótesis distinguibles: `recon > 0` = fue el WiFi · `uptime_s` reseteado = se reinició · nada = muerto.
+
+## Lo que decidí y no era obvio
+
+**No reinicia el nodo para recuperarse.** Era la salida tentadora: `boot.py` cuenta arranques y a los 3 restaura los `.bak` del último OTA — un router que se reinicia no tiene por qué deshacer una actualización de firmware. Reintenta en el lugar, 0/5/15/30/60 s, para siempre. También: socket nuevo, `ip` actualizada, y se tira el buffer a medio llenar (si no, el paquete cruza el hueco declarando `fs=200` con un pozo de minutos adentro — y la fs efectiva medida es justo el número que el README pide anotar el día del encendido).
+
+## Verificación
+
+```
+python tools/test_reenganche_gimap.py            -> OK, 12 chequeos verdes
+python tools/test_reenganche_gimap.py --mutantes -> 6/6 mutantes muertos
+python tools/test_protocolo_gimap.py | test_red_gimap.py | test_ota_gimap.py -> sin regresión
+```
+
+El test corre el **`main()` real** —no un espejo— contra dobles con **reloj virtual**: 90 s de nodo en 2 s, cero esperas. El primer mutante reproduce el código de antes y el test lo reprueba. El chip del visor lo **miré en el navegador**: `cortes de WiFi: 2 (57 s mudo)`, captura en `docs/evidencia/`.
+
+**Falta banco (5 min, en la misma sesión del primer encendido):** apagar el router un minuto y ver volver los paquetes con `recon=1`; y mirar el LED durante el reenganche — en la Pico W va por el chip de WiFi.
+
+## Branch e informe
+
+`nocturno/local-2026-09-04-el-nodo-que-se-queda-mudo` (`f57483f`, pusheado). **Sale de `nodo-gimap/wifi-y-flasheo-2026-08-24`, no de `main`** — ese se mergea primero. Efecto colateral útil: esos 5 commits estaban **sin pushear** y ahora quedaron respaldados en origin como ancestros.
+
+Informe: `diario/nocturno-local-2026-09-04.md` · `QUE_FALTA` ítem 5b · bitácora de `@comms` · MATI-HQ pusheado.
+
+Dos cosas para un minuto tuyo, en el informe: `C:\Proyectos\datalogger` sigue sucio con el branch `08-31` **sin un solo commit, sexta noche**; y quedó un hallazgo que no toqué — **sin MPU6050 el nodo transmite `ax..gz = 0` para siempre**, indistinguible de un acelerómetro quieto, mismo patrón en el otro sensor.
+===== FIN vie 04/09/2026  2:18:07,39 ===== 
