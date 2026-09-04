@@ -608,3 +608,98 @@ Doc de dominio + bitacora. El agente lo lee al arrancar y lo actualiza al cerrar
     anotadas, 57 huellas) - `chequear_solapes_sch.py` **0 solapes** - netlist, PDF y `render_esquematico.png`
     regenerados - `DIFF_REDES_revC_revD.txt` rehecho: **50 redes, conectividad identica a la version aprobada**
     (el cambio es solo de serigrafia dentro de la huella, no toca el netlist).
+
+- **2026-09-04 — @esquematico: DREYFUS/galgas — REV E.1: puentes de aislación entre etapas.**
+  Repo `C:/Proyectos/galgas/hardware/`. Todo por el generador (`kicad/generar_nodo_galga.py`), **nada a mano
+  sobre el `.kicad_sch`**. Sin commit. **No** se tocaron `nodo_galga_v3.kicad_pcb`, `LAYOUT.md` ni `pcb/`.
+  - **Primero, la rev E que dejó el turno cortado**: el `.kicad_sch` sí era rev E (44 piezas, JP2/JP3, sin D11..D32)
+    pero **`nodo_galga_v3.net` seguía siendo el de la rev D** (nadie lo copió), el ERC estaba **0/2** (filtro de huella
+    de `Jumper_*_Open` contra la tira de pines) y **nunca corrió `chequear_solapes_sch.py`**: había 3 textos pisados
+    (título B1 sobre título B2, "modos de JP2" sobre "E_REFN NO ES MASA") y el `+3V0` de `RPU2` **dibujado encima del
+    cable de NSS** (red bien, dibujo que se leía como corto). Además `C41..C45`, que la hoja cita, **no existen en
+    `NOTAS_REV_D.md`**: quedan como deuda del turno de la rev E (anotado en C46). La rev E quedó congelada en
+    `kicad/revE/` + `kicad/nodo_galga_v3_revE.net` como baseline del diff.
+  - **Rev E.1 = rev E + 15 solder jumpers cerrados de fábrica** (`Jumper:SolderJumper-2_P1.3mm_Bridged_RoundedPad1.0x1.5mm`,
+    net-tie, fuera del BOM): `JB11..15` sensor→ADC (+3V0 excitación, E+, S+, S-, E-), `JB21..23` ADC→micro (MISO rama,
+    CS_ADC, DRDY), `JB31..34` LoRa→micro (MISO rama, NSS, RESET, DIO0), `JB41..43` +3V0 de CJMCU / micro / RA-02.
+    **Refs numéricas** porque KiCad no anota `JB1a`. `SCK`/`MOSI` sin puente (compacidad) y la consecuencia escrita
+    en la hoja (módulo sin +3V0 se alimenta por ESD si el bus habla). Pull-ups del lado del módulo. `JB11` aguas
+    arriba del estrella → no toca L10 (0,3 mΩ × 4,25 mA = 1,3 µV, modo común y ratiométrico). **Tabla de aislación
+    dibujada en el bloque 4** y en `salida/revE1_puentes.png`.
+  - `JP2`/`JP3` → `Conn_01x03`/`Conn_01x02` (misma T; ERC vuelve a 0/0). PWR_FLAG en cada isla detrás de un `JB4x`.
+  - **Evidencia**: `verificar_sch.py` TODO OK — ERC **0/0, `Ignored checks: None`** (`erc_revE1.rpt`) ·
+    `chequear_solapes_sch.py` **0 solapes / 0 rotados** · netlist rev E.1 **59 comp / 64 redes** ·
+    `DIFF_REDES_revE_revE1.txt`: 37 idénticas, 2 renombradas (JP2/JP3), y cada red tocada contiene exactamente un
+    `JBxx` (`/S_MAS`, `/S_MENOS`, `/E_REFN`, `/NODO_A` conservan sus nodos salvo el pin del ADC que cruzó el puente) ·
+    PDF/SVG/`render_esquematico.png` regenerados y **mirados** (6 recortes; corregí 3 rótulos pisados que sólo se
+    veían en el render).
+  - **Cuentas y restricción de layout**: `NOTAS_REV_D.md` **C46** (qué, por qué, tabla de uso, decisiones) y
+    **L11** en la tabla C39 (placa alargada con etapas en fila; puentes contiguos en la frontera, accesibles con cutter).
+  - **Próximo**: @verificador re-audita con `DIFF_REDES_revE_revE1.txt` → @pcb rutea con `nodo_galga_v3.net` rev E.1
+    (L11). Deuda: escribir C41..C45 de la rev E.
+
+- **2026-09-04 [FRIOSEGURO / TERMOVIGIA MINI] Esquematico completo de la PCB v1: el kit v1 hecho placa,
+  con el modulo de rele ENCHUFADO COMO SHIELD. Carpeta nueva `C:\Proyectos\frioseguro\hardware\mini\`.**
+  - **Entregables**: `termovigia_mini.kicad_sch` (A3, **una hoja**, 7 bloques, 70 componentes, 35 redes con
+    nombre + 18 NC) + `.kicad_pro` + `.pdf` + `.net` + `_bom.csv` + `erc.txt` + `salida/p1.png` y 7 recortes ·
+    `generar_sch.py` (usa `C:\Proyectos\biblioteca\pc\kicad_gen` por sys.path) · `termovigia_mini.kicad_sym`
+    (4 simbolos propios) · `termovigia_mini.pretty/ESP32_DEVKIT_38_2x19_P2.54mm.kicad_mod` (huella generada
+    por el mismo script) + `fp-lib-table` · **`DISENO_MINI.md`** (calculos K1-K8, medidas M1-M7, envolvente,
+    riesgos) · **`PINOUT_MINI.md`** (para @firmware) · **`ALCANCE_1WIRE.md`** (la cuenta del 2k2, rev B con
+    el caso de 25 m) · **`BOM_MINI.md`**. **Nada commiteado** (orden).
+  - **Evidencia**: ERC `--severity-all` **0 errores / 0 advertencias con `Ignored checks: None`** (los 43
+    chequeos encendidos a mano en el `.kicad_pro`, doctrina G25 de galgas); `chequear_solapes_sch` **0 solapes,
+    0 texto fuera del area util**; PDF exportado y **mirado** (hoja completa + 7 recortes a 260 dpi, 6 pasadas);
+    **netlist leido red por red**. 167 cables / 48 uniones / **4 redes por etiqueta de 40 = 10 %** (SDA, SCL,
+    DEFROST1, DEFROST2), debajo del 15 % de la doctrina.
+  - **Circuito**: J1 5 V -> **D1 SB540 serie** (inversion + no devuelve a la fuente si esta el USB) -> C1
+    1000 uF + C2 100 nF; **bus 1-Wire con 6 sondas** en 2 borneras de 9 vias (grupos V-D-G), R3 22R 1W en el
+    VCC de sondas, R1 2k2 + **R18 1k8 SIN POBLAR**, D2 P6KE6.8CA + R2 100R + D3/D4 clamps; **4 puertas** (se
+    usan 2) con TVS en bornera + 100R + 10k + 100 nF; **shield de rele** = J8 (JD-VCC/VCC/GND) + J9
+    (GND/IN1/IN2/VCC) con **el jumper del modulo SACADO** (VCC a +3V3, JD-VCC a +5 V) y R12/R13 10k a +3V3;
+    **2 entradas de defrost optoacopladas** (PC817 + 2k2 0,5W + 1N4148 antiparalelo + RC 10k/10uF) con
+    **barrera de aislacion dibujada**; buzzer activo por BC547; LED de encendido (fijo) y LED de latido;
+    pulsadores RESET (EN) y WiFi (IO0); header I2C sin poblar; 8 agujeros M3.
+  - **Pinout = el del kit v1** (1-Wire 4, puertas 5/13/14 + **25 nuevo**, reles 26/27, buzzer 19, LED 2):
+    del firmware `HW_KIT_V1` solo cambian `MAX_RELAYS 2`, `MAX_DOOR_SENSORS 4`, `PIN_DOOR_4 25`,
+    `MAX_PROBES 6`, `PIN_DEFROST_INPUT_2 32` y **borrar `PIN_CURRENT_SENSOR 32`** (si queda, pelea el pin
+    con el 2do defrost).
+  - **La cuenta que ordena el 2k2 (ALCANCE_1WIRE)**: el que muestrea es el **ESP32**, no la sonda
+    (`VIH = 0,75x3,3 = 2,48 V` contra 2,2 V del DS18B20) -> `t = R C ln4 = 1,386 R C`. Con 100 pF/m:
+    **4k7 = 651 ns/m (5 us a 7,7 m)** contra **2k2 = 305 ns/m (5 us a 16,4 m)**: **2,14x mas cable con el
+    mismo margen**, y los 5 us son la mitad de los 10 us que deja `OneWire::read_bit()`. Costo: la sonda
+    hunde 1,5 mA y garantiza 4,0 mA (2,7x). **Con los 25 m que pide Santa Cruz el 2k2 da 7,6 us: entra pero
+    sin margen** -> por eso R18 (1k8 en paralelo = 990 ohm -> 3,4 us, margen de corriente 1,2x), que se
+    puebla **solo si la prueba de banco M6 lo pide**. Cable: par trenzado con DQ y GND en el MISMO par.
+  - **CAMBIO DE ALCANCE a mitad de la sesion (cliente de Santa Cruz: 2 reefers por placa)**: se agregaron las
+    2 entradas de defrost (GPIO33 reefer A / GPIO32 reefer B, ninguno es strapping, ADC1 pero van digitales)
+    con el mismo circuito ya validado en la v2 hoja 2 bloque 3, y **la placa dejo de entrar en 100 x 80 mm**:
+    32 posiciones de bornera x 5,08 = 163 mm de paso, ~195 mm con las cajas, y el pedido es que **todas vayan
+    en el MISMO borde** (prensacables de la caja IP65). **No cambie la medida solo**: DISENO_MINI seccion 8
+    propone **200 x 80 (recomendada)** o 130 x 100 con dos filas escalonadas, y lo decide Matias. **Aviso**:
+    @diseno3d esta haciendo en paralelo un gabinete impreso en `hardware/mini/gabinete/` dimensionado para
+    100 x 80 — con la caja IP65 de ferreteria queda sin uso. No lo toque.
+  - **HALLAZGO que encontro el netlist y que el ERC 0/0 NO ve**: en el primer armado del bloque 2, el **bus de
+    VCC de sondas y el bus de datos salieron en la misma red** (`/VSONDAS` traia los pines 1,2,4,5,7,8 de las
+    dos borneras). El ERC no dijo nada. Un test controlado (agregar a mano un cable que cruza tres buses y
+    re-exportar el netlist) demostro que **un cruce puro NO conecta**; el defecto estaba en como salia el bus
+    de datos por encima del bus de VCC. Solucion estructural: **el bus de DATOS va MAS AFUERA que los de VCC y
+    GND**, asi su salida hacia el GPIO no cruza a los otros dos. **Regla: el netlist es la unica autoridad;
+    leerlo red por red no es opcional.**
+  - **Rotulos**: los calculos de la hoja se llaman **K1..K8**, no C1..C7, porque `C1`..`C8` son designadores de
+    capacitor de esta misma placa (mismo criterio que `DE-1..DE-14` en galgas: el que se mueve es el rotulo de
+    documento, no el refdes).
+  - **Otros gotchas de esta sesion**: (a) `Connector:Screw_Terminal_01x02` **no esta centrado** (pin 1 en y=0,
+    pin 2 en -2,54), a diferencia del 01x09 — el mismo vicio que el `Conn_01x06` de la v2; (b) el area util de
+    la A3 es **15..405 x 15..250 mm**, bastante mas chica que el borde de la hoja: tres bloques de texto y dos
+    marcos se salian y solo lo dijo `chequear_solapes_sch`; (c) el chequeador compara texto contra texto, **no
+    texto contra simbolo**: el bloque de notas del jumper pisaba los simbolos J8/J9 con 0 solapes reportados —
+    se ve mirando el PNG; (d) los conectores genericos con pines sin nombre (`Conn_01x03/04`) hacen ilegible un
+    shield: se reemplazaron por **simbolos propios con los nombres de pin** (JD-VCC/VCC/GND, GND/IN1/IN2/VCC,
+    GND/VCC/SCL/SDA) y desaparecieron 7 notas al lado del conector; (e) `four_way_junction` con los 43 chequeos
+    encendidos delato un nodo con 4 cables en el clamp del GPIO4: se separo el tap de D4.
+  - **Proximo paso**: **Matias decide la envolvente (seccion 8) — es lo que bloquea a @pcb** -> Gonza mide
+    M1..M5 con calibre (5 variables de Python y se regenera) -> @verificador audita el `.net` -> @hardware
+    confirma BOM y responde si el defrost del reefer es 12-24 V o contacto seco (R3) y si el modulo de rele
+    clickea con IN al aire (M7) -> @tester corre M6 (100 lecturas de 1-Wire con 25 m reales) -> @pcb rutea ->
+    @firmware aplica `PINOUT_MINI.md`.

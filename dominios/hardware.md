@@ -37,7 +37,7 @@ Corolario: datalogger = Pico (PIO+SD) + LoRa · nodos eternos = ATmega pelado + 
 | Módulos 2 relés | ~10 | casa | upsell FrioSeguro | 2026-07-07 |
 | Analizador lógico | 1 | casa | debug | 2026-07-07 |
 | Supercapacitor 1F 5.5V (moneda) | 1+ | casa | ~~pulso TX LoRa emisor Dreyfus~~ **NO SIRVE como CSC** (ESR ~30 Ω, ver P8 / Rev C 2026-09-02) → backup RTC | 2026-07-10 · corregido 2026-09-02 |
-| Cajas IP65 + prensacables PG7/PG9 + tapones | 3 cajas | casa | Termovigía | 2026-07-08 (compra) — **confirmar contando** |
+| Cajas IP65 + prensacables PG7/PG9 + tapones | 3 cajas | casa | Termovigía | 2026-07-08 (compra) — **confirmar contando** · **2026-09-04: candidatas a ser los 3 gabinetes de interior de Cerro Moro** (la Mini de 120×100 es más compacta que el perfboard PE04 que reemplaza). **M9: medir el interior — vale $63.609.** Ver `mini/BOM_CERRO_MORO.md §3.2` |
 | ESP32 en campo (reefer Cerro Moro) | 1 | Santa Cruz | Termovigía SCZ | 2026-08-21 — descontar del stock de ESP32 |
 | PCB FrioSeguro v1 ("ALDI DISEÑO") | 5 | casa | **no aptas para Base v2 NI para el Kit v1** — motivo CORREGIDO 2026-09-02: el diseño **no tiene SIM800/ACS712**, es un front-end de galga (MCP6004) y **tiene las 6 borneras con los 18 pads sin red** + 2 redes de 3,3 V separadas + 4 pull-ups sin conectar → 23 bodges por placa. Ver `frioseguro/hardware/v1_modulos/BOM_KIT_V1.md` §5. Uso: banco/UTN | 2026-09-01 · corregido 2026-09-02 |
 | DS18B20 / reed / módulos relé / ESP32 | 15-20 / 10-20 / 5-10 mód. / 4-9 | casa | Termovigía + galgas | 2026-09-01 — **discrepancia Matías vs bitácora: CONTAR** (ver BOM_5_EQUIPOS §1) |
@@ -704,3 +704,92 @@ el pigtail. Lo dejo escrito para que el que compre antenas en el futuro no lo re
 **Pendiente @hardware:** (a) **C-4, es lo primero de todo**; (b) precios reales cuando ML se desbloquee
 (D0, BAT85, portapilas siguen con techo declarado); (c) que alguien corrija H3.7 en `BRINGUP_BANCO`;
 (d) las de siempre: ESR del Itytarg 2,2 F, MCP1700-**3002**, M1/M2 con calibre.
+
+## 2026-09-04 — TERMOVIGÍA **MINI**: BOM de compra de Cerro Moro (5 placas) — listo para el día que acepten
+Entregado `C:\Proyectos\frioseguro\hardware\mini\BOM_CERRO_MORO.md` (10 secciones, 49 IDs de ML).
+**Sin commit. NO SE COMPRÓ NADA** (regla de la tarea: el pedido queda armado esperando la OC).
+Precios ML AR **verificados en vivo hoy** (ML desbloqueado, `ml2.py` + `mlitem.py`: hoy también se
+pudieron leer las **fichas de producto**, cosa que no se podía desde el 1-sep). JLCPCB cotizado en
+vivo (headless, panel *Charge Details*). **TC: BNA billete vendedor $ 1.530,00 del 4-9-2026.**
+
+**Los números:** MÍNIMO **$ 659.576 (USD 431)** · RECOMENDADO **$ 828.490 (USD 541)** ·
+COMPLETO con repuestos **$ 942.568 (USD 616)** · + 2 sirenas **$ 1.034.626 (USD 676)**.
+**Margen real sobre equipos + repuesto (USD 3.100) en el escenario recomendado: 27,6 %** contra el
+~28 % que declara @comercial ⇒ **la cuenta de la propuesta se sostiene, sin colchón.**
+
+**Hallazgos duros:**
+1. ⚠⚠ **`D2` (el TVS del 1-Wire) rompe el bus a 25 m, y la falla no se ve en el banco corto.** Bajé
+   y leí el datasheet de Vishay `88369`: **no publica tabla de `CJ` para el P6KE, sólo la Fig. 4,
+   cuyo eje llega a 6.000 pF y cuyo máximo está en el VBR más bajo — que es nuestro 6,8 V.** Aun
+   tomando el número más favorable que citan las fuentes secundarias (1.000 pF), con cable de
+   100 pF/m da **11,1 µs contra 10 µs de presupuesto: el bus falla**; con 3.000 pF, 17,2 µs.
+   **Recomendación: `D2` no se puebla** (la protección correcta ya existe: `R2` 100 Ω + `D3`/`D4`
+   1N4148, **~4 pF cada uno**) y **el TVS se muda al VCC de las sondas**, donde la capacidad es
+   gratis. Mismo componente, misma cantidad, **cero costo**. Es la misma lección de galgas rev D
+   (*"los TVS pasantes no existen para este circuito"*): allá por fuga, acá por capacidad.
+2. ⚠ **El `P6KE6.8CA` NO existe en ML AR hoy.** En 6,8 V pasante sólo hay unidireccional
+   (`P6KE6V8A`, $5.797-7.126 c/u → 20 u = $116-142k). Bidireccional 6,8 V: **1.5KE6.8CA** axial
+   (MLA1774968892, $10.565 el pack de 3 → 20 u = **$73.955**, y huella DO-201AD, más grande que el
+   DO-15) o **SMAJ6.8CA SMA** (MLA1915873384, $8.804 el pack de 5 → 20 u = **$35.216**).
+   **Elegido el SMD** con el argumento de que un TVS no es pieza de reemplazo en campo; ahorra
+   $38.739. Plan B declarado. **Decide @esquematico/@pcb antes de rutear.**
+3. **El Cat5e es la mitigación del 1-Wire, con número.** `ALCANCE_1WIRE` calcula con 100 pF/m; la
+   **capacidad mutua especificada del Cat5e es 5,6 nF/100 m = 56 pF/m** ⇒ 25 m son 1,4 nF y no
+   2,5 nF ⇒ **t = 4,7 µs contra 10 µs: margen 2,1x y `R18` probablemente no hace falta** (lo
+   confirma M6, no el papel). Y 4 pares = **sobran 5 hilos por tirada** para puerta y defrost del
+   reefer vecino. Elegido MLA1368587113, 50 m 100 % cobre exterior, $43.200.
+4. ⚠ **La caja de intemperie cuesta el doble de lo presupuestado.** @comercial puso ~$22.000; la
+   caja que **declara intemperie por ficha de fabricante** es la **Roker PRG357 IP65 200x200x155,
+   polipropileno gris con retardante de llama y cierre de 1/4 de giro — MLA1782745396, $44.419**.
+   La de $21.203 (Genrod PVC blanca 210x310x110) **no declara intemperie ni UV**: sirve de interior.
+   **+$44.838 (USD 29) sobre el total, contabilizado y no rompe el margen.**
+5. ✅ **Hallazgo que puede ahorrar $63.609: con la Mini, las 3 cajas IP65 de stock probablemente SÍ
+   sirven** para los dobles de interior. @comercial las descartó con razón **para el Kit v1** (la
+   plaqueta PE04 es de 150x56 con 7 borneras sueltas); la Mini de 120x100 con todo integrado es
+   **más compacta que el perfboard que reemplaza**. Stack calculado: 33 mm contra ~65 de interior
+   útil. **M9 (nueva): medir el interior de las 3 cajas — 5 minutos que valen $63.609.**
+6. ⚠ **El paso de bornera 5,08 del BOM es un requisito heredado del perfboard y no aplica a una
+   PCB.** El mercado AR vende casi todo en **5,00** (y apilable, que es como se arman los 9 vías de
+   `J2`/`J3`: 3x3). En una PCB los pads van donde uno quiera. **Recomiendo pasar a 5,00.**
+7. **JLCPCB verificado hoy, 2 capas, build 2 días:** 120x100 → **5 u. USD 9,80 · 10 u. USD 15,50** ·
+   130x100 → 10,30/16,50 · 150x100 → 11,20/18,40 · **200x80 → 11,70/19,30** · 100x100 → 4,00/5,00.
+   **DHL Express DDP USD 27,45 (0,33 kg) / 27,60 (0,54 kg).** Renglón elegido: **10 u. de 120x100
+   = USD 43,10 = $65.943** (las 5 extra cuestan USD 5,70: la placa pasa de USD 7,45 a **USD 4,31**).
+   ⚠ **Contradicción de tamaño con `DISENO_MINI §8`**, que dice que las 32 posiciones de bornera
+   piden ~195 mm de borde y recomienda 200x80. **Mi veredicto desde compras: 120x100 o 130x100 con
+   dos filas escalonadas, NO 200x80** — la diferencia de PCB es USD 3,80 pero **200 mm de placa no
+   entra en las cajas de stock y cuesta USD 42 de gabinete**. Pasar a 130x100 cuesta **USD 1,00**.
+8. ⚠⚠ **El cronograma de la propuesta está escrito para el perfboard, no para la PCB.** Dice
+   "despacho semana 2"; con PCB propia el camino crítico es **DHL (10-15 días puerta a puerta según
+   la propia bitácora del 2-sep)** ⇒ **OC → 5 placas armadas y probadas = 3,5 semanas mejor caso,
+   5 semanas realista** ⇒ **despacho semana 4-5 e HITO 2 en la semana 7-8, no en la 5.** El HITO 1
+   no se toca (sólo depende de que lleguen 2 sondas al equipo ya instalado).
+   **Recomendación fuerte: pedir la PCB ANTES de la aceptación.** USD 43,10 = **1,4 % del anticipo**
+   y compra 2-3 semanas; y aunque el cliente diga que no, **son 10 placas que sirven para las demos
+   de Bahía y para Diseño y Manufactura**. Es la única excepción a "no se compra nada" que defiendo;
+   **la decide Matías**, y **primero van los 20 minutos de calibre**.
+9. **Sondas: recomendé comprar 18 moldeadas de 3 m ($190.566) en vez de rearmar las 15 de stock
+   ($85.261 + ~4 h).** La diferencia es **USD 69 = 2,2 % del ingreso de equipos** y compra **18
+   empalmes menos dentro de un reefer a -20 °C con condensación**, cada uno a 1.500 km. Para los 2
+   módulos de intemperie no es opcional.
+10. **La sirena a USD 40 de la propuesta no deja margen**: BR300 (MLA1144075239) subió a **$39.530**
+    (USD 26) **y el relé es contacto seco, así que necesita su propia fuente de 12 V** (USD 4).
+    Sugerencia a @comercial: **USD 70 instalada**, o vender baliza LED.
+11. **`R3` de `DISENO_MINI §9` (defrost 12-24 V vs contacto seco) sigue abierto y es un riesgo de
+    viaje.** **Mitigación de costo cero: 2 puentes de soldadura** para alimentar el LED del opto
+    desde el 5 V local — la cuenta da 0,85 mA de colector contra 0,33 mA necesarios: **satura**.
+    Con eso la misma placa cubre las dos posibilidades y se decide en el campamento con un soldador.
+12. ⚠ **Los 5 ESP32 tienen que ser el mismo modelo y comprarse juntos**: los DevKit de 38 pines
+    vienen con filas a **1,0 y a 1,1 pulgadas** y ML mezcla micro-USB con USB-C bajo el mismo
+    título. Es literalmente la variable `M1`.
+
+**Bloqueos que quedan (los mismos de siempre, ahora con precio):** M1-M5 con calibre (**20 min,
+bloquean fabricar**) · M7 (relé con IN al aire, 30 s, abierto desde el 2-sep) · M8 (interior del
+PRG357, preguntar al vendedor) · **M9 (interior de las 3 cajas de stock, vale $63.609)** ·
+**etiqueta V/A de las 5 fuentes (vale $52.895)** · conteo de stock (abierto desde el 1-sep).
+**Las dos mediciones de 5 minutos valen USD 77 = 9 % del margen del proyecto.**
+
+**Pendiente @hardware:** (a) pasar los 4 cambios de esquemático a @esquematico (D2, huella del TVS,
+bornera 5,00, puentes del defrost); (b) hacer **M7** yo, con los módulos en la mano; (c) preguntar
+al vendedor la medida interior del PRG357; (d) cerrar el precio del cable de 3 hilos si Matías
+elige el escenario A de sondas; (e) buscar precio de baliza LED 12 V como alternativa a la sirena.

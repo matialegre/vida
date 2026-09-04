@@ -1,26 +1,26 @@
 # -*- coding: utf-8 -*-
-"""Render + verificacion de los DOS PDF de reefers Cerro Moro (v5.1, 4-sep-2026).
+"""Render + verificacion de los DOS PDF de reefers Cerro Moro (v6.1, 4-sep-2026).
 
-   Salidas:
-     PRESUPUESTO_CERRO_MORO.pdf          cliente, 2 paginas (5 equipos, un solo presupuesto)
+   Salidas (pisan las de la v5.2):
+     PRESUPUESTO_CERRO_MORO.pdf          cliente, 2 paginas (4 modulos: 2 ext + 2 dobles)
      PRESUPUESTO_CERRO_MORO_INTERNO.pdf  interno, marca de agua INTERNO - NO ENVIAR en todas
 
-   Cambia respecto de render_propuestas.py (v4): habia dos documentos gemelos de cliente y
-   por eso existia gemelos(); ahora es UNO. El interno se arma desde interno_v5.fuente.html
-   (fuente con marcadores) para que el HTML entregable sea reproducible y la fuente no se
-   consuma al inlinar el logo.
+   Cambia respecto de render_v5.py: los DOS documentos se generan (el interno dejo de ser
+   un HTML a mano; ahora sale de armar_interno_v6.py), y la guarda de fugas suma las
+   cadenas que prohibio Matias para la v6.1: nada de impresion 3D ni material del gabinete.
 
-   1) arma el HTML del cliente desde armar_cliente_v5.py   2) arma el interno desde su fuente
-   3) inlina logo y escudo   4) numera las paginas   5) PDF A4 con Chromium (Playwright)
-   6) capturas 1440 y 390 px   7) render de CADA pagina del PDF a PNG
-   8) medicion REAL con PyMuPDF   9) guarda de fugas sobre el PDF del cliente.
+   1) arma los dos HTML   2) inlina logo y escudo   3) numera las paginas
+   4) PDF A4 con Chromium (Playwright)   5) capturas 1440 y 390 px
+   6) render de CADA pagina del PDF a PNG   7) medicion REAL con PyMuPDF
+   8) guarda de fugas sobre el PDF del cliente.
    LECCION HEREDADA: se mide el ENTREGABLE (el PDF), no el HTML.
-   Uso: python render_v5.py
+   Uso: python render_v6.py
 """
 import os, io, re
 from playwright.sync_api import sync_playwright
 import fitz
-import armar_cliente_v5 as ARM
+import armar_cliente_v6 as ARM
+import armar_interno_v6 as INT
 
 AQUI = os.path.dirname(os.path.abspath(__file__))
 CAP = os.path.join(AQUI, "capturas")
@@ -30,22 +30,22 @@ MM = 72.0 / 25.4
 
 CLIENTE = "PRESUPUESTO_CERRO_MORO"
 INTERNO = "PRESUPUESTO_CERRO_MORO_INTERNO"
-FUENTE_INTERNO = "interno_v5.fuente.html"
 
 DOCS = [(CLIENTE, "cli", 2), (INTERNO, "int", None)]
 
 # Cadenas que NUNCA pueden aparecer en el PDF del cliente. Si alguna aparece, el documento NO sale.
-# v5: entran las cadenas internas nuevas (la cuenta del cano, el comparativo, los nombres del taller)
-# y sale "USD 110" (la clausula del P2 ya no existe).
 PROHIBIDAS_CLIENTE = [
     # el comprador no tiene nombre: ni destinatario ni la minera
     "Panamerican", "PAAS", "Pan American", "Para:", "Destinatario",
-    # las tres palabras que Matias prohibio en el documento del cliente
+    # las palabras que Matias prohibio en el documento del cliente
     "plaqueta perforada", "protoboard", "armado a mano",
+    # v6.1: ni el material del gabinete ni como se fabrica
+    "PETG", "impres", "Impres", "PLA ", " PLA", "3D", "3-D",
     # costos, margen y horas hacia adentro
     "margen", "Margen", "costo directo", "Costo directo", "USD 25/h", "USD 90", "USD 46", "USD 148",
     "USD 1.000", "28,5", "plataforma", "Plataforma", "reposición amortizada",
     "38.000", "167.000", "169.000", "133.000", "2.950", "4.892", "4.642", "5.222", "4.517",
+    "409.000", "430.000", "439.700", "2.500.000", "3.530.500",
     "Desarrollo", "desarrollo", "subcotiz", "Supabase", "Venado", "PLATA", "Dreyfus",
     "comisi", "Monotributo", "monotributo", "INPI", "firmware_modular", "entrega_scz",
     "testo", "MercadoLibre", "ML AR", "llave maestra", "bucket", "LISTA_MATERIALES", "BOM",
@@ -54,33 +54,35 @@ PROHIBIDAS_CLIENTE = [
     "@comercial", "@muestreador", "@diseno", "@hardware", "@firmware",
     "SONDAS_MAX", "DS18B20", "ESP32", "GPIO", "firmware_revival", "sondas.h", "config.h",
     "comandos_nube", "NVS", "ALCANCE", "ESTADO_HONESTO", "novillo", "INMAG", "conflicto de inter",
-    # la cuenta del cano y el escenario descartado son internos: al cliente va la conclusion, no la cuenta
+    # la cuenta del cano y el escenario descartado son internos
     "Daisa", "AAIERIC", "electricista", "jornada", "grampa", "Grampa", "cupla", "omega",
-    "Gonza", "Sergio", "anticipo del 50", "semana 0",
+    "Gonza", "Sergio", "anticipo del 50", "semana 0", "riesgo",
     "E0", "E1", "E2", "E3", "E4",
 ]
 
 CLAVES = {
-    "cli": ["Un equipo por reefer", "Condiciones de instalación: ninguna",
-            "El sexto reefer", "se prueba individualmente", "sigue midiendo y reportando",
+    "cli": ["Qué módulo va en cada reefer", "estanco IP65", "módulo doble cada par",
+            "No incluye cable ni tendido entre reefers", "El sexto reefer", "USD 260",
+            "25 metros de cable", "sigue midiendo",
             "a las 2 semanas de iniciado", "a las 15 semanas", "Se acepta con",
-            "4.540", "500", "520", "50 %", "Total a 12 meses", "10.540", "15.340"],
+            "1.200", "1.500", "400", "4.600", "500 / mes", "50 %",
+            "Total a 12 meses", "10.600", "10.000", "16.600", "15.400",
+            "3 sondas", "lo hace el cliente"],
     "int": ["WhatsApp para Andr", "LA CUENTA DEL CA", "439.700", "286",
-            "Los 13 pendientes", "Lo que quedó abierto", "semana 0", "500/mes", "9.940",
-            "352", "4.540", "520"],
+            "Los 17 pendientes", "Lo que quedó abierto", "semana 0", "500/mes",
+            "10.000", "4.600", "260", "quedó armado tal cual me lo describiste",
+            "Nada de esta tabla se adelanta"],
 }
 
 
 def armar_htmls():
     logo = io.open(LOGO, encoding="utf-8").read()
     io.open(os.path.join(AQUI, CLIENTE + ".html"), "w", encoding="utf-8").write(ARM.armar(ARM.D, logo))
-    fuente = io.open(os.path.join(AQUI, FUENTE_INTERNO), encoding="utf-8").read()
-    io.open(os.path.join(AQUI, INTERNO + ".html"), "w", encoding="utf-8").write(fuente)
-    print("armados: %s.html (generador) y %s.html (desde %s)" % (CLIENTE, INTERNO, FUENTE_INTERNO))
+    io.open(os.path.join(AQUI, INTERNO + ".html"), "w", encoding="utf-8").write(INT.HTML)
+    print("armados: %s.html y %s.html (%d hojas de interno)" % (CLIENTE, INTERNO, len(INT.HOJAS)))
 
 
 def inlinar():
-    """El logo horizontal y el escudo del pie viven en marcadores; se inyectan aca."""
     svg = io.open(LOGO, encoding="utf-8").read()
     for nombre, _, _ in DOCS:
         p = os.path.join(AQUI, nombre + ".html")
@@ -92,7 +94,6 @@ def inlinar():
 
 
 def numerar():
-    """Los pies llevan 'N / total' segun la cantidad de <section class="hoja"> del HTML."""
     for nombre, _, _ in DOCS:
         p = os.path.join(AQUI, nombre + ".html")
         s = io.open(p, encoding="utf-8").read()
@@ -136,7 +137,7 @@ def render(nombre, tag):
 
 def medir(pdf, nombre, tag, paginas_esperadas):
     for f in os.listdir(CAP):
-        if re.match(re.escape(tag) + r"_p\d+\.png$", f):   # no borrar _pantalla_1440.png
+        if re.match(re.escape(tag) + r"_p\d+\.png$", f):
             os.remove(os.path.join(CAP, f))
     d = fitz.open(pdf)
     ok = True
@@ -154,9 +155,8 @@ def medir(pdf, nombre, tag, paginas_esperadas):
                 continue
             x0 = min(x0, rr.x0); y0 = min(y0, rr.y0); x1 = max(x1, rr.x1); y1 = max(y1, rr.y1)
         f = lambda v: v / MM
-        print("   p%d %.1fx%.1fmm | TEXTO izq %.1f der %.1f (marg %.1f) sup %.1f inf %.1f | TINTA izq %.1f der %.1f sup %.1f inf %.1f"
-              % (i, f(r.width), f(r.height), f(tx0), f(tx1), f(r.width - tx1), f(ty0), f(r.height - ty1),
-                 f(x0), f(x1), f(y0), f(r.height - y1)))
+        print("   p%d %.1fx%.1fmm | TEXTO izq %.1f der %.1f (marg %.1f) sup %.1f inf %.1f"
+              % (i, f(r.width), f(r.height), f(tx0), f(tx1), f(r.width - tx1), f(ty0), f(r.height - ty1)))
         if tx1 > r.width - 9.0 * MM: print("     !! TEXTO invade margen derecho"); ok = False
         if tx0 < 9.0 * MM: print("     !! TEXTO invade margen izquierdo"); ok = False
         if ty0 < 9.0 * MM: print("     !! TEXTO invade margen superior"); ok = False
@@ -182,7 +182,7 @@ def medir(pdf, nombre, tag, paginas_esperadas):
 
     for k in CLAVES[tag]:
         pgs = [i for i, pg in enumerate(d, 1) if k in pg.get_text()]
-        print("   %-34s -> paginas %s" % (k, pgs))
+        print("   %-40s -> paginas %s" % (k, pgs))
         if not pgs:
             print("     !! clave ausente"); ok = False
     d.close()

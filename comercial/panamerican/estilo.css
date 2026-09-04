@@ -657,3 +657,66 @@ h3.sigue { font-family:var(--mono); font-size:2.9mm; letter-spacing:.35mm; text-
 .hoja.presu .qitem .q { font-size:2.82mm; line-height:1.3; }
 .hoja.presu .box p { font-size:2.85mm; line-height:1.38; }
 .hoja.presu .cond p { font-size:2.95mm; line-height:1.4; }
+
+
+/* --- v6.1: tabla "que modulo va en cada reefer" (documento del cliente) -------
+   Es el bloque que tiene que leerse de un vistazo: la configuracion la describio el
+   contacto en sitio y reconocerla en dos segundos vale mas que cualquier parrafo. */
+table.config td { vertical-align:top; }
+table.config .cant { font-family:var(--mono); font-size:6.6mm; line-height:1; color:var(--marca); }
+table.config .donde { display:block; font-size:2.7mm; line-height:1.25; color:var(--gris); margin-top:.8mm; }
+table.config .lleva { font-size:2.75mm; line-height:1.3; color:var(--tinta); }
+table.config td.equipos { color:var(--marca); font-size:3.1mm; line-height:1.25; white-space:normal; }
+table.config td.equipos span { display:block; font-family:var(--fuente); font-weight:400;
+                               font-size:2.65mm; color:var(--gris); margin-top:.6mm; }
+
+
+
+/* --- v6.1, ronda de encaje: la hoja 1 sumo la tabla de configuracion y el pie
+   quedaba 2 mm afuera. Se aprieta SOLO la caja de la prueba de banco y el pie
+   (nunca el cuerpo ni el bloque .cond). Toda regla nueva tiene que ser MAS
+   chica que las de las rondas anteriores o el documento crece. */
+.hoja.presu .box { padding:2.2mm 3mm; }
+.hoja.presu .box p { line-height:1.3; margin-bottom:0; }
+.hoja.presu .pie { padding-top:1.6mm; }
+.hoja.presu .sep-ch { height:1mm; }
+/* ultimos 6 mm de la hoja 2: cabecera de la tabla A/B, pie de tabla y bloque de contacto */
+.hoja.presu .abc thead th .letra { font-size:3.6mm; margin-bottom:.2mm; }
+.hoja.presu .abc thead th .nom { font-size:2.8mm; }
+.hoja.presu .tabla-pie { line-height:1.2; margin-top:.9mm; }
+.hoja.presu .contacto { padding:1.7mm 3.6mm; }
+.hoja.presu .contacto .cta { font-size:3mm; }
+.hoja.presu .pie { padding-top:1.2mm; }
+.hoja.presu .abc th, .hoja.presu .abc td { padding:.34mm 1.6mm; }
+.hoja.presu .grid2.cierre p { font-size:2.42mm; line-height:1.24; }
+.hoja.presu .grid2.cierre .box, .hoja.presu .grid2.cierre .nota { padding:1.3mm 1.9mm; }
+.hoja.presu .contacto { padding:1.2mm 3.2mm; }
+.hoja.presu .contacto .cta span { font-size:2.4mm; margin-top:.5mm; }
+.hoja.presu .contacto .line { font-size:2.55mm; line-height:1.35; }
+.hoja.presu .pie { padding-top:.9mm; font-size:2.35mm; }
+.hoja.presu h2 { margin-bottom:1mm; }
+.hoja.compacta.presu .sep-ch { height:.8mm; }
+.hoja.presu table.compacta th, .hoja.presu table.compacta td { padding:.3mm 1.5mm; }
+/* v6.1: la seccion 06 (condiciones + sexto reefer) se muda a la hoja 1 para que la
+   hoja 2 quede con plazos y plata. Cabecera y rotulo adelgazan para hacerle lugar. */
+.hoja.presu .cabecera .logo svg { width:48mm; }
+.hoja.presu .cabecera { padding-bottom:1.6mm; }
+.hoja.presu .cabecera .sello b { font-size:3.2mm; }
+.hoja.presu .rotulo { padding:2mm 3.4mm; margin:2mm 0 2.2mm; gap:3.4mm; }
+.hoja.presu .rotulo .cifra-rot { font-size:10mm; padding-right:3mm; }
+.hoja.presu .rotulo h1 { font-size:4.9mm; }
+.hoja.presu .rotulo .b { font-size:2.6mm; margin-top:.6mm; }
+.hoja.presu .rotulo .k { font-size:2.3mm; margin-bottom:.5mm; }
+/* v6.1, ronda final: la tabla de configuracion (~35 mm) es contenido nuevo que el
+   cliente pidio ver de un vistazo. Para pagarla sin perder argumentos se baja un
+   escalon la tipografia del cuerpo (2,85 -> 2,72 mm, el mismo cuerpo que uso la v4)
+   y de las tablas. El bloque .cond sigue siendo el mas grande de la hoja. */
+.hoja.presu p { font-size:2.72mm; line-height:1.36; }
+.hoja.presu .lista.chica li { font-size:2.68mm; line-height:1.32; }
+.hoja.presu .qitem .q { font-size:2.68mm; line-height:1.3; }
+.hoja.presu .box p { font-size:2.7mm; }
+.hoja.presu table.compacta { font-size:2.58mm; line-height:1.3; }
+.hoja.presu .soft.det { font-size:2.34mm; line-height:1.2; }
+.hoja.presu .abc { font-size:2.6mm; }
+.hoja.presu .cond p { font-size:2.95mm; line-height:1.38; }
+.hoja.presu h2 + .sub, .hoja.presu .sub { font-size:2.65mm; line-height:1.3; }

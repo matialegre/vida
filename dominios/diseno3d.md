@@ -1,5 +1,82 @@
 # Bitácora @diseno3d — diseño mecánico 3D
 
+## 2026-09-04 — TERMOVIGÍA MINI: gabinete "lindo" para la PCB propia + shield de relés
+
+Pedido del Director (textual de Matías: *"hacé la carcasa linda para eso"*). La
+placa la hacen @esquematico/@pcb en paralelo; no esperé, trabajé con los datos
+fijos y dejé lo demás como parámetro.
+
+**Entregado** en `C:\Proyectos\frioseguro\hardware\mini\gabinete\`:
+`termovigia_mini.scad` (paramétrico, 15 asserts) + `base_mini.stl` +
+`tapa_mini.stl` + `tapon_usb_mini.stl` + 7 renders + `IMPRESION_MINI.md`.
+Reusé `lib_termovigia.scad` (v2) y `lib_modulos.scad` (v1): misma familia
+estética, cero código nuevo para isotipo, gota truncada, PG, orejas y rótulos.
+
+**Números que cerraron**
+
+| | mm |
+|---|---|
+| Interior | 124 × 104 × 40 |
+| Base en la cama (con orejas) | 158 × 110 |
+| Cerrado | 135,5 × 115,5 × 46 |
+| Libre sobre la PCB | **33,4** (pedido ≥ 30; el shield ocupa 25,6) |
+| Peso est. PETG | base ≈120 g · tapa ≈55 g · tapón ≈2 g |
+
+**Decisiones de diseño**
+- **Prensacables repartidos**: 4 abajo (`PG9 5V`, `PG7 S1-3`, `PG7 S4-6`,
+  `PG7 PUERTAS`) y el `PG9 RELES` **solo, en la pared izquierda**. Los 5 juntos
+  abajo pedían 117 mm de tuercas y hubieran mandado el ancho de la caja; además
+  separar la salida de relé del mazo de señal es lo correcto. 2 PG7 para sondas
+  = hasta 6 DS18B20 sin agrandar nada.
+- **Junta de verdad** (novedad respecto de v1/v2, donde `cordon_d` estaba
+  declarado pero nunca usado): el borde de la pared se engrosa 4 mm hacia
+  adentro y ahí va un canal 3,6 × 2,4 para cordón Ø3, comprimido 20 %. Assert
+  que verifica que el canal tiene volumen para el cordón (8,6 mm² vs 7,1 mm²) y
+  otro que verifica que no pisa las columnas. Los 6 tornillos quedan DENTRO del
+  cordón; la falda de la tapa cubre la junta del chorro.
+- **6 tornillos** (4 esquinas + 2 al medio de las paredes cortas), no 4: 124 mm
+  de luz sin apoyo intermedio no sella.
+- **Tapa**: isotipo + "TERMOVIGÍA / MINI", pilotos ON/OK con guía de luz y
+  anillo grabado, y un **rebaje S/N** para la etiqueta/QR — que además es lo que
+  equilibra el cuadrante libre de abajo a la derecha (la primera versión tenía
+  todo el peso visual a la izquierda). Canto superior chaflanado 1 mm.
+- **Variante de ventana para los LEDs del módulo de relé: implementada y
+  APAGADA** (`ver_leds_rele`). No sabemos dónde caen esos LEDs (son del módulo
+  comprado y cambian por fabricante), quedan debajo del cuerpo del relé, y cada
+  ventana es un punto menos de IP54 en la cara de arriba. Se prende agregando
+  dos entradas a una lista; se reimprime solo la tapa.
+
+**Dos bugs cazados con evidencia (no a ojo)**
+1. Escribí un chequeo de **componentes conexas** sobre el STL: la base daba
+   `Volumes: 3`. Era un rótulo grabado del piso que cortaba la pata de un ancla
+   de precinto y dejaba un islote de 12 triángulos flotando. Corregidas las
+   posiciones de las anclas a los huecos entre rótulos.
+2. En el corte se vio que las columnas de tornillo quedaban **sueltas**, con una
+   ranura de 3,25 × 36 mm contra la pared (v1 tiene el mismo problema). Ahora
+   cada columna va unida a la pared por un alma (`columna_pared()`).
+   *Candidato a portar a v1/v2 y a `biblioteca\3d\lib_gabinete.scad`.*
+3. El tirador del tapón USB sobresalía 1 mm de la brida: la pieza apoyaba en la
+   cama parada sobre el tirador. Ahora está a ras.
+
+**Verificación**: las 3 piezas dan `Simple: yes` / `Volumes: 2` en CGAL y **un
+solo cuerpo conexo** en la malla. Cero soportes en las tres (gota truncada en
+los PG, chaflán 45° en la ventana USB y en el pie del reborde, tapa impresa
+boca abajo). Renders mirados uno por uno, no solo generados.
+
+**Medidas que faltan confirmar con calibre / con @pcb** (todas son variables
+marcadas en el .scad, ninguna inventada como cierta):
+`leds` (posición real de los 2 pilotos — **la que más urge**, define los tubos
+guía), `rele_c_local` y `devkit_c_local` + `usb_x_local` (los define @pcb),
+`rele_mod` / `rele_alto` / `rele_cab_h` / `zocalo_h` (calibre sobre el módulo y
+la tira hembra — fijan `alto_int`), `usb_c_alto`, `pcb_comp_alto`, `led_alto`,
+rosca real de los prensacables comprados, Ø del cordón de junta.
+
+**Próximo paso**: cuando @pcb cierre el placement, cargar `leds`,
+`devkit_c_local`, `usb_x_local` y `rele_c_local`, reexportar (los asserts avisan
+si alguna holgura se rompe) e imprimir **primero la tapa** como pieza de prueba:
+valida en 4,5 h el logo, los tubos guía y el calce de la falda, sin quemar las
+9 h de la base.
+
 ## 2026-09-02 (b) — v1 rev B: la plaqueta de @pcb entra al gabinete + PORTADO EL FIX A v2
 
 Dos tareas del Director. Las dos cerradas.

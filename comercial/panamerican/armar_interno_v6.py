@@ -1,38 +1,56 @@
-<!DOCTYPE html>
-<html lang="es-AR">
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>INTERNO — Cerro Moro v6.1: 4 módulos, la configuración del sitio y los pendientes</title>
-<link rel="stylesheet" href="estilo.css">
-</head>
-<body>
-<div class="doc">
+# -*- coding: utf-8 -*-
+"""Arma el documento INTERNO de Cerro Moro (v6.1, 4-sep-2026).
 
-<section class="hoja">
-<div class="agua">INTERNO — NO ENVIAR</div>
-<div class="banda">Interno — no enviar
-  <span class="men">Este documento es de Matías. Al cliente va un solo PDF: PRESUPUESTO_CERRO_MORO, de 2 páginas.</span>
-</div>
+Reemplaza a interno_v5.fuente.html (escrito a mano para la v5.2): la v6.1 cambio la
+configuracion entera (4 modulos: 2 simples de exterior + 2 dobles de interior, 3 sondas
+por reefer, 4.600 / 500 / sexto a 260), asi que el interno se genera y no se parchea.
 
+Copy: PROPUESTA_PANAMERICAN_CERRO_MORO.md v6.1, PARTES 2 a 7 + anexos. Nada inventado:
+lo unico propio son rotulos de seccion y de columna.
+
+REGLA DE MATIAS (4-sep): NO hay ninguna logistica antes de que acepten el presupuesto.
+Todo el cronograma esta en semanas DESDE la aceptacion y no hay una sola accion fechada
+para "hoy" ni para "el dia que salga".
+
+Salida: PRESUPUESTO_CERRO_MORO_INTERNO.html  (marcadores <!--LOGO_HORIZONTAL--> y <!--ESCUDO-->
+que inlina render_v6.py)
+"""
+import io, os
+
+AQUI = os.path.dirname(os.path.abspath(__file__))
+SALIDA = "PRESUPUESTO_CERRO_MORO_INTERNO.html"
+FECHA = "4 de septiembre de 2026"
+REF = "PROP-CM-2026-09-04"
+
+PIE = ('<div class="aire"></div>\n'
+       '<div class="pie">\n'
+       '  <span class="marca"><!--ESCUDO--> <b>Termovig&iacute;a</b> &middot; Bah&iacute;a Blanca</span>\n'
+       '  <span class="cod">INTERNO &middot; ' + REF + ' &middot; no enviar</span>\n'
+       '  <span class="npag">&middot;</span>\n'
+       '</div>\n</section>\n')
+
+BANDA = ('<div class="agua">INTERNO — NO ENVIAR</div>\n'
+         '<div class="banda">Interno — no enviar</div>\n')
+
+HOJAS = []
+
+
+def hoja(html, banda_larga=None):
+    b = BANDA
+    if banda_larga:
+        b = ('<div class="agua">INTERNO — NO ENVIAR</div>\n'
+             '<div class="banda">Interno — no enviar\n  <span class="men">%s</span>\n</div>\n' % banda_larga)
+    HOJAS.append('<section class="hoja">\n' + b + html + PIE)
+
+
+# =================================================================== HOJA 1
+hoja(u'''
 <div class="cabecera">
-  <div class="logo"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 485.5 112" width="485.5" height="112" role="img" aria-label="Termovigía · Bahía Blanca">
-  <g transform="translate(0.00,13.00) scale(0.8600)">
-  <path d="M50 4 L92 18 V50 C92 74.5 74 90.5 50 97 C26 90.5 8 74.5 8 50 V18 Z" fill="#0E4F66"/>
-  <path d="M20 68 L40 68 L56 40 L62 40" fill="none" stroke="#FFFFFF" stroke-width="8.5" stroke-linecap="round" stroke-linejoin="round"/>
-  <circle cx="75" cy="40" r="9" fill="#FFFFFF"/>
-  <circle cx="75" cy="40" r="5" fill="#C4291C"/>
-  </g>
-  <path d="M143.07 27.02H131.4V61.91H124.66V27.02H113.02V21.29H143.07ZM174.42 61.91H151.62V21.29H173.52V27.02H158.36V38.51H172.33V44.21H158.36V56.21H174.42ZM215.63 61.91H207.76L201.27 51.03Q200.4 49.53 199.56 48.47Q198.73 47.41 197.86 46.73Q197 46.05 195.98 45.73Q194.96 45.42 193.68 45.42H190.97V61.91H184.25V21.29H197.62Q200.48 21.29 202.89 21.97Q205.3 22.65 207.08 24.03Q208.86 25.4 209.87 27.45Q210.88 29.51 210.88 32.25Q210.88 34.41 210.24 36.2Q209.6 38 208.43 39.41Q207.25 40.81 205.59 41.8Q203.94 42.79 201.87 43.33V43.44Q202.97 44.06 203.8 44.81Q204.62 45.56 205.35 46.36Q206.09 47.15 206.81 48.16Q207.53 49.16 208.41 50.49ZM190.97 26.76V39.96H196.57Q198.13 39.96 199.45 39.48Q200.76 38.99 201.73 38.09Q202.69 37.18 203.23 35.88Q203.77 34.58 203.77 32.96Q203.77 30.05 201.93 28.4Q200.09 26.76 196.63 26.76ZM266.59 61.91H259.9V35.62Q259.9 32.4 260.3 27.72H260.19Q259.56 30.39 259.08 31.55L246.96 61.91H242.32L230.17 31.77Q229.66 30.44 229.09 27.72H228.98Q229.2 30.16 229.2 35.68V61.91H222.97V21.29H232.46L243.14 48.34Q244.35 51.46 244.72 52.98H244.86Q245.91 49.78 246.56 48.23L257.44 21.29H266.59ZM295.93 62.59Q287.15 62.59 281.87 56.89Q276.59 51.2 276.59 42.08Q276.59 32.28 281.97 26.45Q287.35 20.61 296.58 20.61Q305.13 20.61 310.36 26.28Q315.58 31.94 315.58 41.09Q315.58 51.03 310.23 56.81Q304.88 62.59 295.93 62.59ZM296.24 26.53Q290.66 26.53 287.17 30.7Q283.67 34.86 283.67 41.66Q283.67 48.43 287.07 52.56Q290.46 56.69 295.96 56.69Q301.79 56.69 305.16 52.76Q308.53 48.82 308.53 41.74Q308.53 34.46 305.26 30.5Q301.99 26.53 296.24 26.53Z" fill="#12171C"/>
-  <path d="M357.47 21.29 342.89 61.91H335.36L321.03 21.29H328.39L338.42 52.11Q338.9 53.58 339.15 55.53H339.26Q339.46 53.92 340.09 52.05L350.34 21.29ZM372.38 61.91H365.44V21.29H372.38ZM416.67 59.13Q410.33 62.59 402.54 62.59Q393.54 62.59 387.96 56.98Q382.38 51.37 382.38 42.14Q382.38 32.71 388.48 26.66Q394.58 20.61 403.99 20.61Q410.75 20.61 415.37 22.6V29.54Q410.7 26.42 404.24 26.42Q397.76 26.42 393.61 30.7Q389.46 34.97 389.46 41.77Q389.46 48.77 393.03 52.77Q396.59 56.78 402.71 56.78Q406.9 56.78 409.96 55.17V45.51H401.41V39.84H416.67ZM434.94 61.91H428.01V21.29H434.94ZM439.56 7.87 431.46 17.16H426.59L433.44 7.87ZM480.91 61.91H473.52L469.87 51.57H453.9L450.38 61.91H443.02L458.23 21.29H465.82ZM468.08 46.07 462.45 29.88Q462.19 29.08 461.91 27.33H461.8Q461.54 28.94 461.23 29.88L455.65 46.07Z" fill="#0E4F66"/>
-  <rect x="112.00" y="74.91" width="369.48" height="1.6" fill="#C9D1D6"/>
-  <path d="M112.94 89.48V79.91H116.04Q117.67 79.91 118.49 80.48Q119.3 81.05 119.3 82.21Q119.3 82.56 119.22 82.9Q119.13 83.25 118.96 83.53Q118.78 83.82 118.52 84.04Q118.25 84.26 117.9 84.38Q118.25 84.44 118.58 84.61Q118.91 84.78 119.15 85.06Q119.4 85.33 119.54 85.71Q119.68 86.08 119.68 86.54Q119.68 88.01 118.7 88.74Q117.72 89.48 115.87 89.48ZM117.43 82.52Q117.43 82.25 117.34 82.03Q117.25 81.81 117.06 81.66Q116.86 81.5 116.56 81.42Q116.26 81.33 115.82 81.33H114.73V83.87H115.82Q116.26 83.87 116.57 83.76Q116.87 83.66 117.06 83.47Q117.26 83.28 117.34 83.04Q117.43 82.8 117.43 82.52ZM115.99 88.01Q116.42 88.01 116.75 87.9Q117.08 87.79 117.3 87.59Q117.52 87.4 117.63 87.13Q117.74 86.87 117.74 86.57Q117.74 85.95 117.28 85.6Q116.81 85.25 115.85 85.25H114.73V88.01ZM130.97 89.48 130.45 87.59H127.11L126.56 89.48H124.78L127.61 79.91H130.13L132.96 89.48ZM128.8 81.66 127.54 86.12H130.04ZM143.24 89.48V85.31H139.99V89.48H138.19V79.91H139.99V83.75H143.24V79.91H145.05V89.48ZM151.34 81.38V79.91H157.39V81.38H155.28V87.99H157.39V89.48H151.34V87.99H153.45V81.38ZM155.25 78.89H153.46L155.1 77.24H157.51ZM150.24 79.91ZM169.21 89.48 168.69 87.59H165.35L164.8 89.48H163.02L165.85 79.91H168.37L171.21 89.48ZM167.04 81.66 165.78 86.12H168.28ZM189.43 89.48V79.91H192.52Q194.15 79.91 194.97 80.48Q195.78 81.05 195.78 82.21Q195.78 82.56 195.7 82.9Q195.62 83.25 195.44 83.53Q195.26 83.82 195 84.04Q194.74 84.26 194.38 84.38Q194.74 84.44 195.06 84.61Q195.39 84.78 195.63 85.06Q195.88 85.33 196.02 85.71Q196.17 86.08 196.17 86.54Q196.17 88.01 195.18 88.74Q194.2 89.48 192.35 89.48ZM193.91 82.52Q193.91 82.25 193.82 82.03Q193.73 81.81 193.54 81.66Q193.35 81.5 193.04 81.42Q192.74 81.33 192.31 81.33H191.21V83.87H192.31Q192.75 83.87 193.05 83.76Q193.35 83.66 193.55 83.47Q193.74 83.28 193.83 83.04Q193.91 82.8 193.91 82.52ZM192.47 88.01Q192.91 88.01 193.23 87.9Q193.56 87.79 193.78 87.59Q194 87.4 194.11 87.13Q194.22 86.87 194.22 86.57Q194.22 85.95 193.76 85.6Q193.29 85.25 192.33 85.25H191.21V88.01ZM202.67 89.48V79.91H204.5V87.93H208.55V89.48ZM220.2 89.48 219.67 87.59H216.33L215.79 89.48H214.01L216.84 79.91H219.36L222.19 89.48ZM218.03 81.66 216.77 86.12H219.27ZM232.14 89.48 229.58 83.77 229.05 82.54V86.5V89.48H227.41V79.91H229.62L232.24 85.66L232.7 86.78V82.55V79.91H234.34V89.48ZM246.82 89.1Q246.19 89.36 245.59 89.49Q244.99 89.61 244.35 89.61Q243.32 89.61 242.52 89.31Q241.73 89 241.18 88.4Q240.64 87.8 240.35 86.91Q240.07 86.02 240.07 84.84Q240.07 83.63 240.38 82.69Q240.69 81.75 241.26 81.1Q241.83 80.45 242.65 80.11Q243.46 79.77 244.48 79.77Q244.81 79.77 245.1 79.79Q245.39 79.8 245.67 79.84Q245.95 79.88 246.23 79.95Q246.52 80.02 246.82 80.12V81.91Q246.2 81.61 245.64 81.49Q245.07 81.36 244.61 81.36Q243.93 81.36 243.45 81.61Q242.96 81.85 242.65 82.3Q242.34 82.74 242.2 83.35Q242.05 83.96 242.05 84.7Q242.05 85.47 242.2 86.08Q242.35 86.7 242.66 87.12Q242.98 87.54 243.47 87.77Q243.96 87.99 244.63 87.99Q244.88 87.99 245.16 87.94Q245.44 87.9 245.73 87.82Q246.02 87.74 246.3 87.64Q246.58 87.53 246.82 87.42ZM258.44 89.48 257.92 87.59H254.58L254.03 89.48H252.25L255.08 79.91H257.6L260.44 89.48ZM256.27 81.66 255.01 86.12H257.51Z" fill="#4A5560"/>
-</svg>
-</div>
+  <div class="logo"><!--LOGO_HORIZONTAL--></div>
   <div class="sello">
     <b>Interno · v6.1</b>
-    4 de septiembre de 2026<br>
-    Ref. PROP-CM-2026-09-04
+    ''' + FECHA + u'''<br>
+    Ref. ''' + REF + u'''
   </div>
 </div>
 
@@ -94,18 +112,10 @@
 relativos y criterios de aceptación, sin validez y sin destinatario. <strong>Sigue eliminada la opción C</strong>
 de la v2 («sin inversión inicial», comodato con permanencia 24 meses), por decisión de Matías: <em>«el de la
 inversión inicial no lo ofrecería»</em>.</p></div>
-<div class="aire"></div>
-<div class="pie">
-  <span class="marca"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" role="img" aria-label="Termovigia"><path d="M50 4 L92 18 V50 C92 74.5 74 90.5 50 97 C26 90.5 8 74.5 8 50 V18 Z" fill="#0E4F66"/><path d="M20 68 L40 68 L56 40 L62 40" fill="none" stroke="#FFFFFF" stroke-width="8.5" stroke-linecap="round" stroke-linejoin="round"/><circle cx="75" cy="40" r="9" fill="#FFFFFF"/><circle cx="75" cy="40" r="5" fill="#C4291C"/></svg> <b>Termovig&iacute;a</b> &middot; Bah&iacute;a Blanca</span>
-  <span class="cod">INTERNO &middot; PROP-CM-2026-09-04 &middot; no enviar</span>
-  <span class="npag">1 / 16</span>
-</div>
-</section>
+''', banda_larga=u'Este documento es de Matías. Al cliente va un solo PDF: PRESUPUESTO_CERRO_MORO, de 2 páginas.')
 
-<section class="hoja">
-<div class="agua">INTERNO — NO ENVIAR</div>
-<div class="banda">Interno — no enviar</div>
-
+# =================================================================== HOJA 2
+hoja(u'''
 <h2><span class="n">01</span>Qué cambió en esta versión</h2>
 <div class="grid2">
   <div class="card">
@@ -179,18 +189,10 @@ Te paso el presupuesto: dos hojas, sin nombre de empresa, para que se lo
 pases a quien corresponda. El equipo que ya está puesto sigue reportando,
 así que mientras lo miran se puede ver el panel en cualquier momento.
 </div>
-<div class="aire"></div>
-<div class="pie">
-  <span class="marca"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" role="img" aria-label="Termovigia"><path d="M50 4 L92 18 V50 C92 74.5 74 90.5 50 97 C26 90.5 8 74.5 8 50 V18 Z" fill="#0E4F66"/><path d="M20 68 L40 68 L56 40 L62 40" fill="none" stroke="#FFFFFF" stroke-width="8.5" stroke-linecap="round" stroke-linejoin="round"/><circle cx="75" cy="40" r="9" fill="#FFFFFF"/><circle cx="75" cy="40" r="5" fill="#C4291C"/></svg> <b>Termovig&iacute;a</b> &middot; Bah&iacute;a Blanca</span>
-  <span class="cod">INTERNO &middot; PROP-CM-2026-09-04 &middot; no enviar</span>
-  <span class="npag">2 / 16</span>
-</div>
-</section>
+''')
 
-<section class="hoja">
-<div class="agua">INTERNO — NO ENVIAR</div>
-<div class="banda">Interno — no enviar</div>
-
+# =================================================================== HOJA 3
+hoja(u'''
 <h2><span class="n">03</span>Por qué el mensaje está escrito así, para que no se suavice al copiarlo</h2>
 <table class="compacta"><thead><tr><th style="width:6%">&nbsp;</th><th style="width:30%">Qué hace</th><th>Por qué</th></tr></thead><tbody>
 <tr><td class="num">a</td><td><strong>Arranca con «quedó armado tal cual me lo describiste»</strong></td>
@@ -231,18 +233,10 @@ presupuesto»: la logística arranca con la aceptación y el anticipo, no antes.
   que está terminado (hay una puesta en marcha por hitos, y está en el precio) · fechas o precios distintos a los
   del PDF. Cualquier pregunta técnica o de números: «eso lo contesta Matías, lo llamamos ahora.»</li>
 </ul>
-<div class="aire"></div>
-<div class="pie">
-  <span class="marca"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" role="img" aria-label="Termovigia"><path d="M50 4 L92 18 V50 C92 74.5 74 90.5 50 97 C26 90.5 8 74.5 8 50 V18 Z" fill="#0E4F66"/><path d="M20 68 L40 68 L56 40 L62 40" fill="none" stroke="#FFFFFF" stroke-width="8.5" stroke-linecap="round" stroke-linejoin="round"/><circle cx="75" cy="40" r="9" fill="#FFFFFF"/><circle cx="75" cy="40" r="5" fill="#C4291C"/></svg> <b>Termovig&iacute;a</b> &middot; Bah&iacute;a Blanca</span>
-  <span class="cod">INTERNO &middot; PROP-CM-2026-09-04 &middot; no enviar</span>
-  <span class="npag">3 / 16</span>
-</div>
-</section>
+''')
 
-<section class="hoja">
-<div class="agua">INTERNO — NO ENVIAR</div>
-<div class="banda">Interno — no enviar</div>
-
+# =================================================================== HOJA 4
+hoja(u'''
 <h2><span class="n">05</span>Qué hay hoy, verificado</h2>
 <table class="compacta"><thead><tr><th>Hecho</th><th style="width:38%">Evidencia</th></tr></thead><tbody>
 <tr><td>1 equipo instalado en el campamento, <code>REEFER_01_SCZ</code>, firmware <code>firmware_revival</code> 2.6.21</td><td>Puesto el 21-ago; reconectado por Andrés el 3-sep</td></tr>
@@ -290,18 +284,10 @@ presupuesto»: la logística arranca con la aceptación y el anticipo, no antes.
     </div>
   </div>
 </div>
-<div class="aire"></div>
-<div class="pie">
-  <span class="marca"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" role="img" aria-label="Termovigia"><path d="M50 4 L92 18 V50 C92 74.5 74 90.5 50 97 C26 90.5 8 74.5 8 50 V18 Z" fill="#0E4F66"/><path d="M20 68 L40 68 L56 40 L62 40" fill="none" stroke="#FFFFFF" stroke-width="8.5" stroke-linecap="round" stroke-linejoin="round"/><circle cx="75" cy="40" r="9" fill="#FFFFFF"/><circle cx="75" cy="40" r="5" fill="#C4291C"/></svg> <b>Termovig&iacute;a</b> &middot; Bah&iacute;a Blanca</span>
-  <span class="cod">INTERNO &middot; PROP-CM-2026-09-04 &middot; no enviar</span>
-  <span class="npag">4 / 16</span>
-</div>
-</section>
+''')
 
-<section class="hoja">
-<div class="agua">INTERNO — NO ENVIAR</div>
-<div class="banda">Interno — no enviar</div>
-
+# =================================================================== HOJA 5
+hoja(u'''
 <h2><span class="n">06</span>Registro: cómo quedó resuelta la discusión de compartir o no compartir</h2>
 <div class="sub">Las v4 y v5 discutieron durante dos versiones si convenía un equipo por reefer o uno cada dos. El
 dato de Andrés del 4-sep —2 afuera, 4 adentro— <strong>cerró la discusión sin que hubiera que elegir bando</strong>.
@@ -354,18 +340,10 @@ mitigación real (prueba de banco con 25 m) tampoco se explica al cliente: se ha
 <strong>Y el tendido no se cotiza</strong> (decisión de Matías, textual: «no contemples el tema de las tiradas»): la
 cuenta del caño queda archivada en la hoja 10 <strong>como historia y como argumento</strong>, no como renglón. El
 precio que mandamos es firme y no depende de nada que pase en una zanja.</p></div>
-<div class="aire"></div>
-<div class="pie">
-  <span class="marca"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" role="img" aria-label="Termovigia"><path d="M50 4 L92 18 V50 C92 74.5 74 90.5 50 97 C26 90.5 8 74.5 8 50 V18 Z" fill="#0E4F66"/><path d="M20 68 L40 68 L56 40 L62 40" fill="none" stroke="#FFFFFF" stroke-width="8.5" stroke-linecap="round" stroke-linejoin="round"/><circle cx="75" cy="40" r="9" fill="#FFFFFF"/><circle cx="75" cy="40" r="5" fill="#C4291C"/></svg> <b>Termovig&iacute;a</b> &middot; Bah&iacute;a Blanca</span>
-  <span class="cod">INTERNO &middot; PROP-CM-2026-09-04 &middot; no enviar</span>
-  <span class="npag">5 / 16</span>
-</div>
-</section>
+''')
 
-<section class="hoja">
-<div class="agua">INTERNO — NO ENVIAR</div>
-<div class="banda">Interno — no enviar</div>
-
+# =================================================================== HOJA 6
+hoja(u'''
 <h2><span class="n">07</span>Qué lleva cada módulo, y qué de eso anda HOY</h2>
 <div class="sub">Verificado en el código el 3-sep-2026.</div>
 <table class="compacta"><thead><tr><th style="width:15%">Función</th><th class="num" style="width:8%">Simple<br>(ext.)</th>
@@ -431,18 +409,10 @@ o sí antes del hito 2.</span></p></div>
 se reporta con el nombre equivocado). Pull-up 2k2 con posición alternativa de 1k, 3 hilos (nada de parasite power),
 100 nF + 10 µF al pie de la sonda más lejana de cada rama. <strong>Habilitar <code>SENSOR_DOOR_ENABLED</code>, probar
 puertas y defrost, y correr la prueba de banco con 25 m de cable en los dos dobles antes de despachar.</strong></p></div>
-<div class="aire"></div>
-<div class="pie">
-  <span class="marca"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" role="img" aria-label="Termovigia"><path d="M50 4 L92 18 V50 C92 74.5 74 90.5 50 97 C26 90.5 8 74.5 8 50 V18 Z" fill="#0E4F66"/><path d="M20 68 L40 68 L56 40 L62 40" fill="none" stroke="#FFFFFF" stroke-width="8.5" stroke-linecap="round" stroke-linejoin="round"/><circle cx="75" cy="40" r="9" fill="#FFFFFF"/><circle cx="75" cy="40" r="5" fill="#C4291C"/></svg> <b>Termovig&iacute;a</b> &middot; Bah&iacute;a Blanca</span>
-  <span class="cod">INTERNO &middot; PROP-CM-2026-09-04 &middot; no enviar</span>
-  <span class="npag">6 / 16</span>
-</div>
-</section>
+''')
 
-<section class="hoja">
-<div class="agua">INTERNO — NO ENVIAR</div>
-<div class="banda">Interno — no enviar</div>
-
+# =================================================================== HOJA 7
+hoja(u'''
 <h2><span class="n">08</span>Lo que se instala, y quién</h2>
 <div class="grid3">
   <div class="card fuerte">
@@ -512,18 +482,10 @@ hecho, <strong>la prueba de campo</strong>: conviene pedirle a Andrés una foto 
     </ul></div>
   </div>
 </div>
-<div class="aire"></div>
-<div class="pie">
-  <span class="marca"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" role="img" aria-label="Termovigia"><path d="M50 4 L92 18 V50 C92 74.5 74 90.5 50 97 C26 90.5 8 74.5 8 50 V18 Z" fill="#0E4F66"/><path d="M20 68 L40 68 L56 40 L62 40" fill="none" stroke="#FFFFFF" stroke-width="8.5" stroke-linecap="round" stroke-linejoin="round"/><circle cx="75" cy="40" r="9" fill="#FFFFFF"/><circle cx="75" cy="40" r="5" fill="#C4291C"/></svg> <b>Termovig&iacute;a</b> &middot; Bah&iacute;a Blanca</span>
-  <span class="cod">INTERNO &middot; PROP-CM-2026-09-04 &middot; no enviar</span>
-  <span class="npag">7 / 16</span>
-</div>
-</section>
+''')
 
-<section class="hoja">
-<div class="agua">INTERNO — NO ENVIAR</div>
-<div class="banda">Interno — no enviar</div>
-
+# =================================================================== HOJA 8
+hoja(u'''
 <h2><span class="n">11</span>Cómo se arman los dos precios: USD 600 el simple, USD 750 el doble</h2>
 <div class="sub">Base: BOM real (<code>BOM_KIT_V1.md</code> rev B de @hardware, precios de MercadoLibre AR verificados
 el 2-sep-2026, a precio de reposición). Cambio $ → USD al BNA vendedor 1.535 del 3-sep.</div>
@@ -578,18 +540,10 @@ marcha no se movieron. Es un <strong>1,3 %</strong> de diferencia y compra una g
 una sola caja de repuesto. Si Matías prefiere el número redondo de 4.540, se llega bajando el repuesto a 340 y
 aceptando que el repuesto sea un simple: <strong>no lo recomiendo</strong> — el día que falle un doble, un repuesto
 simple deja un reefer sin vigilancia y obliga a un envío urgente a 1.500 km.</p></div>
-<div class="aire"></div>
-<div class="pie">
-  <span class="marca"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" role="img" aria-label="Termovigia"><path d="M50 4 L92 18 V50 C92 74.5 74 90.5 50 97 C26 90.5 8 74.5 8 50 V18 Z" fill="#0E4F66"/><path d="M20 68 L40 68 L56 40 L62 40" fill="none" stroke="#FFFFFF" stroke-width="8.5" stroke-linecap="round" stroke-linejoin="round"/><circle cx="75" cy="40" r="9" fill="#FFFFFF"/><circle cx="75" cy="40" r="5" fill="#C4291C"/></svg> <b>Termovig&iacute;a</b> &middot; Bah&iacute;a Blanca</span>
-  <span class="cod">INTERNO &middot; PROP-CM-2026-09-04 &middot; no enviar</span>
-  <span class="npag">8 / 16</span>
-</div>
-</section>
+''')
 
-<section class="hoja">
-<div class="agua">INTERNO — NO ENVIAR</div>
-<div class="banda">Interno — no enviar</div>
-
+# =================================================================== HOJA 9
+hoja(u'''
 <h2><span class="n">12</span>Puesta en marcha, USD 1.500</h2>
 <table class="compacta"><thead><tr><th>Trabajo</th><th class="num" style="width:10%">h</th></tr></thead><tbody>
 <tr><td>Sondas, rangos y umbrales por reefer + <strong>calibración de las 15 sondas</strong> contra referencia y
@@ -641,18 +595,10 @@ pase nada.</p></div>
     equipo que reporta.</p></div>
   </div>
 </div>
-<div class="aire"></div>
-<div class="pie">
-  <span class="marca"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" role="img" aria-label="Termovigia"><path d="M50 4 L92 18 V50 C92 74.5 74 90.5 50 97 C26 90.5 8 74.5 8 50 V18 Z" fill="#0E4F66"/><path d="M20 68 L40 68 L56 40 L62 40" fill="none" stroke="#FFFFFF" stroke-width="8.5" stroke-linecap="round" stroke-linejoin="round"/><circle cx="75" cy="40" r="9" fill="#FFFFFF"/><circle cx="75" cy="40" r="5" fill="#C4291C"/></svg> <b>Termovig&iacute;a</b> &middot; Bah&iacute;a Blanca</span>
-  <span class="cod">INTERNO &middot; PROP-CM-2026-09-04 &middot; no enviar</span>
-  <span class="npag">9 / 16</span>
-</div>
-</section>
+''')
 
-<section class="hoja">
-<div class="agua">INTERNO — NO ENVIAR</div>
-<div class="banda">Interno — no enviar</div>
-
+# =================================================================== HOJA 10
+hoja(u'''
 <h2><span class="n">14</span>LA CUENTA DEL CAÑO — archivo, y por qué ya no entra en el precio</h2>
 <div class="sub">Se conserva de la v5 <strong>como historia y como argumento</strong>, no como parte del presupuesto.
 <strong>El tendido lo hace y lo paga el cliente, y no aparece en el documento que se manda.</strong> Y ahora son
@@ -691,18 +637,10 @@ esta cuenta</strong>, que se hizo para caño rígido exterior.</div>
 curvas, cajas de paso, grampas y cable son <strong>estimados</strong> a precio de plaza; el caño y la mano de obra
 salen de precios y de piso de tarifa relevados. Es una cuenta para decidir y para argumentar, no una cotización de
 obra: <strong>nosotros no la cotizamos y no la ejecutamos.</strong></span></p></div>
-<div class="aire"></div>
-<div class="pie">
-  <span class="marca"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" role="img" aria-label="Termovigia"><path d="M50 4 L92 18 V50 C92 74.5 74 90.5 50 97 C26 90.5 8 74.5 8 50 V18 Z" fill="#0E4F66"/><path d="M20 68 L40 68 L56 40 L62 40" fill="none" stroke="#FFFFFF" stroke-width="8.5" stroke-linecap="round" stroke-linejoin="round"/><circle cx="75" cy="40" r="9" fill="#FFFFFF"/><circle cx="75" cy="40" r="5" fill="#C4291C"/></svg> <b>Termovig&iacute;a</b> &middot; Bah&iacute;a Blanca</span>
-  <span class="cod">INTERNO &middot; PROP-CM-2026-09-04 &middot; no enviar</span>
-  <span class="npag">10 / 16</span>
-</div>
-</section>
+''')
 
-<section class="hoja">
-<div class="agua">INTERNO — NO ENVIAR</div>
-<div class="banda">Interno — no enviar</div>
-
+# =================================================================== HOJA 11
+hoja(u'''
 <h2><span class="n">15</span>Condiciones de pago — 50 / 50, y por qué no 25</h2>
 <div class="sub"><strong>50 % con la orden de compra</strong> (anticipo de materiales) y <strong>50 % contra los
 equipos instalados y reportando</strong>. El abono arranca con el primer equipo andando.</div>
@@ -761,18 +699,10 @@ con historial de pago.</strong> Con dos opciones el comprador elige; con tres se
     este sitio no tiene. <strong>Y ninguna de esas unidades es apta para la intemperie sin gabinete adicional.</strong></p></div>
   </div>
 </div>
-<div class="aire"></div>
-<div class="pie">
-  <span class="marca"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" role="img" aria-label="Termovigia"><path d="M50 4 L92 18 V50 C92 74.5 74 90.5 50 97 C26 90.5 8 74.5 8 50 V18 Z" fill="#0E4F66"/><path d="M20 68 L40 68 L56 40 L62 40" fill="none" stroke="#FFFFFF" stroke-width="8.5" stroke-linecap="round" stroke-linejoin="round"/><circle cx="75" cy="40" r="9" fill="#FFFFFF"/><circle cx="75" cy="40" r="5" fill="#C4291C"/></svg> <b>Termovig&iacute;a</b> &middot; Bah&iacute;a Blanca</span>
-  <span class="cod">INTERNO &middot; PROP-CM-2026-09-04 &middot; no enviar</span>
-  <span class="npag">11 / 16</span>
-</div>
-</section>
+''')
 
-<section class="hoja">
-<div class="agua">INTERNO — NO ENVIAR</div>
-<div class="banda">Interno — no enviar</div>
-
+# =================================================================== HOJA 12
+hoja(u'''
 <h2><span class="n">17</span>Los 5 módulos: qué falta comprar y cuánto sale</h2>
 <div class="sub"><strong>2 simples de exterior + 2 dobles de interior + 1 doble de repuesto.</strong> Sondas: 15
 instaladas + 3 de repuesto = 18. Reed: 5 instalados + 1 de repuesto = 6. Defrost: 5 entradas (cable y bornera, sin
@@ -819,18 +749,10 @@ rango, y <strong>reservando 3 ESP32 para las galgas de Dreyfus</strong>, que es 
     Bahía.</p></div>
   </div>
 </div>
-<div class="aire"></div>
-<div class="pie">
-  <span class="marca"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" role="img" aria-label="Termovigia"><path d="M50 4 L92 18 V50 C92 74.5 74 90.5 50 97 C26 90.5 8 74.5 8 50 V18 Z" fill="#0E4F66"/><path d="M20 68 L40 68 L56 40 L62 40" fill="none" stroke="#FFFFFF" stroke-width="8.5" stroke-linecap="round" stroke-linejoin="round"/><circle cx="75" cy="40" r="9" fill="#FFFFFF"/><circle cx="75" cy="40" r="5" fill="#C4291C"/></svg> <b>Termovig&iacute;a</b> &middot; Bah&iacute;a Blanca</span>
-  <span class="cod">INTERNO &middot; PROP-CM-2026-09-04 &middot; no enviar</span>
-  <span class="npag">12 / 16</span>
-</div>
-</section>
+''')
 
-<section class="hoja">
-<div class="agua">INTERNO — NO ENVIAR</div>
-<div class="banda">Interno — no enviar</div>
-
+# =================================================================== HOJA 13
+hoja(u'''
 <h2><span class="n">18</span>El camino a los hitos 1 y 2, en semanas desde la aceptación</h2>
 <div class="cita"><p><strong>El plan arranca cuando aceptan, no antes.</strong> Semana 0 = aceptación + anticipo del
 50 %. Hasta que eso pase <strong>no se compra, no se arma y no se despacha nada</strong>, y a Andrés no se le pide que
@@ -869,18 +791,10 @@ Los kits <strong>ya estaban planificados como las unidades de demostración del 
 Cerro Moro no compra, no quedan colgados: van a su destino original. <strong>Si Cerro Moro compra, Bahía se queda sin
 demos.</strong> Recomendación: la reposición de los kits de Bahía se dispara en el mismo pedido que la orden de compra,
 no después. <strong>Decide el Director.</strong></p></div>
-<div class="aire"></div>
-<div class="pie">
-  <span class="marca"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" role="img" aria-label="Termovigia"><path d="M50 4 L92 18 V50 C92 74.5 74 90.5 50 97 C26 90.5 8 74.5 8 50 V18 Z" fill="#0E4F66"/><path d="M20 68 L40 68 L56 40 L62 40" fill="none" stroke="#FFFFFF" stroke-width="8.5" stroke-linecap="round" stroke-linejoin="round"/><circle cx="75" cy="40" r="9" fill="#FFFFFF"/><circle cx="75" cy="40" r="5" fill="#C4291C"/></svg> <b>Termovig&iacute;a</b> &middot; Bah&iacute;a Blanca</span>
-  <span class="cod">INTERNO &middot; PROP-CM-2026-09-04 &middot; no enviar</span>
-  <span class="npag">13 / 16</span>
-</div>
-</section>
+''')
 
-<section class="hoja">
-<div class="agua">INTERNO — NO ENVIAR</div>
-<div class="banda">Interno — no enviar</div>
-
+# =================================================================== HOJA 14
+hoja(u'''
 <h2><span class="n">19</span>Qué es cada hito por dentro</h2>
 <div class="sub">Las duraciones se cuentan <strong>en semanas desde la aceptación</strong>, no contra el calendario.
 Los hitos pesados caen después de la semana 5 para no chocar con la parada de Dreyfus.</div>
@@ -918,18 +832,10 @@ del cliente en el camino crítico de los dos pares de adentro.</strong></span></
 <div class="box"><p>Lo que hoy está roto y cada hito arregla (llave maestra en el binario, datos perdidos sin red,
 umbral en 50 °C, equipo muerto que no avisa, OTA que entra 1 de 4) está en <code>AUDITORIA_HALLAZGOS.md</code>; no
 cambió.</p></div>
-<div class="aire"></div>
-<div class="pie">
-  <span class="marca"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" role="img" aria-label="Termovigia"><path d="M50 4 L92 18 V50 C92 74.5 74 90.5 50 97 C26 90.5 8 74.5 8 50 V18 Z" fill="#0E4F66"/><path d="M20 68 L40 68 L56 40 L62 40" fill="none" stroke="#FFFFFF" stroke-width="8.5" stroke-linecap="round" stroke-linejoin="round"/><circle cx="75" cy="40" r="9" fill="#FFFFFF"/><circle cx="75" cy="40" r="5" fill="#C4291C"/></svg> <b>Termovig&iacute;a</b> &middot; Bah&iacute;a Blanca</span>
-  <span class="cod">INTERNO &middot; PROP-CM-2026-09-04 &middot; no enviar</span>
-  <span class="npag">14 / 16</span>
-</div>
-</section>
+''')
 
-<section class="hoja">
-<div class="agua">INTERNO — NO ENVIAR</div>
-<div class="banda">Interno — no enviar</div>
-
+# =================================================================== HOJA 15
+hoja(u'''
 <h2><span class="n">20</span>La relación con Andrés — para que Matías decida</h2>
 <div class="grid2">
   <div class="card">
@@ -984,18 +890,10 @@ decide él: decide Matías.</strong></p>
 <p><strong>Lo bueno de esta vuelta:</strong> a Andrés le llega <strong>exactamente el sistema que él describió</strong>,
 armado sobre datos que dio él (los metros, el caño, la intemperie, el reparto adentro/afuera). Ya no hay que explicarle
 ningún «no». Eso lo deja bien parado adentro, que es lo único que él pidió para sí.</p></div>
-<div class="aire"></div>
-<div class="pie">
-  <span class="marca"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" role="img" aria-label="Termovigia"><path d="M50 4 L92 18 V50 C92 74.5 74 90.5 50 97 C26 90.5 8 74.5 8 50 V18 Z" fill="#0E4F66"/><path d="M20 68 L40 68 L56 40 L62 40" fill="none" stroke="#FFFFFF" stroke-width="8.5" stroke-linecap="round" stroke-linejoin="round"/><circle cx="75" cy="40" r="9" fill="#FFFFFF"/><circle cx="75" cy="40" r="5" fill="#C4291C"/></svg> <b>Termovig&iacute;a</b> &middot; Bah&iacute;a Blanca</span>
-  <span class="cod">INTERNO &middot; PROP-CM-2026-09-04 &middot; no enviar</span>
-  <span class="npag">15 / 16</span>
-</div>
-</section>
+''')
 
-<section class="hoja">
-<div class="agua">INTERNO — NO ENVIAR</div>
-<div class="banda">Interno — no enviar</div>
-
+# =================================================================== HOJA 16
+hoja(u'''
 <h2><span class="n">21</span>Lo que quedó abierto, antes de mandar</h2>
 <div class="sub">17 pendientes. <strong>Ninguno es logística:</strong> hasta que no haya aceptación y anticipo no se
 compra, no se arma y no se despacha nada.</div>
@@ -1040,25 +938,26 @@ sin «Para:», sin validez, <strong>sin mencionar material de gabinete</strong>.
 <h3>Fuentes consultadas</h3>
 <ul class="lista">
   <li>Alcance del bus, pull-ups, tierras entre contenedores y límite prudente de 15 m:
-  <code>frioseguro\hardware\ALCANCE_1WIRE.md</code> (@muestreador), §2.6.</li>
+  <code>frioseguro\\hardware\\ALCANCE_1WIRE.md</code> (@muestreador), §2.6.</li>
   <li>Costo por equipo y stock declarado: <code>BOM_KIT_V1.md</code> rev B (@hardware), precios ML verificados el
   2-sep-2026.</li>
   <li>Estado real y auditoría: <code>ESTADO_HONESTO.md</code> · <code>AUDITORIA_HALLAZGOS.md</code>.</li>
   <li>Qué hace hoy el firmware con sondas, puerta, relé y defrost (leído el 3-sep-2026):
   <code>firmware_revival/sondas.h</code> línea 31 · <code>config.h</code> 67-150 · <code>.ino</code> 369-375, 483-488,
   804-944 · <code>comandos_nube.h</code> (sin comando de relé).</li>
-  <li>Contrato base: <code>MATI-HQ\comercial\CONTRATO_TERMOVIGIA_v4.md</code>.</li>
+  <li>Contrato base: <code>MATI-HQ\\comercial\\CONTRATO_TERMOVIGIA_v4.md</code>.</li>
   <li>Precios de canalización, 1-Wire AN148, testo Saveris 2-T2, novillo INMAG, dólar BNA vendedor 1.535, Supabase Pro
   y el Código de Conducta de Proveedores: enlaces conservados en la v5.2 del archivo fuente (historial de git).</li>
 </ul>
-<div class="aire"></div>
-<div class="pie">
-  <span class="marca"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" role="img" aria-label="Termovigia"><path d="M50 4 L92 18 V50 C92 74.5 74 90.5 50 97 C26 90.5 8 74.5 8 50 V18 Z" fill="#0E4F66"/><path d="M20 68 L40 68 L56 40 L62 40" fill="none" stroke="#FFFFFF" stroke-width="8.5" stroke-linecap="round" stroke-linejoin="round"/><circle cx="75" cy="40" r="9" fill="#FFFFFF"/><circle cx="75" cy="40" r="5" fill="#C4291C"/></svg> <b>Termovig&iacute;a</b> &middot; Bah&iacute;a Blanca</span>
-  <span class="cod">INTERNO &middot; PROP-CM-2026-09-04 &middot; no enviar</span>
-  <span class="npag">16 / 16</span>
-</div>
-</section>
+''')
 
-</div>
-</body>
-</html>
+# =================================================================== salida
+HTML = (u'<!DOCTYPE html>\n<html lang="es-AR">\n<head>\n<meta charset="utf-8">\n'
+        u'<meta name="viewport" content="width=device-width, initial-scale=1">\n'
+        u'<title>INTERNO — Cerro Moro v6.1: 4 módulos, la configuración del sitio y los pendientes</title>\n'
+        u'<link rel="stylesheet" href="estilo.css">\n</head>\n<body>\n<div class="doc">\n\n'
+        + u'\n'.join(HOJAS) + u'\n</div>\n</body>\n</html>\n')
+
+if __name__ == "__main__":
+    io.open(os.path.join(AQUI, SALIDA), "w", encoding="utf-8").write(HTML)
+    print("escrito %s (%d hojas)" % (SALIDA, len(HOJAS)))
