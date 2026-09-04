@@ -2356,3 +2356,44 @@ El apagado va en `dormirSegundos()` — el único chokepoint por el que pasan **
 **Branch:** `nocturno/local-2026-09-03-el-adc-que-no-se-apaga` (`fcaf2b9`, pusheado). Merge limpio.
 **Informe:** `diario/nocturno-local-2026-09-03.md` · **MATI-HQ** commiteado y pusheado (`7caff14`), `QUE_FALTA.md` de galgas marcado EN BRANCH.
 ===== FIN jue 03/09/2026  2:10:23,94 ===== 
+===== TURNO NOCHE jue 03/09/2026 22:00:03,68 ===== 
+Noche cerrada. Una tarea, en PLATA.
+
+## Lo que encontré
+
+**El notificador de FrioSeguro daba por dado el aviso que ningún canal podía entregar.** No lo demoraba: lo perdía.
+
+El bookkeeping de "ya avisé" lo hacía la **decisión**, no la **entrega**. `reglas.decidir()` marcaba la ventana de silencio antes de tocar un canal, y `una_vuelta()` guardaba ese estado y avanzaba las marcas de agua pasara lo que pasara:
+
+- **D1** — la vuelta fallida gastaba igual la ventana: 60 s después la alerta volvía y `decidir` la encontraba `en silencio, faltan 1740s`. El reintento que el propio comentario del servicio promete no ocurría nunca.
+- **D2** — y la marca de agua avanzaba igual. Como el pedido es `created_at >= marca - solape` (120 s), en cuanto entraba una alerta nueva la vieja quedaba fuera de la ventana y **no se volvía a pedir jamás**. El escenario que muerde es el más probable: **un canal caído con Supabase andando** (sesión de WhatsApp vencida, token de Telegram revocado) → se perdían *todos* los avisos de la caída.
+- **D3** — el registro de "no salió" guardaba sólo la primera clave del grupo.
+
+Quinta aparición del patrón del portfolio (`lastSupabaseSync`, `faultAlerted1`, `lastTelegramAlert`, `probe_fault`) — y la primera en el proceso que le manda el mensaje al cliente.
+
+**Un test del repo ya lo delataba y estaba en verde**: pasaba gracias a un `self.almacen.estado = {}  # pasó la ventana de silencio` que borraba el estado a mano, cuando entre las dos vueltas no pasa ni un segundo simulado. El workaround era la prueba. Esa línea se borró.
+
+## El arreglo
+
+`decidir()` pasa a ser de solo lectura y **ya no devuelve estado** — para que el bug no se pueda reintroducir por descuido. El único escritor es `confirmar()`, que sólo recibe mensajes que algún canal aceptó. Y la marca de agua de `alerts` se frena en el más viejo de los pendientes.
+
+**Casi mando un arreglo que sólo funcionaba en el harness:** `AlmacenPostgres.avanzar_marca` usa `GREATEST` en su `ON CONFLICT` (la marca nunca retrocede) y `AlmacenMemoria` asignaba a secas. El freno habría dado verde contra una semántica que en producción no existe. Ahora las dos coinciden, con test.
+
+## Verificación (sin red, sin base, sin hardware)
+
+- `notificador/tests` → **44 OK** (12 nuevos) · `api/tests` → **77 OK**, sin regresión
+- `tools/check_aviso_no_entregado.py` → **27 checks, 0 fallas** · `--mutantes` → **7/7 muertos**
+- contra el código de antes el checker **reprueba**: `FALLO -- 25 checks, 19 fallas`
+
+Los 3 primeros mutantes reproducen el código anterior: no acompañan al arreglo, lo habrían cazado.
+
+**Sin verificar:** ningún notificador corrió contra Supabase con esto (no hay Postgres ni `psycopg` en la máquina). Falta el ciclo real con un canal caído — ~15 min, no necesita hardware.
+
+## ⚠ Antes de mergear
+
+El branch **sale de `backend/neon-primer-despliegue-2026-09-02`, no de `main`**: `servidor/notificador/` todavía no llegó a `main`. Ese branch se mergea primero. Vale la pena mirarlo: el trabajo del servidor de anteayer sigue sin llegar a `main` y ya hay branches nocturnos colgando de esa zona.
+
+**Branch:** `nocturno/local-2026-09-03-b-el-aviso-que-se-da-por-dado` (`c9583a2`, pusheado) · informe `diario/nocturno-local-2026-09-03-b.md` + `QUE_FALTA.md` #21, pusheados a MATI-HQ.
+
+Dos cosas para un minuto tuyo: `datalogger` sigue con el árbol sucio y su branch del 08-31 **sin un solo commit**, quinta noche. Y no toqué `dominios/backend.md` a propósito — hay otro proceso editando este repo ahora mismo (`PLATA.md`, `comercial/`, `dominios/comercial.md` aparecieron modificados durante la sesión) y commitear esa bitácora se habría llevado puesto trabajo en curso ajeno.
+===== FIN jue 03/09/2026 22:22:51,99 ===== 

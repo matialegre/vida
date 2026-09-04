@@ -474,3 +474,201 @@ es un archivo**.
 **Para @verificador**: `TV_DSN_TEST=<neon> python -m unittest discover -s
 api/tests_base -t api -v` (esperar 25 OK) + los pasos de `API_PORTAL.md` §8.
 Nada es producción hasta eso y hasta que se decida dónde vive el dato real.
+
+## 2026-09-03 — FLOTA EMSICA: backend completo, montado y probado contra la base
+Proyecto nuevo (`C:\Proyectos\flota-emsica`). Contrato: `docs\SPEC.md`. **NO se commiteó**
+(pedido explícito). Frontend trabajó en paralelo contra la misma spec; el contrato para él
+quedó en `C:\Proyectos\flota-emsica\docs\BACKEND.md` (firmas exactas + mapa función por
+función de su `lib/datos.js`, que hoy es un adaptador a localStorage esperando esto).
+
+**DECISIÓN DE BASE: schema `flota` dentro de `egdlgprnanrlvmjfshrv` (kiosco-ofiuco), NO
+proyecto nuevo.** El motivo que cierra la discusión no es de estilo: la org `frioseguro`
+está en free y **ya tiene sus 2 proyectos activos** (`vihxmqjjprtlzajlatvu` Santa Cruz +
+`egdlgprnanrlvmjfshrv`), así que un tercero exige upgrade a Pro — pagar hoy por una base de
+pruebas. Sumado: un free nuevo es otro candidato a pausarse (ya murieron 3) y habría que
+agregarlo al keepalive, mientras que `egdlgprnanrlvmjfshrv` ya está cubierto por el guardián
+(cron Vercel 9:00 + `vigilar-latido`). Descarté `vihxmqjjprtlzajlatvu` a propósito: ahí
+reporta el reefer de Santa Cruz, no se le mete un cliente nuevo a una base con hardware en
+producción. **Anotado en BACKEND.md §1: para producción EMSICA merece proyecto propio** —
+comparte `auth.users` con kiosco y Paradise. La mudanza es barata (8 migraciones + 1 función
++ 2 variables); lo único que no se muda solo son las cuentas de auth.
+
+**Qué quedó**: 8 migraciones append-only aplicadas y verificadas, schema `flota` con 8 tablas
+(las 7 de la spec §5 + `mail_outbox`), **todas con RLS y policy — 22 policies**, 5 vistas
+todas con `security_invoker=on`, 18 funciones, 2 jobs de `pg_cron`, Edge Function
+`enviar-mails` **desplegada y ACTIVE**. `flota` agregado a los exposed schemas de PostgREST
+(`public,graphql_public,paradise,flota`) — sin eso el frontend no ve nada.
+
+**DOS BUGS QUE SOLO ENCONTRÓ LA BASE REAL** (migración `0007`, el hallazgo de la sesión):
+los triggers de integridad de `0001` eran SECURITY INVOKER, o sea que corrían como el usuario
+logueado y les aplicaba la RLS de `flota.vehiculos`, donde un usuario común solo tiene policy
+de SELECT.
+1. `tg_viaje_valida_km_inicio` hace `SELECT … FOR UPDATE`; bajo RLS, `FOR UPDATE` exige policy
+   de UPDATE → no encontraba la fila → **todo `iniciar_viaje` de un usuario común moría con
+   "El vehiculo … no existe"**.
+2. Peor, y silencioso: `tg_viaje_cierra_actualiza_km` hace `UPDATE flota.vehiculos`. Sin policy
+   de UPDATE eso **no falla: afecta cero filas**. El kilometraje del vehículo no se hubiera
+   actualizado NUNCA para nadie que no fuera admin, y nadie se enteraba hasta ver un `km_actual`
+   viejo semanas después — justo la corrupción de kilometraje que la spec pide evitar.
+   **Regla para llevarse: un trigger que escribe otra tabla bajo RLS tiene que ser DEFINER, y
+   un UPDATE que no matchea filas por RLS no tira error.** Ninguno de los dos se veía leyendo
+   el SQL.
+
+**Reglas en la base** (spec §5), las tres del DoD probadas ROMPIÉNDOLAS por HTTP:
+dos viajes abiertos en el mismo vehículo → `23505` (índice único parcial sobre `fin_ts IS NULL`),
+también por INSERT directo salteándose la función; `km_fin < km_inicio` → `23514` (CHECK), también
+por PATCH directo, y `km_inicio` menor al último del vehículo → `23514` (trigger); reservas
+superpuestas → `23P01` (`EXCLUDE USING gist` con `tstzrange [desde,hasta)` + `btree_gist`,
+`WHERE estado='activa'`), y la reserva *pegada* (misma hora de corte) sí entra.
+
+**Decisiones de diseño que conviene recordar**
+- `vehiculos.km_actual` es **de solo lectura para la app**: no se puede "revocar una columna" de
+  un GRANT de tabla entera (Postgres avisa y no hace nada), así que a `vehiculos` se le concedió
+  el UPDATE **columna por columna** dejando `km_actual` afuera. La escribe el trigger; corregir
+  un error de carga va por `corregir_km_vehiculo()` (admin, deja constancia en `notas`).
+- Cierre forzado de sesión huérfana: DEFINER, **no cambia `usuario_id`** — el viaje sigue siendo
+  del que se olvidó; se anota `cerrado_forzado`, `cerrado_por_usuario_id` y una línea en
+  observaciones. No borra el rastro.
+- Alta de cuentas: `registrarme()` idempotente, **el primero queda admin** (si no, no hay quien
+  habilite a nadie); los siguientes según `config['alta_automatica']` (hoy true, en producción
+  false). Una cuenta logueada sin fila en `flota.usuarios` ve **cero** — es lo que aísla a
+  EMSICA de los otros dos clientes que comparten `auth.users`, y está probado.
+- Mails: **bandeja de salida**, no llamada directa. Trigger e incidencia encolan; `pg_cron` cada
+  minuto dispara `pg_net` → Edge Function que drena. Si no hay proveedor, el aviso **no se
+  pierde**: queda encolado con el motivo. El `service_role` del cron vive en **Supabase Vault**,
+  no en `app.settings` (que `current_setting` deja leer a cualquier sesión — hueco que arrastra
+  Termovigía). Circuito verificado punta a punta: cron → pg_net → función → 200 con la lista de
+  lo que falta escrita en cada fila.
+- Semáforo: `verde|naranja|rojo|**sin_datos**`. `sin_datos` no es verde. Hoy los 3 vehículos
+  arrancan así y el tablero no rompe.
+
+**EVIDENCIA**: `pruebas/probar_reglas.py` — **56 verificaciones OK, 0 fallas** contra la base
+real, entrando por HTTP como el frontend (PostgREST + Auth, anon key + sesión), con 4 cuentas
+`@emsica.test`. Incluye el caso Neuquén textual (500 km estimados vs 300 hasta el service →
+avisa ANTES de salir y dice que se pasa por 200). `--limpiar` deja la base como estaba.
+Estado al cerrar: 3 vehículos en blanco, 0 usuarios, 0 viajes, 0 mails.
+
+**Datos que faltan y NO se inventaron**: el 4º vehículo (queda
+`config['vehiculos_esperados']='4'` para que la app avise), patentes, kilometrajes, intervalos
+de service, pólizas, y el **mail del responsable de flota**. Para que los mails salgan faltan
+exactamente 3 valores (`mail_responsable`, `mail_remitente`, secret `BREVO_API_KEY`) y cero
+código — recomendé Brevo porque EMSICA ya tiene cuenta empezada (TXT `brevo-code` en su DNS),
+**con la advertencia del 2026-08-27: el DKIM de Brevo no está publicado y el SPF de ellos es
+`-all`** → mandar desde `@emsica.com.ar` hoy va a spam.
+
+**Abierto para Matías**: (1) `documentos."compañia"` quedó con eñe porque lo dice la spec §5 —
+funciona por HTTP, probado, pero si preferís `compania` es una migración de una línea; en las
+vistas ya la expuse como `seguro_compania`, sin eñe. (2) `reservas.estado` no estaba en la spec:
+lo definí `activa|cancelada|cumplida`, y **cancelar es cambiar el estado, no borrar** (así libera
+la franja del EXCLUDE sin perder el rastro).
+
+**NO commiteado** (pedido). **Para @verificador**: correr `pruebas/probar_reglas.py` contra la
+base antes de declarar producción, y revisar §10 de `docs/BACKEND.md`.
+
+### 2026-09-03 (b) — FLOTA EMSICA: cierre de las dos decisiones abiertas
+Respuesta del Director a las dos preguntas que dejé abiertas. Migración `0009` (append-only).
+
+- **`compañia` → `compania`.** Regla que queda para todo el proyecto: **datos en castellano,
+  identificadores en ASCII**. Barrido completo hecho, no solo el rename: script sobre las 9
+  migraciones + Edge Function + pruebas (ignorando comentarios y literales) **y** consulta contra
+  el catálogo de Postgres (`pg_attribute` / `pg_class` / `pg_proc` / `pg_constraint`) —
+  **cero tablas, vistas, columnas, funciones, parámetros o constraints fuera de `[a-z0-9_]`**
+  en el schema `flota`. `compañia` era el único. **GOTCHA**: el `ALTER TABLE … RENAME COLUMN`
+  reescribe solo las referencias internas de las vistas, pero **el nombre de la columna de
+  SALIDA de una vista es texto guardado y NO se renombra**, y `CREATE OR REPLACE VIEW` no puede
+  cambiar nombres de columna → `v_documentos_estado` hubo que dropearla y recrearla.
+  `v_vehiculos_estado` no, porque su salida ya se llamaba `seguro_compania`. Corregida también
+  `docs/SPEC.md` §5 con nota de por qué.
+- **`reservas.estado` = `activa|cancelada|cumplida` aprobado y escrito como contrato** en
+  `docs/BACKEND.md` §3.3: **cancelar es `update({estado:'cancelada'})`, nunca `delete()`** —
+  libera la franja del `EXCLUDE` y conserva quién reservó y quién canceló, consistente con el
+  resto del schema (acá no se borra historial). El calendario tiene que filtrar `estado=eq.activa`
+  para pintar ocupación, porque `v_reservas` devuelve también canceladas y cumplidas.
+
+**Evidencia**: `pruebas/probar_reglas.py` re-corrida después del rename → **56 OK, 0 fallas**.
+Base dejada limpia (0 usuarios, 0 viajes, 0 mails, 3 vehículos en blanco). Sigue sin commitear.
+
+### 2026-09-03 (c) — FLOTA EMSICA: migración `0010` (foto + marcado de datos de ejemplo)
+Pedido del Director para que el frontend, ya en producción, enchufe su adaptador a la base.
+`vehiculos.foto_url` / `es_ejemplo` / `es_supuesto`, `documentos.es_ejemplo`, las 2 vistas
+recreadas (drop+create, no `CREATE OR REPLACE`: cambia la lista de columnas de salida — mismo
+aprendizaje que el rename de 0009) y las 4 funciones. **79 OK / 0 fallas.** Sin commit.
+
+- **`es_supuesto` no es un `es_ejemplo` más fuerte: se comportan distinto y por eso son dos
+  columnas.** `es_ejemplo` sobre un vehículo que el cliente SÍ nombró (Toro/Fit/Focus) = la fila
+  es real y los datos son de mentira → al vaciar **se limpian los datos y la fila queda**.
+  `es_supuesto` (solo la Kangoo, la elegimos nosotros porque dijo "son 4" y nombró 3) → al vaciar
+  **se borra la fila**. Hay un CHECK que fuerza `es_supuesto ⇒ es_ejemplo`.
+- **`borrar_ejemplos()` no puede tocar una fila real por construcción**: los DELETE/UPDATE llevan
+  `es_ejemplo` escrito fijo en el WHERE y la función no toma parámetros. Probado con la
+  verificación que más importa: se guarda patente+km del Fiat Toro (real) antes y después, y
+  tienen que ser idénticos. Además, un vehículo supuesto con viajes o incidencias **no se borra**
+  (tiene historial real colgando): se informa en `no_borrados_por_tener_historial`.
+- **`cargar_ejemplos()` nunca pisa datos reales**: si el vehículo ya tiene patente o kilometraje
+  y no está marcado como ejemplo, lo saltea y lo devuelve en `salteados_por_tener_datos_reales`.
+  Es idempotente. Las fechas de VTV/seguro se calculan contra `current_date`, no fijas, para que
+  la demo siga mostrando un verde, un naranja y un rojo en vez de envejecer toda a rojo (copiado
+  del criterio que ya había usado @frontend en `lib/ejemplos.js`).
+- **`confirmar_como_real()` baja los dos flags y NO toca los documentos**: confirmar el vehículo
+  no convierte en real una póliza inventada; cada documento se confirma aparte.
+
+**COLISIÓN QUE TIENE QUE RESOLVER MATÍAS (no la decidí yo)**: el CHECK pedido para `foto_url`
+exige `http://` o `https://`, pero `lib/ejemplos.js` usa rutas **relativas**
+(`./assets/vehiculos/fiat-toro.webp`) → la base las rechaza con `23514`. Implementé el CHECK como
+se pidió y `cargar_ejemplos()` deja `foto_url` en NULL (la app cae al placeholder de iniciales,
+que es el fallback previsto, así que no rompe nada). Para que se vean las fotos: o el frontend
+guarda la URL absoluta del deploy, o se relaja el CHECK. Escrito en `docs/BACKEND.md` §3.4.
+
+**Otra diferencia a mirar en el enchufe**: `lib/ejemplos.js` usa apodos (`La Toro`, `El Fit`,
+`El Focus`, `La Kangoo`); la base usa los nombres del cliente que ya estaban sembrados en 0006
+(`Fiat Toro`, `Honda Fit`, `Ford Focus`) + `Renault Kangoo`. Mantuve los de la base para no
+duplicar filas — si no, quedaban 7 vehículos. Los apodos desaparecen al enchufar.
+
+### 2026-09-03 (d) — FLOTA EMSICA: identidad "persona elegida", sin credencial (0011 + 0012)
+Cambio de requisito del cliente: no hay login, se elige una persona de una lista. Implementado.
+**93 OK / 0 fallas**, con las tres reglas duras rotas a propósito otra vez. Sin commit.
+
+**NO ACTIVÉ `signInAnonymously`, y no es por flota.** Antes de tocar un flag de proyecto verifiqué
+qué alcanza una sesión anónima en un proyecto **compartido con el kiosco y con Paradise**. Una
+sesión anónima recibe el rol `authenticated`, y contra el catálogo:
+`paradise.categorias/productos/pedidos/ventas_local` tienen `FOR ALL TO authenticated USING (true)`,
+y `storage.objects` deja escribir/borrar el bucket `paradise` a `authenticated`. O sea: **activar el
+anónimo le daba a cualquiera en internet permiso de borrar el catálogo, los pedidos, las ventas y
+las fotos de la tienda de Eduardo.** No es riesgo de EMSICA, es de otro cliente que no pidió nada.
+Recomendación en `docs/BACKEND.md` §11.4, en orden: (1) proyecto propio para EMSICA — deja de ser
+deuda y pasa a ser lo que destraba esto; (2) mientras tanto, **una sola cuenta compartida de
+oficina** (la sesión se guarda, se tipea una vez por dispositivo y del segundo día en adelante la
+experiencia es la que pidió el cliente) — **cero cambios de backend, es lo que uso en las pruebas**;
+(3) avisar al dominio de Paradise que esas 4 policies son demasiado anchas (`and
+coalesce((auth.jwt()->>'is_anonymous')::boolean,false)=false` las salva). **No toqué su schema.**
+
+**Diseño**: `auth_uid` nullable (una persona es un registro de negocio, no una credencial);
+`flota.persona(p_usuario_id)` como **único** lugar donde se valida el actor (existe + activo), en vez
+de repetir el chequeo en cada RPC y olvidárselo en una; `p_usuario_id` explícito en iniciar/finalizar/
+cerrar_forzado/resolver; policies de INSERT ahora exigen "persona ACTIVA" en vez de "tu propia fila".
+**`es_admin()` lo dejé atado a credencial a propósito** (si "admin" fuera elegir a Mati en un
+desplegable, cualquiera podría borrar vehículos y cambiar el mail de las alertas) y agregué
+`puede_administrar(p_usuario_id)` para lo usable sin login; **borrar** vehículos/viajes/config y ver
+la bandeja de mails siguen exigiendo cuenta con contraseña.
+**Lo que salvó el cambio**: las reglas duras viven en índices, CHECKs y triggers, no en policies, así
+que sobrevivieron sin tocarlas. Agregué `atribucion_inmutable` (no se le cambia el dueño ni el
+vehículo a un viaje ya registrado) porque eso sí dependía de la RLS.
+
+**BUG REAL ENCONTRADO POR EL TEST (0012)**: `definir_rol()` es SECURITY DEFINER, pero eso sólo cambia
+QUIÉN ejecuta — **el trigger `sin_autoascenso` se dispara igual**, y pregunta por `es_admin()`, que
+ahora exige credencial. Resultado: la única vía prevista para cambiar un rol fallaba siempre con su
+propio mensaje ("el rol se cambia con definir_rol()"). Callejón sin salida perfecto. Arreglado con
+marca de transacción (`set_config(..., is_local => true)`), que muere con la transacción y no se
+puede dejar prendida desde afuera. **Regla para llevarse: SECURITY DEFINER no saltea triggers.**
+
+**Los dos reportes del frontend, atendidos**: (1) corregido `BACKEND.md` §6 — `23514` lo levantan
+TANTO un CHECK de tabla (mensaje de Postgres, en inglés) COMO nuestro trigger (castellano); el
+`code` no alcanza para decidir, hay que mirar si el `message` empieza con `new row for relation` /
+`duplicate key value` / `conflicting key value`. Dejé los 4 mensajes reales capturados contra la
+base y un mapa por nombre de constraint. (2) tildes puestas en los mensajes de los triggers.
+
+**Colisión de estado entre agentes, para tener en cuenta**: la corrida de QA del frontend había
+dejado SUS vehículos (`La Toro`, `El Fit`, `El Focus`, `La Kangoo`) y borrado los 3 de la spec, así
+que mi test reventó al arrancar. `--limpiar` ahora restaura el estado canónico (borra lo que sobra,
+recrea los 3 vehículos del cliente en blanco y resiembra las personas). Dos agentes contra la misma
+base de pruebas necesitan un estado canónico o se pisan.
