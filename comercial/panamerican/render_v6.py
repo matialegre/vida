@@ -58,19 +58,22 @@ PROHIBIDAS_CLIENTE = [
     "Daisa", "AAIERIC", "electricista", "jornada", "grampa", "Grampa", "cupla", "omega",
     "Gonza", "Sergio", "anticipo del 50", "semana 0", "riesgo",
     "E0", "E1", "E2", "E3", "E4",
+    # numeros de versiones obsoletas: no pueden colarse en el PDF del cliente
+    "4.115", "765", "4.600", "9.515", "10.115", "16.115", "14.915", "1.450",
+    "850",
 ]
 
 CLAVES = {
-    "cli": ["Qué módulo va en cada reefer", "estanco IP65", "módulo doble cada par",
+    "cli": ["Qué módulo va en cada reefer", "estanco IP65", "módulo cada reefer",
             "No incluye cable ni tendido entre reefers", "El sexto reefer", "USD 260",
             "25 metros de cable", "sigue midiendo",
             "a las 2 semanas de iniciado", "a las 15 semanas", "Se acepta con",
-            "765", "1.500", "400", "4.115", "500 / mes", "50 %",
-            "Total a 12 meses", "10.115", "9.515", "16.115", "14.915",
+            "700", "600", "2.400", "350", "1.550", "5.000", "500 / mes", "50 %",
+            "Total a 12 meses", "11.000", "10.400", "17.000", "15.800",
             "3 sondas", "lo hace el cliente"],
     "int": ["WhatsApp para Andr", "LA CUENTA DEL CA", "439.700", "286",
-            "Los 17 pendientes", "Lo que quedó abierto", "semana 0", "500/mes",
-            "9.515", "4.115", "260", "quedó como me dijiste",
+            "20 pendientes", "Lo que quedó abierto", "semana 0", "500/mes",
+            "10.400", "5.000", "260", "quedó como me confirmaste",
             "Nada de esta tabla se adelanta"],
 }
 

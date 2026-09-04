@@ -703,3 +703,73 @@ Doc de dominio + bitacora. El agente lo lee al arrancar y lo actualiza al cerrar
     confirma BOM y responde si el defrost del reefer es 12-24 V o contacto seco (R3) y si el modulo de rele
     clickea con IN al aire (M7) -> @tester corre M6 (100 lecturas de 1-Wire con 25 m reales) -> @pcb rutea ->
     @firmware aplica `PINOUT_MINI.md`.
+
+- **2026-09-04 [FRIOSEGURO / TERMOVIGIA MINI **LITE**] La placa de las demos de Bahia: la Mini adelgazada.
+  Carpeta nueva `C:\Proyectos\frioseguro\hardware\mini_lite\`. **`hardware/mini/` NO se regenero**
+  (verificado por mtime: `.kicad_sch` 12:22 y `.kicad_pcb` 15:01, anteriores a la sesion).**
+  - **Entregables**: `termovigia_mini_lite.kicad_sch` (A3, 1 hoja, 7 bloques, **47 componentes**,
+    22 redes con nombre + 24 NC) + `.kicad_pro` (los 42 chequeos de ERC encendidos, copiados de la
+    Mini) + `.pdf` + `.net` + `_bom.csv` (**30 lineas**) + `erc.txt` + `salida/p1.png` y 6 recortes ·
+    `generar_sch.py` · `termovigia_mini_lite.kicad_sym` + `.pretty` + `fp-lib-table` ·
+    **`DISENO_LITE.md`** (que salio y por que, tabla antes/despues, K1-K7, **cota A1**, envolvente) ·
+    **`PINOUT_LITE.md`** · **`BOM_LITE.md`**. **Nada commiteado** (orden).
+  - **Evidencia**: ERC `--severity-all` **0/0 con `Ignored checks: None`**; `chequear_solapes_sch`
+    **0 solapes / 0 texto fuera del area util**; PDF exportado y **mirado** (5 pasadas: hoja completa
+    + 5 recortes a 260-300 dpi; se corrigieron 6 defectos que solo se ven mirando); **netlist leido
+    red por red**. 112 cables / 30 uniones y **0 conexiones por etiqueta**: las 10 etiquetas son
+    documentacion sobre un cable que existe (incluido DEFROST, que en la Mini era etiqueta pura).
+  - **QUE SALIO** (orden del Director, "debe ser simple faz la placa"; 2 capas se mantiene porque en
+    JLCPCB cuesta lo mismo): 5 TVS P6KE6.8CA, 4 de los 5 1N4148, buzzer + BC547 + sus 2 R, header
+    I2C, 2 de las 4 puertas, 1 de los 2 optos. **QUEDA** el DevKit en zocalo, el shield de rele
+    (2 hembras + 4 M3 + jumper JD-VCC sacado + 10k de IN a 3V3), el bus 1-Wire con 2k2 + 6 sondas,
+    5 V, 2 LED y RESET/WiFi.
+  - **Componentes 70 -> 47 (-33 %)**; a soldar **62 -> 39 (-37 %)**; BOM 35 -> 30 lineas; posiciones
+    de bornera **32 -> 26**. **Envolvente: 100 x 80 mm, ENTRA** (borde de 100: 3 sondas 45,0 + 2
+    puertas 20,0 + alimentacion 10,0 = **75,0** sobre 87 libres; borde de 80: defrost 10,0 + 6 mm de
+    aire + 3 sondas 45,0 = **61,0** sobre 67). Presupuesto de area **65 %** con la restriccion **L1**
+    (bajo el modulo de rele, sobre separadores M3, van SOLO axiales acostados <= 4 mm; sin L1 se iba
+    a 83 %). Fallback declarado: 110 x 80 sin mover borneras.
+  - **Decisiones con criterio, no por lista**: (a) **los 100R de las puertas QUEDAN** — son lo que
+    convierte a C3/C4 en un filtro de `100 ohm x 100 nF = 10 us` frente al cable; sin ellos el
+    capacitor se carga desde el cable con impedancia casi nula y el flanco llega entero al pin
+    (K4); (b) **D2 1N4148 queda**: no es clamp de entrada, protege el LED del PC817 (VR max 6 V)
+    contra alterna o polaridad invertida; (c) **NO se dejaron huellas DNP de los TVS**: son DO-15 de
+    13 mm justo en el borde de las borneras, que es lo que hay que despejar; la variante protegida
+    ya existe entera y ruteada en `mini/`; (d) justificacion del retiro por norma, no por corazonada:
+    **IEC 61000-4-5 clase de instalacion 0-1** para linea corta interior (no se ensaya sobretension).
+  - **Los 3 hallazgos de @verificador (`mini/VERIFICACION_LAYOUT_2026-09-04.md`) atendidos**:
+    1. **Cota A1** escrita en la hoja Y en DISENO_LITE 4: el keepout de aislacion **arranca en el
+       BORDE DE LA PLACA** (rectangulo 30 x 18 mm centrado en J10 hasta el eje del PC817), incluye
+       la bornera y el agujero M3 de la esquina, el plano de GND queda a >= 6,0 mm, y **6 mm de aire
+       entre J10 y la bornera vecina**. El 6,0 sale de IEC 60664-1 (250 Vrms, polucion 2, IIIa:
+       ~5,0 mm reforzada) y es **coherente con los 5,9 mm que fisicamente da el DIP-4 del PC817**
+       (7,62 de paso - 1,7 de pad): no se declara mas de lo que el componente sostiene. El defecto
+       de la Mini (6 mm declarados bajo el opto, **0,3 mm reales en la bornera**) no puede repetirse.
+    2. **PASO 5,00 mm, TODAS** (`TerminalBlock_MaiXu_MX126-5.0-0xP`), en el cajetin de la hoja y en
+       DISENO_LITE 5 en negrita. Y el harness: en `comun.py` las constantes se llaman **`FP_TB2_508`
+       / `FP_TB2_500` / `FP_TB3_500`** — el paso va **en el nombre**, para que no se pueda mezclar.
+       Ademas **6 borneras de 3 vias, una por sonda** en vez de 2 de 9: es lo que se consigue en AR,
+       una bornera = una sonda, y el largo de borde es identico (6x3x5,00 = 2x9x5,00 = 90,0 mm).
+    3. **No se publican coordenadas de pad**: DISENO_LITE 6 le pide a @pcb publicar el **CENTRO DEL
+       COMPONENTE** para @diseno3d, con el motivo escrito (`SW_PUSH_6mm` tiene **dos pads numerados
+       "1"**, el centroide de "el pad 1" no es el vastago).
+  - **UNA sola fuente de verdad**: nuevo **`hardware/mini/comun.py`** con lo que no puede
+    desincronizarse entre las dos placas (cotas M1..M5, constantes de huella, mapa de pines fisicos
+    del DevKit, escritor del `.kicad_mod` del zocalo). **Los dos** generadores lo importan. **No** se
+    compartio el dibujo: son dos circuitos distintos, no dos poblados, y un flag convertiria cada
+    coordenada en un condicional. **Verificado**: `mini/generar_sch.py` refactorizado reproduce su
+    `.kicad_sch` **byte a byte salvo UUID** (+ `.kicad_sym` y `.kicad_mod` identicos), probado en
+    copia aislada en el scratchpad; los archivos de `mini/` no se regeneraron.
+  - **Gotchas nuevos**: (a) helper **`y_centro(lib_id, y_pin1)`** — los `Screw_Terminal` de KiCad no
+    estan centrados igual segun la cantidad de vias (ya habia mordido con el 01x02 y el `Conn_01x06`);
+    ahora la posicion se **calcula** desde el PINMAP en vez de asumirse; (b) los **comentarios del
+    cajetin** se salen del cuadro por derecha y **ningun chequeador los mira** (el de solapes no ve
+    el title block): hay que contarlos a mano, ~70 caracteres; (c) el valor de un pulsador con
+    `val_off=(-3,4)` cae exactamente sobre el bajante a GND: se ve solo en el PNG; (d) ocupacion
+    **46 %** contra el objetivo 55-75 % de la doctrina — aceptado y declarado: el pedido era una hoja
+    **mas despejada**, y la A3 se mantiene para no partir los calculos.
+  - **Proximo paso**: @verificador audita el `.net` y **la cota A1** -> @hardware compra (BOM_LITE:
+    **borneras MX126 de 5,00**, 4x2P + 6x3P) y mide M1..M5 -> @pcb rutea a **100 x 80** con L1 y A1,
+    y publica **centros de componente** de LED/pulsadores para @diseno3d -> @firmware aplica
+    `PINOUT_LITE.md` (MAX_RELAYS 2, MAX_DOOR_SENSORS 2, MAX_PROBES 6, sin buzzer, sin 2do defrost,
+    la sirena pasa a ser carga del rele).

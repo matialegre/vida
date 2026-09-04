@@ -4,6 +4,84 @@ Doc de dominio + bitacora. El agente lo lee al arrancar y lo actualiza al cerrar
 
 ## Bitacora
 
+## 2026-09-04 — @verificador sobre TERMOVIGIA Mini rev A: **RECHAZADO** (14 hallazgos)
+
+Informe completo: `C:\Proyectos\frioseguro\hardware\mini\VERIFICACION_LAYOUT_2026-09-04.md`.
+Auditoría adversarial del layout de @pcb. Todo medido con pcbnew de KiCad 10 sobre el
+`.kicad_pcb`, no leído de la doc. DRC re-corrido por el verificador: **0 violaciones, 0
+desconectados** — reproducible; lo que se discute es su alcance. Sin commit, sin correcciones.
+
+**Veredicto: RECHAZADO.** No es "APTO tras medir M2-M5": hay 2 defectos de diseño que no son
+M2-M5, una cota mal entregada al gabinete, y un bloqueante mecánico del peso de M2 sin declarar.
+
+**Bloqueantes (dueño):**
+1. **H-01 CRÍTICO — la barrera de aislación no existe en la bornera. (@pcb)** `§2.3` declara
+   creepage 6,02 mm y "lado campo sin plano de masa", pero `CAMPO_DEFROST` arranca en **x = 11,20**
+   y `J11`/`J12` están en **x = 5,40**: los pads de 12-24 V quedan a **0,300 mm del relleno de GND,
+   en las DOS capas** (medido en (6,45 , 77,30), red `Net-(J12-Pin_1)`). Por el criterio del propio
+   `§2.3` (IPC-2221, 2,50 mm para 311 V) falla 8x. `J1.2` (GND de 5 V) a 4,03 mm del cobre de
+   campo. Se ve en `pcb_top.png`/`pcb_bottom.png`: el keepout blanco no llega a la bornera.
+2. **H-02 ALTO — `/DOOR4` (B.Cu) a 1,85 mm del centro de `H5`** = 0,25 mm del borde del agujero, y
+   `+5V` a 2,70 mm. Los 8 keepouts de agujero prohíben **sólo relleno** (`tracks=False`,
+   `vias=False`). Una arandela/tuerca M3 del módulo pisa la pista. **(@pcb)**
+3. **H-03 ALTO — `§6` le da a @diseno3d los pulsadores mal por 3,25 X / 2,25 Y.** `verificar.py:89`
+   usa `pad["SW1.1"]` y `SW_PUSH_6mm` tiene **dos pads numerados 1**: publica el último (76,5) en
+   vez del centro del actuador (**73,25 , 95,85**). Idem SW2 (88,5 vs **85,25 , 95,85**). Un
+   agujero de tapa ahí no toca el vástago. **(@pcb → @diseno3d)**
+4. **H-04 ALTO — paso de bornera 5,08 vs 5,00, sin declarar.** `BOM_CERRO_MORO §5.3.1` pidió
+   textualmente pasar a 5,00 **"antes de rutear"** y `J2`/`J3` como 3x3 apilables; la placa tiene
+   13 borneras MKDS **5,08** y bloques de **9 vías de una pieza**. 9 vías a 5,08 vs 5,00 acumulan
+   0,64 mm: no entra. **No está en `§9`, ni en el LEEME, ni en la serigrafía.** Es el mismo error
+   del perfboard, tercera vez. **(@esquematico + @hardware)**
+5. **H-05 ALTO — la desviación `.net` vs placa no está cerrada.** `§5` la declara en prosa, pero el
+   `.net`, el campo `Value` de la placa, `gerbers/termovigia_mini_bom.csv` (**cant. 5, DO-15,
+   columna `Poblar` VACÍA**) y `_pos.csv` dicen todos `P6KE6.8CA` DO-15. Quien compre por el BOM
+   generado compra 5 TVS que no existen en AR y puebla `D2`, que rompe el bus a 25 m. Atenuante:
+   los CSV **no** viajan dentro del ZIP. **(@esquematico + @pcb)**
+
+**Sobre M2 (H-07, MEDIO):** el plan "5 líneas" no cierra. Simulado con courtyards reales: para
+**M2 <= 16 mm** (variante tiras juntas) **`R12` y `R13` chocan con `J8`**, porque están fijados como
+offsets constantes de `TIRA_B_X` en `placement.py:111-112`. Se rehace el bloque G entero + el
+fan-out de `+5V`/`+3V3`/`GND`/`/RELAY1`/`/RELAY2`: medio día.
+**Mitigación más barata, en orden: (1) comprar el módulo AHORA y medirlo** — el mismo argumento
+que `BOM §5.3.3` hizo para el ESP32, elimina M2-M5 de una; (2) **doble juego de pads de zócalo,
+poblando uno solo** (bajo el módulo hoy sólo hay `J8`,`J9`,`R12`,`R13`,`H5-H8`: sobra lugar; NO
+poblar los dos o el módulo se hamaca); (3) **sacar `H5-H8` del camino crítico** — el módulo cuelga
+del cabezal (lo dice el `.scad`), así que M4 deja de bloquear y de paso desaparece H-02.
+Con (2)+(3) el bloqueo baja de {M2,M3,M4,M5} a {M3}.
+
+**Otros:** H-06 la tabla DFM `§7` tiene 3 filas falsas (hay 12 vías de **0,60/0,30** con anillo
+0,150 y no 0,80/0,40; taladro mínimo real **0,75** en `Q1`, no 0,80; y el proyecto bajó
+`min_via_diameter/annular/through_hole` a la medida del board). H-08 el riel de `+5V` de 2,0 mm
+pasa a **0,254 mm** del pad de GPIO4 (`U1.32`) — distancia más chica de la placa, en un pad que se
+suelda a mano: un pelo de estaño = 5 V en un GPIO de 3V3. H-09 5 leyendas bajo cuerpo de
+componente (refdes `J5` bajo `R3`, `R2` bajo `J3`, `LED1` bajo `D1`). H-10 el gabinete de
+`gabinete/` está dimensionado para **100 x 80** y sin agujeros de pulsador: los STL son anteriores
+al layout. H-11 `D2` DNP deja 2 pads Ø2,40 desnudos (uno es el bus; a 10,16 mm, no se puentea solo,
+pero es entrada de ESD/condensación). H-12 los SMA son **bidireccionales** y la silk les dibuja
+cátodo. H-13 dique de máscara 0,22 mm en `Q1` con el chequeo apagado
+(`solder_mask_min_width = 0`). H-14 `chequear_solapes.py` decide "alto" con una lista negra de 9
+subcadenas, y `RELE_W/RELE_H = 50x39` es un **sexto número estimado que no está en M1-M5** (en
+plaza hay 50,6x38,8 y 50,0x41,0; `C1` tiene sólo 2,21 mm de margen).
+
+**Lo que aguantó y hay que decirlo:** DRC 0 reproducible · **0 islas de masa flotantes** (las 7
+sospechosas cuelgan de `U2.3`/`U3.3`/`C1.2`) · retorno de 1-Wire y puertas **continuo** hasta
+`U1.14` (misma isla, 136 conex. en F.Cu / 161 en B.Cu) · el canal del 1-Wire entre pads del zócalo
+da **0,37 mm** exactos y va **bajo máscara**, así que el riesgo de puente a mano ahí es bajo ·
+**0 pistas y 0 vías de campo cruzan la barrera** (x máx de campo = 30,00 contra barrera en 31,30) y
+creepage bajo el opto = 6,02 mm confirmado · keepout de antena limpio en 2 capas · nada más alto de
+8 mm bajo el módulo, verificado uno por uno · **el TVS recibe la señal antes que la R serie** en
+los 4 canales (traza `J4.1 -> D5.1 -> ... -> R4.1`) · ZIP con las 7 capas + drills + LEEME ·
+serigrafía de armado completa y `JD-VCC` bien escrito. El trabajo de @pcb es sólido; lo que falla
+es el borde, que es donde se pierden los proyectos que viajan 1.500 km.
+
+**Nota para el harness:** dos evidencias resultaron no ser evidencia. `verificacion.json` publica
+posiciones de **pad** como si fueran de componente (H-03), y `salida/pcb_3d.png` **no tiene modelo
+3D ni del DevKit ni del módulo de relé** (son rectángulos vacíos), así que `§0` no puede citar los
+renders para sostener la posición del USB — que además queda **2,34 mm adentro** del borde, no "al
+ras" como dice `§6`.
+
+
 ## 2026-09-04 — FRIOSEGURO / TERMOVIGIA **Mini** rev A: placa completa, DRC 0, gerbers PRELIMINAR
 
 `C:\Proyectosrioseguro\hardware\mini\` — `termovigia_mini.kicad_pcb`, `LAYOUT_MINI.md`,
