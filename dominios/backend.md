@@ -672,3 +672,90 @@ dejado SUS vehículos (`La Toro`, `El Fit`, `El Focus`, `La Kangoo`) y borrado l
 que mi test reventó al arrancar. `--limpiar` ahora restaura el estado canónico (borra lo que sobra,
 recrea los 3 vehículos del cliente en blanco y resiembra las personas). Dos agentes contra la misma
 base de pruebas necesitan un estado canónico o se pisan.
+
+### 2026-09-03 (e) — HALLAZGO DE SEGURIDAD: el proyecto `egdlgprnanrlvmjfshrv` ya está expuesto HOY
+Auditoría de **sólo lectura** pedida por el Director tras frenar el sign-in anónimo. Informe completo
+con la corrección escrita y **SIN EJECUTAR** en `C:\Proyectos\flota-emsica\docs\HALLAZGO_PARADISE.md`.
+No se modificó ni un dato, ni una policy, ni una configuración. Las dos consultas que simularon rol
+corrieron dentro de `BEGIN … ROLLBACK` y sólo contaron filas.
+
+**La respuesta a la pregunta del Director es SÍ: el riesgo existe sin el anónimo.**
+- **`disable_signup = false`** → el registro público está ABIERTO, sin captcha, con `password_min_length=6`.
+- **Paradise (Eduardo)**: `categorias/productos/pedidos/ventas_local` tienen UNA policy,
+  `FOR ALL TO authenticated USING(true) WITH CHECK(true)` + los GRANT completos. **Cualquier cuenta
+  del proyecto lee, modifica y borra todo**, incluido `pedidos` (nombre, apellido, teléfono, email de
+  los clientes — hoy vacía, así que **la fuga todavía no está consumada**). Ídem el bucket `paradise`
+  de fotos (write/update/delete a `authenticated`).
+- **Kiosco (Paco)**: peor barrera, menor impacto. Sus 9 tablas tienen policies
+  `TO {anon,authenticated} USING(true)` para SELECT/INSERT/UPDATE → **sin ninguna cuenta**, con la
+  anon key que viaja en el bundle, se leen y modifican 971 productos, 12 ventas, 5 perfiles.
+  **DELETE no** (no hay policy), aunque el GRANT de DELETE/TRUNCATE a `anon` está y sobra.
+- **Cruzado**: una sola cuenta ve Paradise + kiosco + (desde 0011) la flota de EMSICA.
+- **Lo que NO está mal**: ninguna tabla sin RLS (13/13 con policies), `anon` NO tiene SELECT sobre
+  `paradise.pedidos` (42501), y el anónimo está apagado.
+
+**LA BARRERA REAL, MEDIDA** (el dato que más importa): probé el alta con la anon key como lo haría
+cualquiera. Con dominio válido el alta **se acepta** y sólo falla el envío del mail:
+`429 over_email_send_rate_limit`. `smtp_host = null` (no hay SMTP propio) y `rate_limit_email_sent = 2`
+por hora. O sea: **hoy Paradise está protegido por un límite de envío de mails de un tercero**, no por
+una decisión de diseño — y eso se cae solo el día que se configure SMTP propio, que ya es tarea
+pendiente para que los mails no vayan a spam. Los intentos no dejaron cuentas (5 en total, 1 real).
+
+**AUTOCORRECCIÓN**: la corrección que yo mismo había propuesto en `BACKEND.md` §11.4
+(`is_anonymous = false`) **no alcanza**: cubre el escenario apagado y no el que ya existe. Sirve de
+cinturón, no de arreglo. Propuesta en 3 pasos, en orden de costo/riesgo: **(1)** `disable_signup=true`
+—un clic, reversible, ataca la raíz, no rompe nada si ninguna app ofrece "crear cuenta"; **(2)** tabla
+`paradise.administradores` + `paradise.es_admin()` y reemplazo de las 4 policies + las 3 de storage +
+las 2 RPC (`ajustar_stock`/`vender_local` hoy piden "tener sesión", no "ser admin" — y **una sesión
+anónima pasaría ese chequeo**, porque para Postgres `auth.role()` es `authenticated`); **(3)** kiosco:
+`revoke delete, truncate ... from anon` (inofensivo hoy) y `security_invoker=on` en sus 4 vistas —
+apretar sus policies **rompe el kiosco**, que escribe con la anon key sin login: es trabajo de ese
+dominio, no de acá.
+
+**Qué se rompería**, en el informe §6. Lo principal: el paso 2 deja afuera a cualquier cuenta que hoy
+escriba en Paradise y no esté en la lista. La única real es `paradisee.lp@gmail.com` (va sembrada),
+pero **hay que preguntarle a Eduardo si usa una segunda cuenta o si un empleado opera el POS de
+local**, porque `vender_local` pasaría a ser sólo del admin.
+
+### 2026-09-03 (f) — APLICADO el paso 1: registro público cerrado en `egdlgprnanrlvmjfshrv`
+Matías autorizó **el paso 1 y sólo el paso 1** del `HALLAZGO_PARADISE.md`.
+`PATCH /v1/projects/egdlgprnanrlvmjfshrv/config/auth {"disable_signup": true}` → 200.
+
+**Verificado, no asumido** (los cuatro puntos que pidió el Director):
+1. `/auth/v1/settings` **releído** con la anon key: `disable_signup = True`, `external.email = true`,
+   `external.anonymous_users = False` (sin cambios, como se pidió).
+2. Alta pública con la anon key y dominio válido: **`422 signup_disabled` — "Signups not allowed for
+   this instance"** (gmail y outlook). Antes daba `429 over_email_send_rate_limit`, o sea que el alta
+   **se aceptaba** y sólo fallaba el envío del mail. Esa era exactamente la diferencia entre "protegido"
+   y "protegido por casualidad".
+3. **Las cuentas existentes siguen entrando**, que era el riesgo a descartar antes de que Eduardo se
+   quedara afuera: login 200 con access_token en `matias@`, `qa.uno@` y `sin.alta@flota-emsica.test`.
+   **`disable_signup` corta el ALTA, no el LOGIN.**
+4. App de flota andando por HTTP como la lee el frontend: `v_vehiculos_estado` 200 con los 3 vehículos,
+   `usuarios` 200 con Mati/Pablo/Jorge, `rpc contar_ejemplos` 200, y **sin sesión → 401 "permission
+   denied for schema flota"**.
+
+**Sin residuo ni daño colateral**: `auth.users` sigue con las mismas 5 cuentas (los intentos de alta se
+rechazaron antes de crear nada), `paradise` con sus 6 policies y 16 productos, kiosco con sus 26
+policies y 971 productos. **No se tocó ninguna policy, ningún dato ni ninguna otra opción de auth.**
+
+**Pasos 2 y 3 NO aplicados, a propósito**, y marcados en el informe con su motivo para que el próximo
+que lo lea no los tome por olvidos: el 2 (allowlist de Paradise) puede dejar a Eduardo afuera de su
+propia tienda y hay que preguntarle antes con qué cuenta entra y quién opera el POS; el 3 (kiosco)
+rompe su app, que escribe con la clave pública sin login, y es trabajo de ese dominio.
+
+**FLOTA — camino elegido por Matías: CUENTA DE OFICINA COMPARTIDA.** Ni sesión anónima ni proyecto
+nuevo por ahora. El porqué: (a) la sesión anónima está descartada mientras Paradise y el kiosco vivan
+en este proyecto, porque una sesión anónima es `authenticated` para Postgres y llega a las policies
+`FOR ALL USING(true)` de Paradise — sería abrir por un lado justo lo que el paso 1 acaba de cerrar por
+el otro; (b) el proyecto propio cuesta el Pro y no hay urgencia ahora que el alta pública está cerrada;
+(c) la cuenta compartida da la experiencia que pidió el cliente (se tipea una vez por dispositivo, del
+segundo día en adelante abrís y elegís quién sos) sin exponer a nadie. **La `0011` ya soporta ese
+modelo tal cual: no queda backend por hacer para esto, lo que falta es del frontend.** El proyecto
+propio para EMSICA sigue anotado como la solución de fondo, sin urgencia.
+
+**Efecto colateral mío, para @frontend**: mis corridas de `probar_reglas.py --limpiar` borraron las
+filas de `flota.usuarios` que había creado su QA ("Matias Alegre", "Jorge (QA uno)", "Ana (QA dos)").
+Las **cuentas de auth sobreviven** y `registrarme()` es idempotente, así que la app se recompone sola
+al entrar; pero si su suite espera esos nombres, hay que volver a correrla. La base quedó en estado
+canónico: 3 vehículos de la spec en blanco + Mati/Pablo/Jorge.
