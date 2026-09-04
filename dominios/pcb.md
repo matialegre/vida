@@ -4,6 +4,115 @@ Doc de dominio + bitacora. El agente lo lee al arrancar y lo actualiza al cerrar
 
 ## Bitacora
 
+## 2026-09-04 (e) — FRIOSEGURO / TERMOVIGIA **Mini LITE**: doble faz con DRC 0, y despues **dos cambios de reglas** que la frenaron a proposito
+
+`C:\Proyectos\frioseguro\hardware\mini_lite\` — `LAYOUT_LITE.md` (estado completo),
+`termovigia_mini_lite.kicad_pcb`, `drc.txt`, `salida\` (2D top/bottom, 3D top/bottom, **los 3
+PDF de fabricacion casera**, `verificacion.json`), toolchain en `pcb\`. **Sin commit.** La
+placa doble faz queda archivada como referencia en `doble_faz_descartada\`.
+
+**Lo que se hizo y quedo medido (placa doble faz 110 x 80, terminada):** 47/47 componentes,
+46 redes, 95 segmentos F.Cu + 87 B.Cu + 112 vias. `kicad-cli pcb drc --severity-all`:
+**0 violaciones / 0 objetos sin conectar** (el reporte no tiene una sola linea).
+`chequear_solapes.py` **0 solapes**; `verificar.py` **0 fallos / 0 avisos**. Renders 2D y 3D
+**mirados** y corregidos en 8 iteraciones (de 145 violaciones de serigrafia a 0).
+
+**Los cinco hallazgos que @verificador rechazo en la Mini, cerrados con numero:**
+1. **A1 la hace cumplir el DRC, no un rectangulo dibujado.** Netclase **CAMPO** con las 3
+   redes de campo + un `termovigia_mini_lite.kicad_dru` propio con la regla de clearance de
+   6,0 mm entre CAMPO y todo lo demas (y la misma en `hole_clearance`). Eso cubre **pads,
+   pistas, vias Y relleno**, que era exactamente lo que fallaba en H-01. La barrera
+   geometrica ademas es una **"L"** (vertical entre las filas del DIP + horizontal por
+   debajo) que ENCIERRA el campo contra los dos bordes de placa. **Medido: 6,22 mm en F.Cu
+   y 6,22 en B.Cu**, y lo que limita es el pad del propio PC817, no el layout.
+2. **Keepouts de agujero radio 3,60** (1,60 de taladro + 2,00 de guarda): prohiben relleno,
+   pistas Y vias. Peor caso medido **1,93 mm del borde del agujero** = 3,53 del centro,
+   contra una arandela M3 de 3,50. Los 8 verificados uno por uno.
+3. **Centros de COMPONENTE, no de pad** (`centro_sw()`, `centro_led()`), publicados en
+   `LAYOUT_LITE §3` + `verificacion.json`. El USB queda **1,64 mm adentro** del borde: se
+   dice, no se declara "al ras".
+4. **Paso de bornera 5,00 medido en la placa: error 0,000 mm**, y los bloques abutados
+   tambien 0,000. En la serigrafia y en el LEEME.
+5. **Desviaciones .net <-> placa**: `verificar.py` compara valor Y huella de los 47
+   componentes contra el `.net`. **Cero.**
+6. **L1** ya no se decide con una lista negra de subcadenas (H-14) sino con una **tabla de
+   alturas por huella** (`ALTURA_MM`), y el chequeo **falla si una huella no declara altura**.
+
+**Dato nuevo de @diseno3d absorbido:** el modulo de rele saca el cable de carga por su borde
+de borneras, asi que el modulo se **giro 90 grados** para que ese lado mire al borde
+DERECHO, el unico borde entero sin conectores; serigrafia `BORNERAS DE CARGA ->` con flecha.
+
+**Por que 100 x 80 no cerraba** (el registro que pidio el Director, medido con courtyards
+reales): borneras del borde izquierdo 13,0 + zocalo del DevKit 32,0 + modulo de rele 39,0 +
+5,0 de aire = **89,0 mm**; en los 11 que sobraban tenian que entrar la zona A1 (23 de campo
++ 6,22 de creepage = **29,2**) y el M3 de esa esquina. **Faltaban ~18 mm de ancho.**
+
+### Los dos cambios de reglas (por eso esta FRENADA, no abandonada)
+- **La LITE no va a JLCPCB: la fabrican Matias, Gonza y Sergio en casa, con acido.** Eso
+  invalida la doble faz entera: sin metalizado, las **112 vias** serian 112 remaches.
+  Medicion que justifica REHACER en vez de convertir: `pcb/puentes.py` sobre este board dice
+  que pasar ESTE placement a una sola cara costaria **30 puentes, 621 mm de alambre, el mas
+  largo de 137 mm**.
+- **Matias simplifico el circuito**: se va la entrada de defrost (opto, bornera y **toda la
+  barrera A1**) y las puertas pasan a **una sola bornera de 5 vias**. @esquematico esta
+  rehaciendo el `.net`; rutear el viejo con las reglas nuevas era trabajo perdido dos veces.
+
+### Lo que se adelanto, que NO depende del netlist (corrido y mirado)
+**`pcb/artwork.py`** — artwork **1:1** para fabricacion casera, dibujado desde el board (el
+B&W de `kicad-cli` sale invertido): `artwork_cobre_espejado.pdf` (el que se plancha),
+`artwork_cobre_directo.pdf` y `hoja_armado.pdf` (**reemplaza a la serigrafia**: courtyards,
+referencias, los rotulos de la placa y los puentes en rojo punteado). Tiene lo que el export
+no da: huecos del relleno bien restados (sin eso el plano sale macizo y la placa es un
+corto), **marca de centrado en cada pad**, **marcas de registro** en las 4 esquinas, el
+contorno **con los arcos** de las esquinas redondeadas, y **DOS reglas de 50 mm, una en X y
+otra en Y** — una laser puede escalar distinto en cada eje por el arrastre del papel y con
+una sola regla eso no se ve.
+**Se auto-verifica**: reabre el PDF que acaba de escribir y MIDE. Corrida de hoy:
+`regla X = 50,000 mm OK` y `borde mas largo = 104,000 mm` (= 110 - 2 x 3 de radio, exacto).
+Mas `pcb/taladros.py` (tabla por mecha: cambiar de mecha es lo que mas rompe brocas de 0,8)
+y `pcb/puentes.py` (cadenas de alambre con largo y extremos), **portados de galgas rev E.2 —
+la regla de biblioteca funciono: el problema ya estaba resuelto y solo hubo que adaptarlo**.
+
+### Reglas de la placa nueva, ya acordadas (LAYOUT_LITE §4)
+1 cara (cobre en B.Cu) · **0 vias** · pista 0,5 senal / 1,0-1,5 alimentacion · aislacion 0,5
+(relleno 0,6) · **pad 2,6 mm** con taladro 0,9-1,3 · **pad 2,0 en paso 2,54** (desviacion
+DECLARADA: a 2,54 un pad de 2,6 se toca con el vecino; 2,0 deja 0,54 de aire) · sin mascara
+ni serigrafia · envolvente de arranque **140 x 95** (entra en una virgen de 10 x 15 con
+margen de corte).
+**Consecuencia geometrica que hay que aceptar de entrada:** con pads de 2,0 y 0,5 de aire,
+**entre dos pines a 2,54 NO PASA NINGUNA PISTA** (harian falta 1,5 y hay 0,54): el canal
+entre las dos filas del zocalo **deja de ser un atajo** y hay que sacar de ahi todo lo que
+hoy vive adentro.
+**Topologia ya razonada para una cara:** las dos filas del DevKit parten la placa en dos
+mundos y el reparto sale solo (columna A -> rele y alimentacion; columna B -> sondas,
+puertas y panel), **sin un solo ramal cruzando**; las 6 sondas en un mismo borde con
+**`/VSONDAS` por la franja que queda ENTRE los pads de las borneras y el borde de placa** y
+`/1WIRE_BUS` por encima de los cuerpos, asi **los dos buses nunca se cruzan y no cuestan un
+puente**; y RESET y BOOT **no van a quedar juntos**, a proposito (EN e IO0 estan en extremos
+opuestos: juntarlos costaba dos puentes largos cruzando los buses de sonda).
+
+### Trampas nuevas del harness (KiCad 10 + Python)
+1. **`fp.Remove()` / `fp.Add()` degradan el handle de la huella a `SwigPyObject` pelado** y a
+   veces tambien el del board: despues de eso `fp.Pads()`, `fp.GetPosition()` y hasta
+   `board.Footprints()` explotan. Por eso `contornos.py` corre en **proceso propio y UNA
+   huella por corrida** (11 procesos cortos). Y el origen de la huella no se pide con
+   `GetPosition()`: se calcula del placement.
+2. **Las formas que se agregan a una huella van en coordenadas ABSOLUTAS** (KiCad no las gira
+   ni las traslada): hay que transformar cada esquina a mano.
+3. **El courtyard de catalogo del MX126 mide 15,5 mm para 3 posiciones** (incluye la cola de
+   encastre) pero el bloque mide n x 5,00 y esta HECHO para abutarse: con el contorno de
+   catalogo, dos bloques pegados dan errores de patios y de serigrafia que no son errores.
+   Se redibujan courtyard y silk al cuerpo real.
+4. **`fitz` (PyMuPDF) existe en el Python de KiCad**: el artwork corre con el mismo
+   interprete que `pcbnew` y no hace falta el puente de dos procesos que hubo que armar en
+   galgas.
+
+**Proximo paso:** llega el `.net` nuevo -> rehacer `placement.py` (no convertir) con las
+reglas de acido -> rutear a mano los buses y el riel de 5 V con el A* forzado a una capa ->
+minimizar puentes (meta: un digito) -> DRC 0 con 0,5/0,5 -> los 3 PDF mirados -> actualizar
+los centros para @diseno3d, **que cambian y con ellos el gabinete**.
+**Sigue bloqueando:** M1-M5 (DevKit y modulo de rele) siguen estimadas, en `../mini/comun.py`.
+
 ## 2026-09-04 — @verificador sobre TERMOVIGIA Mini rev A: **RECHAZADO** (14 hallazgos)
 
 Informe completo: `C:\Proyectos\frioseguro\hardware\mini\VERIFICACION_LAYOUT_2026-09-04.md`.

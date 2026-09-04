@@ -773,3 +773,52 @@ Doc de dominio + bitacora. El agente lo lee al arrancar y lo actualiza al cerrar
     y publica **centros de componente** de LED/pulsadores para @diseno3d -> @firmware aplica
     `PINOUT_LITE.md` (MAX_RELAYS 2, MAX_DOOR_SENSORS 2, MAX_PROBES 6, sin buzzer, sin 2do defrost,
     la sirena pasa a ser carga del rele).
+
+- **2026-09-04 (b) — @esquematico: DREYFUS/galgas — REV F. Medio puente FIJO con galga doble + la protección
+  de entrada que faltaba. 12 de los 17 hallazgos de `VERIFICACION_REV_E1.md`, cerrados.**
+  Repo `C:/Proyectos/galgas/hardware/`. Todo por el generador (`kicad/generar_nodo_galga.py`), **nada a mano**.
+  Sin commit. **No** se tocaron `nodo_galga_v3.kicad_pcb`, `LAYOUT.md`, `pcb/` ni `U2` (hay una decisión de
+  Matías pendiente sobre pasar el micro a Pro Mini).
+  - **Decisión de Matías: se descarta el ¼ de puente.** SALEN `JP2` y `R1`; los dos brazos activos son las dos
+    rejillas de la galga doble que ya está pegada en Dreyfus. Eso cierra **H-1** (no hay dos modos, así que no
+    hay modo silencioso ni strap que agregar), **H-12** (no hay contacto mecánico dentro de un brazo: eran
+    28,6 µε que saltan por fretting) y ordena **H-2**.
+  - **`J1` reordenado (H-14)**: `1 MALLA · 2 E+ · 3 G1 · 4 SENSE · 5 E_REFN`. `E_REFN` —el riesgo #1— queda en
+    un extremo y su único vecino es `SENSE`: **ese corto da fondo de escala, o sea que se ve**. `G1` y `SENSE`
+    van los dos a la unión de las rejillas (uno lleva el shunt-cal, el otro no lleva corriente).
+  - **Las DOS constantes del shunt-cal, escritas en la hoja (H-2/H-15)**: el escalón eléctrico es fijo,
+    **−1,5015 mV**, y eso es **500,5 µε en flexión (+ε/−ε) y 770,0 µε en Poisson (+ε/−0,3ε)**. "1000 µε
+    exactos" salió de todos lados: era del ¼ y encima eran 1001,0. **`M17` (= `DE-16`) queda abierto y
+    bloquea la calibración**: en qué configuración están las galgas de Dreyfus.
+  - **H-13, la protección de E+/E−, decidida con la cuenta**: por esas dos líneas circulan los **8,5 mA de
+    excitación**, así que **no admiten R serie** (1 Ω en `E_REFN` = 2900 ppm de ganancia; 1 Ω en `E+` = 1400 µε
+    de cero). Entonces: (1) **la protección primaria es la MALLA** — el cable apantallado pasa a ser requisito
+    escrito, con el número que lo justifica (100 pF acoplados de un variador = 500 mA de pico y 1,28 mA medios);
+    (2) **4 clamps 1N3595 en el conector** (`DE1/DE2` en E+, `DR1/DR2` en E_REFN), fuga 1 nA → **0,06 µε**;
+    (3) **`RS3` = 100 Ω** en la toma Kelvin de `REFP1`, que baja el diodo interno de `AIN0` de 77 mA a
+    **3,8 mA** y cuesta 17 ppm calibrables; (4) **`D4` vuelve al riel y cambia de parte**: `ESD5Z3.3T1G`, no el
+    `ESD5Z5.0` de la rev D, que empezaba a conducir **por encima** del absoluto de 3,9 V del RA-02.
+    Y el **criterio de reversión ahora es observable en campo** (el de la rev E no podía activarse nunca):
+    el ATmega mide su propio riel con la referencia interna de 1,1 V contra `AVCC` — **si un nodo instalado
+    reporta VCC > 3,15 V hay inyección por el cable**. Cuesta cero y es `DE-15` para @firmware.
+  - **Documentación (H-6, H-7, H-8, H-9, H-10, H-11, H-17)**: escritos **`C41`** (galga doble: las tres
+    orientaciones, y que el caso "las dos rejillas iguales" da 0,000 µV/µε **exactos** y ningún autotest lo
+    ve), **`C42`**, **`C43`**, **`C44`** (los clamps, con el criterio de campo), **`C45`** (`CO2`/`CBLK1`, y la
+    interacción `JB43`↔`CR2` resuelta **sin agregar piezas**: `CR2` alimenta el pulso de la radio que el
+    puente cortado desconecta) y **`C47`** (la rev F entera). `C32` queda marcado **DEROGADO** (Q1/Q3/RGD no
+    existen), `L3` sin `CBLK1`, `C33` con la capacidad real (12,6 µF, 10,1 detrás de `JB43`), `C36` con los
+    clamps y `D4` reales (22,2 µA), `L10`/`C39.1` con `J1.5` y con la tolerancia del ½ puente (0,71 mΩ),
+    y `C46.2` corregido: **`JB15` NO lleva 0 corriente, lleva los 8,5 mA** — de ahí sale **`L12`** (clase
+    EXCITACIÓN para @pcb) y **`L13`** (los clamps van EN el conector). `CO1` pasa a **2u2 X7R** (H-17: un
+    disco de 1 µF Y5V son 0,2 µF reales, debajo del mínimo del MCP1700). Cable unificado en 5 m de diseño.
+  - **Evidencia**: `verificar_sch.py` **TODO OK** — ERC **0/0 con `Ignored checks: None`** (`erc_revF.rpt`),
+    110 refs, 63 huellas · `chequear_solapes_sch.py` **0 solapes / 0 rotados** · netlist rev F **63 componentes
+    / 63 redes** · `DIFF_REDES_revE1_revF.txt`: 56 redes idénticas, y lo único que se mueve es lo que se pidió
+    (`/E_MAS_DOBLE`+`Net-(JB11-A)` → `/E_MAS`; `J1` corriendo de pin; los 4 clamps y `D4` colgando de `+3V0`/
+    `GND`; `RS3` partiendo la toma de `REFP1`). **`/S_MAS`, `/S_MENOS` y `/NODO_B` intactas nodo por nodo** ·
+    PDF/SVG regenerados y **mirados** (`salida/revF_bloque_sensor.png`, `salida/revF_puentes.png`) ·
+    rev F congelada en `kicad/revF/`.
+  - **Lo que NO cerré, y de quién es**: H-3/H-4/H-5 (`PINOUT.md`, @firmware), H-16 queda como `L12` para @pcb,
+    y `M17`/`M18`/`M19` + `DE-19` (cable apantallado en el BOM) son mediciones de @hardware y Matías.
+  - **Próximo**: @verificador re-audita la rev F con el diff → @pcb rutea con `nodo_galga_v3.net` rev F
+    (L10..L13) → @firmware toma `DE-15` (alarma de riel) y la constante de calibración cuando cierre `M17`.
