@@ -759,3 +759,50 @@ filas de `flota.usuarios` que había creado su QA ("Matias Alegre", "Jorge (QA u
 Las **cuentas de auth sobreviven** y `registrarme()` es idempotente, así que la app se recompone sola
 al entrar; pero si su suite espera esos nombres, hay que volver a correrla. La base quedó en estado
 canónico: 3 vehículos de la spec en blanco + Mati/Pablo/Jorge.
+
+### 2026-09-04 — FLOTA EMSICA: proyecto propio de Supabase — BLOQUEADO por el token (nada aplicado)
+Encargo: crear proyecto propio para la flota en la org de `termovigia@gmail.com`, correr las 12
+migraciones desde cero, activar `signInAnonymously` y sacar la cuenta de oficina. **No se pudo crear
+el proyecto.** No se tocó `egdlgprnanrlvmjfshrv` (kiosco/Paradise/flota vieja) ni Termovigía. Sin commit.
+
+- **Hay lugar**: la doc de Supabase dice *"You are granted two free projects. The project limit applies
+  across all organizations where you are an Owner or Administrator"* — el límite es **por cuenta**, no
+  por org. `termovigia@gmail.com` tiene **1 solo proyecto** (`ccyrncqyvabzcjobggfm`, us-east-2), así que
+  queda **1 slot free**. Termovigía no pierde nada. **Confirmado, no era el problema.**
+- **El problema es el token de la bóveda**: `sbp_fccf…` es un **token de permisos finos**, no un PAT de
+  cuenta entera. Lo probado, endpoint por endpoint: `GET /v1/projects` 200 (ve el proyecto),
+  `GET /v1/projects/{ref}/api-keys` 200, `GET /v1/projects/{ref}/config/auth` 200,
+  `POST /v1/projects/{ref}/database/query` 201 (o sea que **correr las migraciones sí podría**),
+  `GET /v1/organizations` 200 pero **`[]`**, `GET /v1/organizations/{slug}` **403**,
+  **`POST /v1/projects` → 403 Forbidden**. Idéntico por CLI (`supabase projects create` → Forbidden).
+  Con org inexistente el mismo POST da **404**, o sea que el 403 es de **permisos, no de cuota**.
+- **Efecto colateral que hay que saber**: para descartar que el 403 fuera "no sos dueño de esa org",
+  probé creando una org propia — y **sí pudo**: quedó creada la org vacía **`emsica`
+  (`gxwhzmzqevzjtjhvpsmx`)**. Crear el proyecto adentro **también dio 403**, así que quedó vacía y **la
+  API no tiene endpoint para borrar organizaciones** (`DELETE /v1/organizations/{id}` → 404). Se borra
+  desde el dashboard (Settings → General → Delete organization) o **se usa**: una org por cliente no es
+  mala idea (aísla accesos y facturación el día que EMSICA pague su propio proyecto).
+- **Lo que destraba todo (1 minuto de Matías)**: `supabase.com/dashboard/account/tokens` **logueado como
+  `termovigia@gmail.com`** → *Generate new token* → **acceso total** (o al menos permiso de escritura
+  sobre proyectos y lectura de organizaciones) → pegarlo en `CREDENCIALES\supabase.md`. Con eso hago
+  todo el resto sin volver a molestar: crear el proyecto en **sa-east-1 (São Paulo)** —la región
+  disponible más cercana a Argentina, y la que **no** tiene Termovigía, que quedó en Ohio—, las 12
+  migraciones, el anónimo, las semillas y `probar_reglas.py`.
+- **Decisión de diseño del rol admin, ya tomada** (queda escrita para implementarla en `0013` en cuanto
+  haya base): **se elimina la operación irreversible en vez de protegerla con una credencial.** Hoy
+  `es_admin()` exige cuenta con contraseña, y sin credenciales **nadie podría administrar nada**; pero
+  bajar admin a "elegí a Mati en el desplegable" deja que cualquiera borre vehículos e historial. La
+  salida: **desde la app no se borra nada** — vehículos y personas se **desactivan** (`activo=false`,
+  la columna ya existe) y los viajes/incidencias no se borran nunca, que es la doctrina que el schema
+  ya sigue en todo lo demás. Las policies `for delete` salen del alcance de `authenticated`; el borrado
+  físico de verdad queda sólo por SQL/`service_role` (Matías). Lo administrativo **reversible** (cargar
+  o vaciar datos de ejemplo, corregir un kilometraje, cambiar el mail de las alertas, dar de baja un
+  vehículo) sigue por RPC con `p_usuario_id` y `puede_administrar()` — o sea, **sólo lo ven las personas
+  marcadas admin** — y las dos o tres acciones que asustan piden además **confirmación explícita
+  escrita** (tipear la patente del vehículo que se da de baja), validada **en la base**, no en la
+  pantalla. **El día a día no pide absolutamente nada.** Lo que esto protege: que un click distraído —o
+  cualquiera que abra la URL— no pueda destruir la flota ni el historial; lo que **no** protege: quién
+  dice ser quién (eso ya lo perdimos a propósito en `0011`, §11 de `docs/BACKEND.md`).
+- `HALLAZGO_PARADISE.md` **sin cambios**: la flota todavía vive en `egdlgprnanrlvmjfshrv`, así que no
+  corresponde marcar la mudanza. Los pasos 2 y 3 (Paradise y kiosco) siguen pendientes igual — mudar la
+  flota no los resuelve.
