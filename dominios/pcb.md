@@ -3,6 +3,103 @@
 Doc de dominio + bitacora. El agente lo lee al arrancar y lo actualiza al cerrar. Backlog inicial: ver seccion "Tu backlog inicial" en ~/.claude/agents/pcb.md (copia en ../agentes/pcb.md).
 
 ## Bitacora
+
+## 2026-09-04 — FRIOSEGURO / TERMOVIGIA **Mini** rev A: placa completa, DRC 0, gerbers PRELIMINAR
+
+`C:\Proyectosrioseguro\hardware\mini\` — `termovigia_mini.kicad_pcb`, `LAYOUT_MINI.md`,
+`drc.txt`, `salida\` (2D top/bottom, 3D top/bottom, `.glb` 1,9 MB, `.step`, `verificacion.json`),
+`gerbers\` + `termovigia_mini_gerbers_PRELIMINAR.zip` (17 archivos), toolchain en `pcb\`.
+**Sin commit** (orden). Envolvente **120 x 100** confirmada por el Director y por @hardware
+(200 mm no entra en ninguna caja de stock).
+
+**Estado medido (no declarado):** 70/70 componentes, 53 redes, **208 segmentos F.Cu (1.333 mm) +
+243 B.Cu (885 mm) + 193 vias**. `kicad-cli pcb drc --severity-all`: **0 violaciones / 0 objetos
+sin conectar** — el reporte no tiene una sola linea. `chequear_solapes.py`: **0 solapes, nada
+fuera del contorno**. `verificar.py` (nuevo, mide criterios y no fabricabilidad): **0 fallos,
+0 avisos**. Renders 2D y 3D **mirados** y corregidos en 6 iteraciones.
+
+### Lo que manda el placement (y no lo decide el DRC)
+- **1-Wire corto de verdad**: GPIO4 es el **pad 32**, o sea la fila de ARRIBA del zocalo. El
+  front-end se metio en la franja de 8 mm entre las borneras de sonda y el DevKit, y `/ONEWIRE`
+  **sube por el canal entre las dos filas del zocalo**, entrando entre los pads 10 y 11 (pads
+  achicados a 1,5 mm -> 1,04 mm de aire). **33 mm del GPIO al bus**, contra ~78 rodeando la placa.
+- **Los dos buses de sonda no se cruzan**: DATO por F.Cu a y=7,8 **sin una sola via**; VSONDAS
+  por encima a y=9,9 y **cada una de sus 6 bajadas salta por B.Cu**. Las vias van en el riel, no
+  en el dato.
+- **Barrera de aislacion = UNA recta**: U2 y U3 en el mismo eje x=30; rule area que prohibe
+  relleno + pistas + vias en las dos capas, y **todo el lado campo sin plano de masa**. Medido
+  sobre el board: **creepage borde-a-borde 6,02 mm**, 0 pistas adentro, 0 pads de logica del lado
+  campo.
+- **Antena del WROOM con keepout de verdad** (sin relleno, sin pistas, sin vias): se pudo prohibir
+  tambien las pistas — al reves que en la Base v2 — porque todos los pads del zocalo estan en las
+  dos filas exteriores y nadie necesita cruzar por debajo de la antena.
+- **El bulk donde se pide la corriente**: C1 (1000 uF) a **11,1 mm de JD-VCC (J8.1)**, no en la
+  entrada. El +5V llega a J8.1 **por el norte** y el +3V3 a J8.2 **por el sur**, para no cruzarse
+  sobre el conector. C2 a 4,6 mm del pin 5V del DevKit.
+- **Ancho por CAIDA, no por corriente**: +5V en **2,0 mm**. IPC-2221 daria 5,5 A y el pico son
+  0,68 A; lo que manda es que el AMS1117 del DevKit tiene **280 mV de margen** y el camino
+  J1 -> D1 -> C1 -> U1.19 mide **134,7 mm** (la diagonal de la placa, con la bornera de entrada en
+  un borde y el pin 5V en la esquina opuesta). Medido: **22,2 mV**; con 1,0 mm serian 44.
+- **Serigrafia que se ve con la placa armada**: el cuerpo de una bornera tapa la placa hasta
+  y=10,75, asi que un rotulo "S1 / V D G" entre los pines **queda invisible**. Los 18 bornes de
+  sonda tienen su etiqueta propia (`1V 1D 1G ... 6G`) en una fila ARRIBA del cuerpo, y los 7 del
+  borde izquierdo llevan el nombre girado 90 en la franja de 1,2 mm entre bornera y bornera.
+
+### Cambios de @hardware absorbidos el mismo dia (declarados en UN solo lugar)
+`HUELLA_OVERRIDE` y `NO_POBLAR` en `placement.py`, y §5 de LAYOUT_MINI.md para @esquematico:
+1. **D5..D8 pasan de DO-15 THT a `Diode_SMD:D_SMA_Handsoldering`** (el P6KE6.8CA no se consigue en
+   Argentina; va SMAJ6.8CA en SMA). Variante *Handsoldering* a proposito: los sueldan Gonza y
+   Sergio. **Son los 4 unicos SMD de la placa.**
+2. **D2 NO SE POBLA** (su ~1000 pF solos rompen el timing a 25 m). Se conserva la huella pasante,
+   marcada DNP y con `NO POBLAR: D2 R18 J10` en el silk. El bus queda con R2 100 R + los clamps
+   1N4148 (~4 pF). Para @esquematico: en la rev B el TVS se muda al VCC de sondas.
+
+### Lo que BLOQUEA la fabricacion
+**M2/M3/M4/M5** (separacion, desfasaje, agujeros y paso de las dos tiras del modulo de rele) son
+**estimados**. Viven en **5 lineas de `pcb/placement.py`**; todo lo demas (rectangulo del modulo,
+rotulos, keepouts de los 4 agujeros, posicion de R12/R13) **se deriva**. La serigrafia lo dice en
+la propia placa: `agujeros y tiras A MEDIR (M2-M5)`. Riesgo escrito: si el modulo real tiene las
+dos tiras juntas en vez de a 40,6 mm, hay que rehacer 6 lineas de `rutas.py` y nada mas.
+
+### Deudas declaradas (LAYOUT_MINI.md §9)
+**39,9 % del cobre ruteado va por B.Cu** (885 de 2.219 mm): es la debilidad principal y se ve en
+`salida/pcb_bottom.png` — ranuras de 0,7 mm en el plano de abajo, aceptables porque la senal mas
+rapida es un 1-Wire de 15 kHz y el radio vive apantallado dentro del modulo. Rev B: rehacer a mano
+el abanico por F.Cu. Ademas: R3 a 23 mm de las borneras (no entra en la franja de 8 mm, y es un
+elemento serie), SDA/SCL con 74-78 mm para un header que no se puebla, RESET con 80 mm hasta EN,
+**sin test points** (no estan en el netlist; rev B: 4 para @esquematico) y **sin fiduciales** a
+proposito (no va a pick & place).
+
+### Trampas nuevas del harness (KiCad 10 + Python) — para la biblioteca
+1. **KiCad cachea el proyecto en el primer `LoadBoard` del proceso**: escribir las netclases en el
+   `.kicad_pro` y releerlas en el MISMO proceso devuelve siempre el Default viejo (0,20) y el
+   guardia falla sin motivo. La relectura de control tiene que correr en **otro proceso**.
+2. **`SetTextAngleDegrees()` toma GRADOS, no decimas.** Heredar `rot=900` de la Base v2 deja los
+   textos a 900 = 180 grados: rotulos dados vuelta y una docena de `silk_overlap` que parecen falta
+   de espacio y no lo son.
+3. **El router A\* trata todo pad como pasante**: con un TVS **SMA** dejo una pista de 10,6 mm en
+   B.Cu que no conecta a nada. Lo que toca un pad SMD se rutea a mano.
+4. **Camino degenerado del A\*** (0 tramos, 0 vias): el `while` no progresa y quema `MAX_PARES`
+   girando en falso. Hay que declarar el par abierto y seguir (ya estaba aprendido en galgas; la
+   copia de la Base v2 no lo tenia).
+5. **Una pista que pasa entre los dos pads de un TO-92 lo cortocircuita**: al colector hay que
+   entrar por el extremo, no "por el lado corto".
+6. **Un pad SMD de masa queda flotando si dos pistas le estrangulan el relleno** por debajo del
+   `min_thickness` (0,3): se arregla corriendo la pista 0,7 mm, no metiendo vias.
+7. **El triangulo de pin 1 de las borneras horizontales cae fuera de la placa** cuando la bornera
+   se monta con la boca en el borde: hay que borrar ese `fp_poly` de F.SilkS al cargar la huella.
+8. `b.Remove(via)` con zonas rellenas es toxico: `limpiar_vias.py` corre en proceso propio, vacia
+   las zonas, borra y despues rellena.
+
+**Para @diseno3d** (LAYOUT_MINI.md §6, la PCB manda): LED1 (37,5 . 95,0), LED2 (58,5 . 95,0),
+SW1 RESET (76,5 . 98,1), SW2 WIFI (88,5 . 98,1), **USB en el borde X=120 centrado en Y=35,3**,
+**centro del modulo de rele (91,0 . 71,5)** con cuerpo 50 x 39 ocupando x 66..116 / y 52..91,
+M3 de placa en (4,4) (116,4) (4,96) (116,96) con **separadores de nylon**, altura interior minima
+**35 mm**, 6 prensacables abajo + 4 a la izquierda + ventana de USB a la derecha. `.step` exportado.
+
+**Proximo paso:** Gonza mide M1..M5 -> 5 lineas -> `sh pcb/todo.sh` + `sh pcb/fabricacion.sh`;
+@esquematico rev B (SMA, D2 mudado, 4 test points); @verificador antes de fabricar.
+
 - 2026-07-07 - Agente creado por Claude Fable con backlog real de los repos migrados (C:/Proyectos).
 
 - 2026-07-30 [LASER-PCB: demo punta a punta HECHA] — `C:\Proyectos\laser-pcb\ejemplo_kicad\`: detector de campo (190Vcc→2x22k 2W→PC817→GPIO27, LOW=campo OK) + divisor de bus opcional (9Vca→W10M→10uF→30k/10k+zener 3V3→GPIO39) para el drive del torno. KiCad 10 REAL: esquemático generado por script (S-expr, símbolos embebidos de libs oficiales, ERC 0) → netlist kicad-cli → PCB construido con API pcbnew (gen_pcb.py: placement con assert de 27 pads, ruteo manual single-side B.Cu 1.0/1.5mm, clearance 0.6, zona GND con keepout de creepage en la región de campo, keepouts en 4 agujeros M3, serigrafía completa). DRC --severity-all: 0 violaciones / 0 unconnected. Renders top/bottom MIRADOS (3 iteraciones: courtyards Phoenix vs holes/R1/D1, silk tapada por bornera). Salidas: gerbers B.Cu+B.Mask+F.SilkS+Edge, drill Excellon, BOM+pos, placa.glb 547KB para el visor 3D. Regeneración 100% por script (tools/gen_sch.py + tools/gen_pcb.py, comandos en LEEME.md). Lección: borneras MaiXu de la lib estándar no tienen modelo 3D → Phoenix MKDS 5.08 sí; pcbnew.BOARD() pelado segfaultea, usar pcbnew.NewBoard(path).
@@ -91,6 +188,113 @@ Doc de dominio + bitacora. El agente lo lee al arrancar y lo actualiza al cerrar
     **juntan**. Antes cada linea del `.md` era un `<p>` y el texto salia a los saltos: en el celular
     se leia mal.
   - Regeneracion desde cero verificada (borrando cache y JSON): 18 paginas, 3,25 MB. Sin commit.
+
+- 2026-09-04 (b) [GALGAS / DREYFUS - rev E.1] **DOSSIER en UN PDF**: `hardware\NODO_GALGA_v3_revE1_DOSSIER.pdf`,
+  **23 paginas, 4,24 MB**. Portada con 218 x 27 y el sello **PRELIMINAR - NO FABRICAR** con TODOS los
+  bloqueos vigentes (M1/M2, M5, P3, D0 y **la cota del eje, que la debe Matias**) - resumen - esquematico
+  rev E.1 vectorial - la placa (3D top/bottom, 2D top/bottom, **los 4 zooms por etapa** y la **tabla de
+  aislacion de los 15 puentes**) - layout - estado medido - verificacion - pendientes.
+
+  **El script se habia roto y el arreglo es de harness, no un parche.** `armar_dossier.py` buscaba las
+  secciones del `LAYOUT.md` **por su titulo con regex** (`^## 3\. Las dos ESTRELLAS`) y abortaba con
+  `no encontre la seccion` en cuanto el LAYOUT se rehizo para la E.1 (13 secciones nuevas). Ahora:
+  1. **Una sola tabla `SECCIONES` arriba del script** (clave -> numero + pista de texto). Para adaptar el
+     dossier a la proxima revision se toca SOLO esa tabla.
+  2. Las secciones se buscan **por numero** (`^## N.`), no por texto; la pista sirve para el aviso y se
+     compara **sin acentos** (la 12 se llama "Lo que se que es debil" y el acento la hacia fallar).
+  3. **Si una seccion falta, avisa y sigue** (`AVISOS_SECCIONES`, que se imprime al final de la corrida)
+     en vez de `SystemExit`. Una seccion renombrada no puede voltear el dossier entero.
+  4. Los renders que faltan tambien avisan en vez de romper (`zoom_*_top.png`, `revE1_puentes.png`).
+  5. `FECHA` sale del **mtime del `.kicad_pcb`**, no de una constante (decia 2026-09-02 con la placa del 04).
+  Ademas la seccion 5.3 del dossier ya no tiene autocritica propia: **inserta la seccion 12 del LAYOUT**,
+  para que no existan dos versiones de la misma debilidad. Verificado mirando el PDF: portada, zooms,
+  tabla de puentes y estado medido. Corrida limpia: *"las 13 secciones del LAYOUT.md que pide el dossier
+  estan todas"*.
+
+## 2026-09-04 — GALGAS / DREYFUS: **rev E.1, la placa cambia de forma** (218 x 27, SOBRE EJE)
+
+`C:\Proyectos\galgas\hardware\kicad\` — `nodo_galga_v3.kicad_pcb`, `generar_pcb.py` parametrizado,
+`LAYOUT.md` rehecho (13 secciones), `drc.rpt`, `salida\` (3D top/bottom, 2D top/bottom, **8 zooms
+recortados**, `.glb`, `.step`, `verificacion.json`), toolchain en `pcb\`. **La rev D entera se archivo
+en `revD/`** con LEEME (placa, .pro, .dru, LAYOUT, drc, generador + `pcb/`, `salida_revD/`).
+**Sin gerbers y sin commit** (orden).
+
+**Estado medido (cierre):** 59/59 componentes, 64 redes, **327 segmentos + 38 vias**,
+**DRC `--severity-all` = 0 violaciones, 0 pads sin conectar, 0 errores de huella** (el reporte no
+tiene una sola linea). `pcb/verificar.py`: **0 fallos, 1 aviso** (los 15 tramos de B.Cu bajo el
+zocalo del micro, aceptados y declarados). Renders 2D y 3D **mirados** (los enteros de 218x27 no se
+pueden leer: `pcb/zooms.py` los corta en 4 tramos por cara).
+
+### La decision del ANCHO: el zocalo NO alcanza, y el numero se dijo antes de forzar nada
+Matias ordeno "el ancho lo fija el zocalo DIP-28". Se midio y **no entra**: el `DIP-28_W7.62mm_Socket`
+ocupa 10,66 mm, pero el **CJMCU-1220 tiene las filas a 20,32 mm (23,82 de courtyard)** y el RA-02 con
+adaptador a 22,86 (22,28). No es placement: es el paso de las tiras hembra, y no cambia ni girando ni
+acostando. `ANCHO_MINIMO` se DERIVA (23,82 + 2 x 0,6 = 25,5) y se fijo **ANCHO_PLACA = 27,0**: los
+1,5 mm extra los piden el lazo sur de E-/REFN (y = 25,3) y la fila sur del CJMCU (y = 23,66).
+**El LARGO no se tipea**: `largo_derivado()` lo saca del courtyard mas al este -> **218,0 mm**.
+
+### Girado / acostado / parado (decision 3 y 4)
+Girados: `U1` 270, `U2` 90 (filas a lo largo), `U3` 180 (SPI al micro, 3V3/RST/DIO0 a la
+alimentacion, IPEX en la esquina SE). Acostados a lo largo: `J1` (26,4), `J4` (21,3), `SW1` (24,7),
+`CSC1` (supercap, en el extremo este). **Parados** (huella vertical forzada, sin cambio de red;
+deuda para @esquematico): `RD1 RD2 RD3 RSTRAP1 RP1 RL1 RR1 RPU1 RPU2 RPU3` + `RSC1` + `DB1 DB2`.
+Las seis de precision quedaron **acostadas a proposito** (L1): mismo eje, misma columna x = 42,5.
+
+### L10 sobrevive al cambio de topologia: el nudo estrella ahora vive en JP2
+`R2.1 -> JP2.2` = 4,19 mm y `R1.1 -> JP2.1` = 4,26 mm, dos rectas; en 1/4 de puente el shunt 1-2 las
+une. **Asimetria 0,07 mm = 0,39 ue** (limite 1). `JB11` quedo **aguas arriba** del nudo (JB11.1 = red
+del nudo, JB11.2 = +3V0), como se pidio. El nudo sigue por y = 13,5 **entre los dos pads de CD1** y
+`JB12.2` baja a AVDD **entre los pines 11 y 12 del modulo** (0,32 mm de aire a cada lado).
+`E-/REFN` es una "C" (lazo norte a R3.2 y JB15.1, lazo sur a JP3.1): **122,4 mm, 0 vias, solo F.Cu**,
+4 pads exactos. Verificado sobre el cobre, no declarado.
+
+### L11: los puentes por frontera, en columna, a paso 3,6
+`JB15 JB14 JB12 JB11 JB13` (filtro->ADC, en el orden de los pines del CJMCU) · `JB22 JB41 JB23 JB21`
+(ADC->micro) · `JB31 JB32 JB33 JB34` (micro->radio). Los de alimentacion van con su modulo: `JB41` en
+la columna del ADC, `JB42` pegado a CM1, `JB43` pegado a CR1/CR2. Todos accesibles con cutter.
+
+### La franja del zocalo es el UNICO lugar donde se corta el plano
+Abajo va contra metal: B.Cu prohibido por rule areas en **todo el bloque analogico (x < 96)** y bajo
+el **radio (x 146-172,5)**, con tres ventanitas de 3 x 1,4 mm para via-jogs declaradas. Medido:
+**1 tramo bajo el CJMCU** (la via-jog de AVDD, bajo los pines 11/12) y **0 bajo el cuerpo del RA-02**.
+Todo el resto de B.Cu (68 tramos) vive bajo el zocalo del micro. **Anotado en LAYOUT §3.1: hace falta
+una lamina aislante** (Kapton/Nomex 0,2) entre la placa y el eje: los 90 pads pasantes asoman por
+abajo y, si el eje esta a masa de la maquina, esa masa entra en la del ADC.
+
+### El canal del zocalo como bus (lo que enseño esta placa)
+En 27 mm de ancho, la unica via de paso longitudinal entre el ADC y el radio es el hueco de 6 mm
+entre las dos filas del DIP-28. Quedo como bus de 6 carriles (SCLK 11,0 · MISO 12,0 · MOSI 13,0 ·
++3V0 14,35 · DRDY 15,3 · VBAT_RET 15,85). **Regla nueva: un carril que sigue hacia el este bloquea
+las subidas de los carriles de abajo** -> cada carril termina EN SU PIN y la continuacion cambia de
+capa (B.Cu, permitido justo ahi).
+
+### Serigrafia: la mitad de las referencias va ABAJO, y es correcto
+En 27 mm no entran 59 referencias arriba. `rotular.py` ahora esquiva ademas **pistas y vias de F.Cu**
+y, si no hay lugar, manda la referencia a **B.SilkS espejada, pegada al componente**: 29 arriba, 25
+abajo, 5 escondidas. En una placa toda pasante la cara de abajo es la que se mira al soldar.
+Sanidad agregada: en F nunca espejada, en B siempre (si no, `mirrored_text_on_front_layer`).
+
+### Trampas del harness nuevas (para la biblioteca)
+1. **`b.Remove()` tambien degrada el board al borrar TEXTOS**: los rotulos fijos de la corrida
+   anterior se borran en `pcb/limpiar_silk.py`, **proceso aparte** (si no, rotular.py explota).
+2. **`GetFilledPolysList(capa)` dispara un assert MODAL** si la zona no esta rellena en esa capa —
+   y una zona en F+B con `GetLayer()` devuelve UNA sola. Mataba `rutear_astar.py` en silencio.
+3. **El heredoc de bash se come los `
+` de los strings de Python**: escribir los parches como
+   archivo (`Write`) y ejecutarlos, no pasarlos por `<<EOF`.
+4. El item que el DRC muestra en un `shorting_items` **puede no ser el culpable** (mostro un pad de
+   JB41 a 80 mm del conflicto real, que era JB43): mirar la RED que nombra, no la posicion.
+5. **Anchos de netclase que no entran**: los dos rieles de +3V0 son de 0,5 y no 0,8 (hueco de 1,43 mm
+   entre JB43 y DB1). Declarado en LAYOUT §7 con la cuenta (4,8 mV en el pulso de TX).
+
+**Punto mas debil declarado (LAYOUT §12):** los 218 mm son un lazo largo — el bloque analogico y el
+radio a 90 mm, y el ramal de +3V0 al ADC recorre ~80 mm desde el LDO; la forma la impuso el eje, no
+la electronica, asi que **no hay separacion transversal analogico/digital**, solo longitudinal, y el
+carril de +3V0 del nudo pasa por el canal del zocalo del micro.
+
+**Sigue bloqueando gerbers:** **M1** (separacion real de filas del RA-02) y **M2** (calibre del
+CJMCU — este SI manda el ancho de placa). Deuda para @esquematico: bajar al `.kicad_sch` las 13
+huellas verticales y la pasante del RA-02 (no cambian ninguna red).
 
 ## 2026-09-02 (d) — GALGAS / DREYFUS: **rev D, la placa se rehizo entera** (120 x 90, TODO PASANTE)
 

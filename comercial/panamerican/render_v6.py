@@ -65,12 +65,12 @@ CLAVES = {
             "No incluye cable ni tendido entre reefers", "El sexto reefer", "USD 260",
             "25 metros de cable", "sigue midiendo",
             "a las 2 semanas de iniciado", "a las 15 semanas", "Se acepta con",
-            "1.200", "1.500", "400", "4.600", "500 / mes", "50 %",
-            "Total a 12 meses", "10.600", "10.000", "16.600", "15.400",
+            "765", "1.500", "400", "4.115", "500 / mes", "50 %",
+            "Total a 12 meses", "10.115", "9.515", "16.115", "14.915",
             "3 sondas", "lo hace el cliente"],
     "int": ["WhatsApp para Andr", "LA CUENTA DEL CA", "439.700", "286",
             "Los 17 pendientes", "Lo que quedó abierto", "semana 0", "500/mes",
-            "10.000", "4.600", "260", "quedó armado tal cual me lo describiste",
+            "9.515", "4.115", "260", "quedó como me dijiste",
             "Nada de esta tabla se adelanta"],
 }
 

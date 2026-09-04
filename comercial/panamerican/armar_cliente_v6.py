@@ -1,13 +1,16 @@
 # -*- coding: utf-8 -*-
-"""Arma el UNICO presupuesto del cliente (v6.1, 4-sep-2026).
+"""Arma el UNICO presupuesto del cliente (v7.0, 4-sep-2026).
 
-Copy: PROPUESTA_PANAMERICAN_CERRO_MORO.md v6.1 (@comercial), PARTE 1 + la columna
+Copy: PROPUESTA_PANAMERICAN_CERRO_MORO.md v7.0 (@comercial), PARTE 1 + la columna
 "como se acepta" de la PARTE 4 reescrita sin nombres internos. Nada inventado.
 
-Cambia respecto de la v5.2 (mismo generador, otro contenido):
-  - 4 modulos: 2 simples de exterior (IP65) + 2 dobles de interior. Antes: 5 iguales.
-  - Seccion 02 NUEVA: "Que modulo va en cada reefer" -> la configuracion del sitio de un vistazo.
-  - 3 sondas por reefer (antes 4). Inicial 4.600 (antes 4.540). Sexto reefer 260 (antes 520).
+Cambia respecto de la v6.1 (mismo generador, otro contenido):
+  - 3 modulos, TODOS DOBLES: 1 estanco de exterior (los 2 de afuera, juntos) + 2 de
+    interior de a pares. Antes: 2 simples de exterior + 2 dobles de interior (4 modulos).
+  - Seccion 02: "Que modulo va en cada reefer" -> 2 afuera juntos = 1 modulo estanco;
+    4 adentro = 2 modulos de a pares.
+  - Precios: exterior USD 765, interior USD 750 x2, repuesto 400, puesta en marcha 1.450.
+    Inicial USD 4.115 (antes 4.600). Sexto reefer 260 (sin cambio). B = 9.515 (antes 10.000).
 Salida: PRESUPUESTO_CERRO_MORO.html
 """
 import io, os
@@ -27,8 +30,8 @@ ESCUDO = ('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" role="i
 D = dict(
     archivo="PRESUPUESTO_CERRO_MORO",
     ref="PROP-CM-2026-09-04",
-    titulo="Cuatro m&oacute;dulos, armados seg&uacute;n c&oacute;mo est&aacute; el sitio",
-    bajada="2 m&oacute;dulos de exterior + 2 m&oacute;dulos dobles bajo techo",
+    titulo="Tres m&oacute;dulos, armados seg&uacute;n c&oacute;mo est&aacute; el sitio",
+    bajada="1 m&oacute;dulo doble estanco de exterior + 2 m&oacute;dulos dobles bajo techo",
     lugar="Campamento Cerro Moro (Santa Cruz) &mdash; 5 reefers en servicio",
 
     que_es="""<p>Un sistema que mide la temperatura de cada reefer las 24 horas y avisa al celular cuando algo se
@@ -38,21 +41,21 @@ defrost</strong>.</p>
 propuesta ese equipo sigue midiendo y reportando</strong>, y el panel se puede abrir en el celular en cualquier
 momento: los resultados se ven durante el proceso, no despu&eacute;s.</p>""",
 
-    # --- 02: la configuracion del sitio, de un vistazo (bloque nuevo de la v6.1)
+    # --- 02: la configuracion del sitio, de un vistazo
     config=[
-        ("2", "a la intemperie",
-         "<strong>Un m&oacute;dulo cada uno</strong>, en gabinete <strong>estanco IP65 apto para "
+        ("2", "a la intemperie, juntos",
+         "<strong>Un solo m&oacute;dulo doble</strong>, en gabinete <strong>estanco IP65 apto para "
          "exterior</strong>.",
          "3 sondas &middot; 1 sensor de puerta &middot; 1 se&ntilde;al de defrost",
-         "Ni un metro de cable entre contenedores.",
-         "2 m&oacute;dulos<span>simples, de exterior</span>"),
+         "Comparten m&oacute;dulo porque est&aacute;n pegados: ni un metro de cable a cielo abierto entre contenedores separados.",
+         "1 m&oacute;dulo<span>doble, de exterior</span>"),
         ("4", "bajo techo",
          "<strong>Un m&oacute;dulo doble cada par</strong>, en gabinete com&uacute;n de interior.",
          "3 sondas &middot; 1 sensor de puerta &middot; 1 se&ntilde;al de defrost",
          "Una tirada de cable por par, bajo techo. Uno de los 4 est&aacute; hoy fuera de servicio: su canal ya queda libre.",
          "2 m&oacute;dulos<span>dobles, de interior</span>"),
     ],
-    config_pie="""<strong>Total: 4 m&oacute;dulos para los 6 reefers</strong> &mdash; <strong>5 en servicio
+    config_pie="""<strong>Total: 3 m&oacute;dulos para los 6 reefers</strong> &mdash; <strong>5 en servicio
 hoy</strong> y el sexto con su canal ya puesto.""",
 
     que_hace=[
@@ -75,7 +78,7 @@ hoy</strong> y el sexto con su canal ya puesto.""",
 
     instala="""<p>Cada m&oacute;dulo trae su fuente y <strong>2 salidas a rel&eacute;</strong>, y se suma un
 <strong>kit de repuesto que queda en el campamento</strong> (un m&oacute;dulo doble completo, que reemplaza a
-cualquiera de los cuatro). El montaje lo hace personal del campamento con los equipos preconfigurados y gu&iacute;a
+cualquiera de los tres). El montaje lo hace personal del campamento con los equipos preconfigurados y gu&iacute;a
 por videollamada: <strong>por eso esta propuesta no tiene l&iacute;nea de instalaci&oacute;n ni
 vi&aacute;ticos</strong>.</p>""",
 
@@ -98,7 +101,7 @@ ac&aacute; para no renegociar nada el d&iacute;a que pase.""",
          "Captura de la alerta en el celular, el registro en la nube y la planilla de calibraci&oacute;n de las 3 sondas.",
          "a las 2 semanas de iniciado"),
         ("2",
-         "Los 4 m&oacute;dulos montados y los 5 reefers reportando; nada se pierde si se corta la red; aviso de m&oacute;dulo mudo y <strong>de sonda que se desv&iacute;a de las otras del mismo reefer</strong>; puertas y defrost validados; una semana sin falsas alarmas",
+         "Los 3 m&oacute;dulos montados y los 5 reefers reportando; nada se pierde si se corta la red; aviso de m&oacute;dulo mudo y <strong>de sonda que se desv&iacute;a de las otras del mismo reefer</strong>; puertas y defrost validados; una semana sin falsas alarmas",
          "Desenchufar una sonda y que llegue la alarma; cortar la red 20 minutos sin perder lecturas; abrir una puerta 4 minutos y que avise; forzar el defrost de un reefer y que el otro del mismo m&oacute;dulo siga alarmando.",
          "a las 5 semanas"),
         ("3",
@@ -116,41 +119,44 @@ ac&aacute; para no renegociar nada el d&iacute;a que pase.""",
     ],
 
     costos=[
-        ("M&oacute;dulo de exterior, para un reefer a la intemperie",
-         "Gabinete estanco IP65, fuente, 2 rel&eacute;s, 3 sondas, puerta y defrost.",
-         "2 &times; 600", "1.200"),
+        ("M&oacute;dulo de exterior para los dos reefers que est&aacute;n juntos a la intemperie",
+         "Gabinete estanco IP65 apto para exterior, fuente, 2 rel&eacute;s, y por cada reefer 3 sondas + "
+         "puerta + defrost. Probado en banco con 25 m de cable.",
+         "1", "765"),
         ("M&oacute;dulo doble, para dos reefers bajo techo",
          "Gabinete, fuente, 2 rel&eacute;s, y por reefer 3 sondas + puerta + defrost. Probado en banco con 25 m.",
          "2 &times; 750", "1.500"),
         ("Kit de repuestos en sitio",
-         "1 m&oacute;dulo doble completo, que reemplaza a cualquiera de los cuatro, + 3 sondas + 1 puerta.",
+         "1 m&oacute;dulo doble completo, que reemplaza a cualquiera de los tres, + 3 sondas + 1 puerta.",
          "1", "400"),
         ("Puesta en marcha y ajuste en sitio",
          "Los 5 hitos de arriba, con su plazo. Incluidos en el precio, no se facturan aparte. El montaje lo hace "
          "personal del campamento con los equipos preconfigurados y gu&iacute;a por videollamada: no hay l&iacute;nea "
          "de instalaci&oacute;n ni vi&aacute;ticos.",
-         "5 hitos", "1.500"),
+         "5 hitos", "1.450"),
     ],
-    total="4.600",
+    total="4.115",
     abono="500 / mes",
     pie_precio="No incluye cable ni tendido entre reefers.",
 
-    pago_equipos="USD 4.600 <small>50 % con la OC, 50 % contra instalaci&oacute;n</small>",
-    pago_inicial_a="USD 4.600",
-    pago_inicial_b="USD 10.000<small>equipos + 12 meses de servicio, con 10 % de descuento sobre el servicio</small>",
+    pago_equipos="USD 4.115 <small>50 % con la OC, 50 % contra instalaci&oacute;n</small>",
+    pago_inicial_a="USD 4.115",
+    pago_inicial_b="USD 9.515<small>equipos + 12 meses de servicio, con 10 % de descuento sobre el servicio</small>",
     mensual_a="USD 500<small>USD 100 por reefer, completo desde el primer mes</small>",
     mensual_b="&mdash;<small>el primer a&ntilde;o; renovaci&oacute;n anual USD 5.400</small>",
-    doce_a="10.600", doce_b="10.000",
-    veinti_a="16.600", veinti_b="15.400",
-    bna="USD 4.600 &asymp; $ 7.061.000 &middot; USD 500 &asymp; $ 767.500 &middot; USD 10.000 &asymp; $ 15.350.000",
+    doce_a="10.115", doce_b="9.515",
+    veinti_a="16.115", veinti_b="14.915",
+    bna="USD 4.115 &asymp; $ 6.317.000 &middot; USD 500 &asymp; $ 767.500 &middot; USD 9.515 &asymp; $ 14.606.000",
 
     saber="""El sistema avisa; no garantiza la mercader&iacute;a ni reemplaza la revisi&oacute;n del reefer. Sin
 energ&iacute;a en el m&oacute;dulo no mide: lo que avisa en ese caso es la nube, diciendo que dej&oacute; de
 reportar. La entrada de defrost necesita una se&ntilde;al o un contacto accesible; si alg&uacute;n reefer no lo
 tiene, esa entrada queda libre y el resto funciona igual. Las 2 salidas a rel&eacute; vienen en el
-m&oacute;dulo; la sirena o baliza que se conecte no est&aacute; incluida. Cada m&oacute;dulo necesita llegar a la red del campamento. El tendido del cable de los dos pares de adentro lo hace el cliente, y ah&iacute; si un
-m&oacute;dulo se queda sin energ&iacute;a quedan <strong>dos</strong> reefers sin vigilancia hasta que vuelva; en los
-de la intemperie, uno. Los plazos de los hitos 1 y 2 suponen que el montaje en sitio se hace dentro de la ventana prevista, que depende de personal del campamento.""",
+m&oacute;dulo; la sirena o baliza que se conecte no est&aacute; incluida. Cada m&oacute;dulo necesita llegar a la
+red del campamento. El tendido del cable entre los dos reefers de cada par lo hace el cliente. Si un m&oacute;dulo
+se queda sin energ&iacute;a, quedan <strong>dos</strong> reefers sin vigilancia hasta que vuelva; para eso est&aacute;
+el m&oacute;dulo de repuesto en el campamento. Los plazos de los hitos 1 y 2 suponen que el montaje en sitio se hace
+dentro de la ventana prevista, que depende de personal del campamento.""",
 )
 
 # ------------------------------------------------------------------ plantilla
@@ -159,7 +165,7 @@ de la intemperie, uno. Los plazos de los hitos 1 y 2 suponen que el montaje en s
 def pie(n, total):
     return ('<div class="pie">\n'
             '  <span class="marca">%s <b>Termovig&iacute;a</b> &middot; Bah&iacute;a Blanca</span>\n'
-            '  <span class="cod">Presupuesto &middot; 4 m&oacute;dulos &middot; Cerro Moro &middot; Precios en USD</span>\n'
+            '  <span class="cod">Presupuesto &middot; 3 m&oacute;dulos &middot; Cerro Moro &middot; Precios en USD</span>\n'
             '  <span class="npag">%d / %d</span>\n'
             '</div>\n' % (ESCUDO, n, total))
 
@@ -178,7 +184,7 @@ def armar(d, logo_svg):
     a('  <div class="sello"><b>Presupuesto</b>%s<br>Ref. %s</div>\n</div>\n' % (FECHA, d["ref"]))
 
     a('<div class="rotulo">\n'
-      '  <div class="cifra-rot">4</div>\n'
+      '  <div class="cifra-rot">3</div>\n'
       '  <div class="txt"><span class="k">Monitoreo de temperatura de reefers</span>'
       '<h1>%s</h1><span class="b">%s &middot; %s</span></div>\n'
       '</div>\n' % (d["titulo"], d["bajada"], d["lugar"]))
