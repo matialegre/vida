@@ -267,6 +267,253 @@ M3 de placa en (4,4) (116,4) (4,96) (116,96) con **separadores de nylon**, altur
     se leia mal.
   - Regeneracion desde cero verificada (borrando cache y JSON): 18 paginas, 3,25 MB. Sin commit.
 
+- 2026-09-04 (g) [GALGAS] **Limpieza y archivo de la rev E.1** (pedido del verificador). Los dos
+  `.bak` sueltos NO se borraron: son de la **rev E.1**, que hoy es una de las dos salidas reales,
+  asi que se archivaron como corresponde en **`revE1/`** (`LAYOUT.md`, `rutas.py`, `LEEME_REVE1.txt`).
+  El LEEME dice lo que falta y como se recupera: **el `.kicad_pcb` de la E.1 se sobrescribio** al
+  derivar la E.2/E.3 sobre el mismo archivo, pero esta intacto en **git, commit `62b7996`**
+  (verificado: placa 218 x 27 y `drc.rpt` con **0 violaciones / 0 unconnected / 0 footprint**), con
+  el comando `git show` exacto para sacarlo. Tambien avisa que **`SIMPLE_FAZ = False` NO devuelve la
+  E.1**: devuelve una doble faz con el placement de la E.3. Borrados los `__pycache__`; `*.bak`
+  agregado al `.gitignore` con el motivo (cada revision se archiva en su `revX/`, no como `.bak`).
+  Los `.txt` que marcaba el verificador ya no estaban; los `DIFF_REDES_*.txt` quedan: son los diffs
+  de netlist entre revisiones, no temporales.
+  **`LAYOUT.md` 0.5**: quedo escrita la conclusion que estaba solo en el chat — *partir por `JB2x`
+  no ayuda* (la placa A se lleva 9 cruces y **los 45 del micro se van enteros a la B**: partir
+  sirve cuando el problema esta en la frontera, y aca esta ADENTRO de un bloque) y **la salida es
+  cambiar el encapsulado del micro** (con 0,6+0,6 no se pasa entre pines a 2,54, asi que los 28
+  pines del DIP son una barrera de 36 mm en el medio de la placa). Anotado que Matias evalua el
+  **Pro Mini 3,3 V** y que **hasta el netlist rev F el layout no se toca**.
+
+## 2026-09-04 (f) — GALGAS rev E.3: **rehice el orden del digital y NO alcanza: ~48 puentes**
+
+Se decidio seguir con simple faz (motivo de fabricacion: Matias la hace en acido y **alinear las
+dos caras es donde se arruinan**). Rehice el orden fisico del bloque digital con la tecnica de la
+rev D. **El numero final: ~48 puentes de alambre**, contra los 12 pedidos y los 20 del limite
+acordado. Paro aca, como se acordo.
+
+| | antes del rediseño | despues |
+|---|---|---|
+| cruces | 80 | **89** |
+| puentes que pide | 46 | **48** |
+| abiertas | 36 | 31 |
+
+### Lo que SI arreglo el rediseño (y queda en la placa)
+* **La regla que ordena el canal**: encima de la fila norte del zocalo NO HAY NADA, asi que un
+  pin de esa fila se saca al norte sin cruzar a nadie. El bus del ADC entra por el canal y SUBE
+  a su pin; lo que va al ISP y al radio SALE del mismo pin HACIA EL NORTE.
+* **`J1` girado**: de oeste a este quedo **MALLA - E- - S+ - A - E+2**, que es el orden de sus
+  destinos en la columna. Con el orden inverso, `A` y `S+` se cruzaban si o si. Este es el mismo
+  criterio de la rev D y funciono igual de bien.
+* ISP girado 270 y colgado del bus; `JB3x` reordenados por DE DONDE LLEGA cada señal (MISO y NSS
+  del norte arriba; RST y DIO0 de la fila sur, abajo); el reed a la avenida sur; los dos rodeos
+  del radio en carriles separados.
+
+### El dato que decide: DONDE estan los cruces
+| zona | cruces |
+|---|---|
+| A analogico + ADC (x < 104) | **9** |
+| **B micro (104..150)** | **45** |
+| C radio + ISP (150..190) | 20 |
+| D alimentacion (> 190) | 15 |
+
+**El problema no esta en la frontera entre bloques: esta DENTRO del bloque del micro.** Un
+ATmega328P DIP-28 con 20 señales saliendo a los cuatro costados, en UNA cara y con 0,6 de
+aislacion (que impide pasar entre pines), es un abanico que no se aplana moviendo cosas.
+
+**Y por eso partirla en dos por `JB2x` NO ayuda**: la placa A (galga + columna + filtro + ADC) se
+lleva **9** cruces y quedaria casi limpia, pero **los 45 del micro se van enteros a la placa B**.
+
+### Las tres salidas reales
+1. **Doble faz de fabrica (rev E.1)**: 218 x 27, **DRC 0/0/0, cero alambres**, ya cerrada.
+2. **Simple faz casera con ~48 puentes**: viable y la placa esta lista, pero son 48 alambres
+   soldados a mano en un nodo montado en un REDLER que golpea.
+3. **Cambiar el encapsulado del micro**: la mitad de los cruces de la zona B salen de que el
+   DIP-28 tiene 28 pines en dos filas a 2,54 y en una cara no se puede pasar entre ellos.
+
+**Estado entregado:** 234,5 x 32 (ancho sin cambios), placement sin solapes, **DRC 186 / 31
+abiertas**, **1 puente declarado** (el shunt-cal, con su agujero de paso en cada punta).
+Artworks 1:1, hoja de armado con el rotulo de cada hilo, **169 agujeros en 6 mechas** y dossier
+`NODO_GALGA_v3_revE3_DOSSIER.pdf` al dia. Renders mirados. Sin gerbers, sin commit.
+
+## 2026-09-04 (e) — GALGAS rev E.3: **el ajuste fino NO alcanzo, y ahora se por que**
+
+Me mandaron a cerrar el DRC "corriendo carriles, no rediseñando" -- que es lo que yo mismo
+habia dicho. **Estaba equivocado y lo medi.** Estado real al cerrar: **164 violaciones, 36
+pares abiertos** (18 son islas de masa) y **1 puente de alambre**.
+
+### Lo que descompone esas 164
+| | |
+|---|---|
+| separacion (decimas de mm) | **66** -> SI se arreglan moviendo |
+| **cruces reales** | **80** -> NO se arreglan moviendo |
+
+El relajador que escribi los bajo solo: **violacion total 227,6 -> 38,2 y puntos en falta
+202 -> 65**. Pero un cruce no se separa empujando: en UNA cara cada cruce **cuesta un puente**.
+Lo probe: convertir todos los cruces en puentes da **46 tramos levantados + 68 agujeros**, y
+esos 68 agujeros de 1,8 en un ruteo denso **disparan el DRC a 273**. Por ese camino no cierra.
+
+**Diagnostico:** con las reglas caseras (0,6/0,6 y pads de 1,8, que impiden pasar entre pines a
+2,54) **el bloque digital no es planar con este placement**. Lo que falta no es una pasada de
+ajuste: es **rehacer el orden fisico del digital para hacerlo planar** -- la tecnica de la rev D
+(*los destinos al sur del micro EN EL ORDEN DE SUS PINES*), moviendo `J2`, `J3`, `LD1` y la
+columna `JB3x`. Es una sesion, no un retoque.
+
+### Lo que SI quedo cerrado
+* **Bloque analogico completo en una cara**: `E-/REFN` sin vias y sin puentes, L10 y L1 intactos.
+  **Ninguna red de MEDICION quedo abierta** -- lo garantiza el guardian de `cerrar_puentes.py`,
+  que ABORTA si alguna aparece suelta.
+* **Un solo puente de alambre** (el shunt-cal, 23,7 mm), con **agujero de paso en cada extremo**
+  (0,8 con anillo 0,5): sin ese agujero el alambre no toca el cobre y la red queda abierta --
+  bug que encontre y arregle en `rutear.py`.
+* Artworks 1:1 y hoja de armado regenerados; **169 agujeros en 6 mechas**; dossier
+  `NODO_GALGA_v3_revE3_DOSSIER.pdf` (23 pag) con la portada corregida: fabricacion CASERA, no
+  JLCPCB, y el estado dice "digital EN PROGRESO" en vez de "ruteo COMPLETO".
+
+### Harness nuevo (lo que permite cerrarlo la proxima)
+| script | que hace |
+|---|---|
+| `pcb/chequear_tabla.py` | mide la tabla **antes** de aplicarla y dice **que ruta y que punto** falla. 2 s contra 40 s del ciclo con DRC |
+| `pcb/relajar.py` | descenso local sobre los waypoints (el metodo de fuerzas **oscilaba**: subia de 139 a 160). Subdivide tramos largos, **fija los puntos compartidos entre rutas** (si no, la red se abre) y no toca el analogico |
+| `pcb/cortar_cruces.py` | cruces -> puentes con sus agujeros, con lista de redes **protegidas** |
+| `pcb/diagnostico.py` | agrupa las violaciones **por familia**: con 170, leerlas de a una no sirve |
+
+### Trampas nuevas
+1. **`rutear.py` no es idempotente si cambian las coordenadas**: hay que regenerar el board
+   antes de rutear o quedan las pistas viejas Y las nuevas (me dio 231 violaciones fantasma).
+2. **Un puente de alambre sin agujero en la punta no conecta nada** (y el DRC lo canta como red
+   abierta, no como puente mal hecho).
+3. **Mover waypoints rompe las uniones entre rutas** que compartian una coordenada: 11
+   `track_dangling` y 40 pares abiertos hasta que las fije.
+
+### Lo que tiene que decidir Matias
+1. **Rediseñar el digital para una cara** (una sesion mas) -> casera de 234,5 x 32; o
+2. **volver a la doble faz de la rev E.1** (218 x 27, **DRC 0/0/0**, sin un solo alambre) y
+   mandarla a fabricar: es mas chica y ya esta cerrada.
+**Y sigue faltando la cota del eje**, que es lo unico que puede volver a cambiar todo.
+
+## 2026-09-04 (d) — GALGAS: **rev E.3, ACHICADA** (234,5 x 32, de 26 puentes a 18)
+
+Orden de Matias con los numeros de la E.2 a la vista: **simple faz, pero achicar primero y
+ruteAr una sola vez despues**. Resultado:
+
+| | E.1 doble faz | E.2 simple faz | **E.3 achicada** |
+|---|---|---|---|
+| tamano | 218 x 27 (5.886 mm2) | 240 x 40 (9.600) | **234,5 x 32 (7.504)** |
+| puentes de alambre | 0 | 26 (1.175 mm) | **18 (300 mm)** |
+
+**−22 % de area y −8 mm de ancho contra la E.2**, y el alambre bajo a un cuarto.
+
+### Cada recorte con su ahorro (lo que se pidio)
+* **`J1` y `J4` fuera**: los cables van SOLDADOS DIRECTO, con huella propia `CABLE_1xN_P3.00`
+  (pads de 2,4 con broca 1,3 + **dos agujeros de 2,5 de ALIVIO DE TRACCION**, uno a cada lado:
+  el tiron se lo come el precinto, no la soldadura). J1: 26,4x10,8 -> 21,6x3,2 (**−7,6 de
+  ANCHO**, que es lo que mas valia); J4: 21,3x10,8 -> 18,6x3,2.
+* **El REED sale de la placa**: el iman esta en la estructura, asi que su lugar lo define el
+  REDLER y no el layout. Queda cableado (2 pads) y **pegado a J4**, de modo que reed y pilas
+  salen por el MISMO prensacable. 24,7 -> 12,6 mm y libera toda la franja sur del micro.
+* **`JP1`**: 2 pads con tira cortable en vez de tira de pines (3,5x6,1 -> 5,0x2,6).
+* **Los 15 `JB*` -> `JB_CUTTER`** propio (dos pads de 1,2x1,6 con tira de 0,4): sin mascara no
+  hace falta el solder jumper de catalogo, que esta pensado para produccion.
+* **Diez condensadores parados** (paso 5,00 -> 2,50): −1,6 mm cada uno, ~18 mm en total.
+* `U4` TO-92 -> **TO-92_Wide** y `CR2` P2,00 -> **P2,50**: las dos huellas del netlist que NO
+  eran fabricables a mano (pads a 1,27 se tocan con anillo 0,4).
+* **El LED SE QUEDA**, y lo digo con la consecuencia: sacarlo ahorraba ~10 mm y **costaba la
+  unica forma de diagnostico sin radio** (3 destellos = binario cruzado, 5 = fusibles). En una
+  planta sin cobertura eso es quedarse ciego. No vale 10 mm.
+
+### Lo que se aprendio achicando
+* **En 32 mm de ancho una franja NO admite dos filas de pasivos mas un carril.** Se resolvio
+  con `acomodar_filas()` en el generador: se declaran las filas (y, rot, [(ref, x deseada)]) y
+  la funcion mide el courtyard REAL ya rotado y empuja al este lo que no entra. Calcular esos
+  huecos a ojo fallo tres veces seguidas; ahora lo hace el script y ademas informa cuanto
+  empujo a cada uno. **Trampa**: si la fila impone `rot`, pisa la rotacion propia del
+  componente (J3 girado 270 se paraba y se salia de la placa); por eso `rot=None` = respetar.
+* El courtyard del zocalo DIP-28 llega a y=21,33: la fila sur no puede estar a 21,8.
+* **El mínimo alcanzable** (LAYOUT 0.6): el ancho tiene piso duro en **23,82 mm** (CJMCU con
+  filas a 20,32). 30 mm apretando a una avenida por lado; **26 sin avenidas**; y si la cota del
+  eje obligara, **partirla en dos** por la columna `JB2x` -- que existe justo para eso: son 5
+  hilos (CS, DRDY, MISO, +3V0, GND) -- daria **~105 x 24** (sensor) y **~135 x 26** (nodo).
+
+### Estado y lo que falta
+Placement **sin solapes**, digital **ruteado a mano** (el A* no se volvio a usar), **18 puentes**
+y artworks/hoja de armado/taladros regenerados (**168 agujeros en 6 mechas**). La hoja de armado
+ahora lleva **el rotulo de cada hilo** (MALLA/E-/S+/A/E+2 en J1, +C1/GND/+C2/GND en J4, TX/RX/GND
+en J3), que es lo que reemplaza a la serigrafia de las borneras que se sacaron.
+**Falta**: una pasada de ajuste fino del ruteo (172 violaciones de separacion con la regla de
+0,6; se corrigen corriendo carriles, no rediseñando) y **la cota del eje, que sigue sin darse**.
+
+## 2026-09-04 (c) — GALGAS / DREYFUS: **rev E.2, SIMPLE FAZ + fabricacion CASERA** (EN PROGRESO)
+
+Dos ordenes nuevas de Matias el mismo dia: **una sola cara de cobre** y **la fabrica el en casa,
+con acido** (no JLCPCB). `C:\Proyectos\galgas\hardware\kicad\`. **No esta terminada y lo digo
+con numeros** — la parte dificil (el analogico) esta hecha; el bloque digital falta.
+
+### LA RESPUESTA QUE PIDIO: cuanto cuesta la simple faz casera
+| | rev E.1 doble faz | rev E.2 simple faz casera |
+|---|---|---|
+| tamano | **218 x 27** (5.886 mm2) | **240 x 40** (9.600 mm2) = **+63 % de area** |
+| pista/aislacion | 0,3 / 0,2 | **0,6 / 0,6** (masa y potencia 1,5) |
+| vias | 38 | **0** |
+| puentes de alambre | 0 | **26 (1.175 mm)**, el mayor de 264 mm |
+| DRC | 0/0/0 | **58 sobre cobre + 18 abiertas** |
+
+**Las tres cosas que la encarecen, medidas:**
+1. **Con pads de 1,8 y aire de 0,6, entre dos pines a 2,54 quedan 0,74 mm: NO PASA NINGUNA
+   PISTA** (hace falta 1,8). En la E.1 el ruteo se colaba entre pines en once lugares; ninguno
+   sobrevive. Quedan como avenidas internas solo el canal del zocalo DIP-28 (5,82 mm) y el
+   interior del CJMCU (18,5 mm).
+2. **El ancho tuvo que ir de 27 a 40 mm** para abrir dos avenidas longitudinales: el CJMCU ocupa
+   23,8 de los 27 viejos y no quedaba por donde llevar los rieles ni el bus.
+3. **Dos huellas del netlist no son fabricables a mano** (misma pieza, sin tocar una red):
+   `U4` TO-92 (pads a 1,27, se tocaban) -> **TO-92_Wide**; `CR2` radial P2,00 -> **D6.3 P2,50**.
+
+**Dato para decidir:** con el placement de la E.1 tal cual, la simple faz costaba **24 puentes
+(389 mm)** — lo medi antes de tocar nada. Hoy son 26, pero **20 de esos 26 son del bloque digital
+sin rutear**, que los puso `cerrar_puentes.py` en linea recta. **El bloque analogico entero
+necesito UN solo puente.** Estimacion con el digital ruteado a mano: **8-12**.
+**Mi recomendacion: si se quiere chica y sin alambres, la E.1 doble faz sale mejor.**
+
+### Lo que SI quedo hecho (y es lo dificil)
+* **`SIMPLE_FAZ` es una VARIABLE, no un fork** (`generar_pcb.py`): de ella salen el ancho, el
+  offset del contenido, el plano en una sola capa, los pads/brocas caseros y el **swap de capas**
+  de `pcb/rutear.py` ("F" logica = B.Cu real; "B" logica = F.Cu = **puente de alambre**, capa que
+  no se fabrica). Con `False` vuelve la doble faz.
+* **Analogico completo en una cara**: `E-/REFN` **sin vias y sin puentes**, L10 (nudo en `JP2`) y
+  L1 (seis de precision en un eje, paso 4,2) intactos. **Un solo puente**: el del shunt-cal,
+  elegido a proposito porque es el unico camino que no entra ni en el cero ni en la ganancia
+  (174 kOhm, ~17 uA).
+* **Los 15 `JB*` pasaron a la cara del cobre (B.Cu)**: un pad SMD en la cara de componentes de
+  una placa de una sola cara NO TOCA NADA. Ademas asi se cortan sin dar vuelta la placa.
+* **Reglas caseras en el DRC** (`pcb/netclases.py` -> `.kicad_pro`): 0,6/0,6, anillo 0,5 (0,4 en
+  pines a 2,54, porque con broca 1,0 un pad de 2,0 deja 0,54 entre pines), broca >= 0,8,
+  agujero-a-agujero 0,8, y **`solder_mask_bridge` y toda la serigrafia en *ignore*** (no hay
+  mascara ni serigrafia; lo que las reemplaza es el aire de 0,6 y la hoja de armado).
+* **Salidas de fabricacion casera nuevas** (`pcb/artwork.py`, dibujadas del board con PyMuPDF
+  porque el B&W de kicad-cli sale invertido): `artwork_cobre_espejado.pdf` (para planchar),
+  `artwork_cobre_directo.pdf` (fotosensible) y `hoja_armado.pdf` (reemplaza a la serigrafia),
+  **los tres 1:1 con una REGLA DE 50 mm dibujada** para detectar si la impresora escalo, y
+  **marca de centrado en cada pad** para que la mecha no patine. Mas `pcb/taladros.py`:
+  **156 agujeros en 5 escalones** (0,8 x89 - 1,0 x52 - 1,2 x4 - 1,3 x9 - 3,2 x2).
+* **Herramientas nuevas**: `pcb/puentes.py` (agrupa el cobre de F.Cu en cadenas = inventario de
+  alambres, con largo) y `pcb/cerrar_puentes.py`, que **ABORTA si una red de MEDICION quedo
+  abierta**: E-/REFN y las ramas del puente se rutean en cobre o no se rutean.
+
+### Lo que falta
+Rutear a mano el bloque digital (SPI, ISP, radio, reed, LED, divisor). **El A* no sirve con
+0,6/0,6**: intenta y se choca (genero 97 violaciones y hasta rompio redes analogicas, por eso lo
+saque del cierre). De ahi salen las 18 abiertas y las 58 violaciones sobre cobre.
+
+### Trampas del harness (nuevas, para la biblioteca)
+1. **Un pad SMD en la cara equivocada de una placa de una sola cara no conecta con nada** y el
+   DRC lo reporta como "unconnected" en redes que uno juraria ruteadas.
+2. **Los dos pads de un net-tie a 1,3 mm se tapan entre si** cuando el clearance sube a 0,6: el
+   A* decia "grupo sin celda libre" sin decir por que. Un net-tie no es obstaculo para su hermana.
+3. **KiCad no espeja al leer una huella declarada en B.Cu**: la posicion es la que uno escribe,
+   asi que NO hay que negar la X (si se niega, el pad 1 se va al otro lado y las rutas se invierten).
+4. **Una netclase con anillo invalido (via 0,9 / broca 0,5) se descarta entera en silencio** y
+   KiCad usa el valor viejo: la guardia de `netclases.py` lo caza.
+
 - 2026-09-04 (b) [GALGAS / DREYFUS - rev E.1] **DOSSIER en UN PDF**: `hardware\NODO_GALGA_v3_revE1_DOSSIER.pdf`,
   **23 paginas, 4,24 MB**. Portada con 218 x 27 y el sello **PRELIMINAR - NO FABRICAR** con TODOS los
   bloqueos vigentes (M1/M2, M5, P3, D0 y **la cota del eje, que la debe Matias**) - resumen - esquematico

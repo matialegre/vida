@@ -87,3 +87,28 @@ Bitacora del evaluador independiente. Generator != evaluator: aca van los veredi
   - **Verificado y adoptado:** los **224 mV** del diodo (re-derive `n·Vt = 34,744 mV` e `Is = 0,0999 µA` desde la Tabla 7 del BAT85; `Vf(par)` a 0,177 mA = 235,8 mV) y la **autonomia 2,43 años** (`4200/0,177 = 2,709 a` brutos, reproduce exacto; la diferencia con los 2,52 de @energia es solo el % de meseta supuesto, y @esquematico es el mas conservador). El hundimiento de TX lo domina la **ESR** (120 de 165 mV) → **`D10` es efectivamente la medicion de mayor palanca del proyecto**.
   - **Gate para liberar LAYOUT:** H-1 + H-2 + H-15. **Gate para liberar FABRICACION:** H-3 (el mas importante) + H-4 + H-5 + H-6 + H-7, ademas de M1/M3 que ya estaban. **No hace falta rehacer** el netlist, el ERC, la anotacion, la ratiometria, las dos huellas propias, el pinout del DIP-28 ni los valores de `RGD1`/`RGD2`/`RB_Q1`/`RSC1`.
   - Dueños: **@firmware (H-3, H-14, H-16)**, @esquematico (H-1, H-2, H-4, H-6, H-9 a H-13, H-15), @hardware (H-1, H-5), @energia (H-7, H-8, H-14), @pcb (H-15). **Nota a favor de @esquematico:** es la primera revision de este proyecto donde el harness encontro defectos electricos que el ERC no ve **y los encontro el autor, no el auditor**; y la deteccion de que el diodo pasa la corriente **media** y no la de reposo es justamente lo que hizo visible H-3.
+
+- **2026-09-04 — DREYFUS/galgas — auditoría rev E.1 del esquemático. ⚠ APROBADO CON OBSERVACIONES, 17 hallazgos.**
+  Informe: `C:\Proyectos\galgas\hardware\VERIFICACION_REV_E1.md` (transcrito por el Director: la sesión del
+  verificador tenía `Write` deshabilitado y devolvió el informe en su respuesta).
+  **Netlist verificado:** cold-start reproduce el `.kicad_sch` byte a byte (0 líneas de diff normalizando UUIDs),
+  netlist regenerado idéntico al entregado (59 comp/64 redes, 0 redes distintas), ERC `--severity-all` **0/0 con
+  `Ignored checks: None`** corrido por él, `/E_REFN` disjunto de `GND` (4.ª vez), 59/59 símbolo↔huella coherentes
+  (el defecto de N patas/M pads **no** reaparece), los 15 `JBxx` con 2 pines en 2 redes y ninguna red de medición
+  partida por error.
+  **Bloquea fabricar: H-1** — `JP2` no tiene pin de sentido y el firmware no puede saber el modo; galga doble +
+  `JP2` en ¼ = lee 50 % **en silencio**; hay 5 pines libres, se decide antes del ácido.
+  **Bloquean calibrar/firmware:** H-2 el shunt-cal **no da 1000 µε en ½ puente (da 500)**, contra la propia
+  fórmula de la hoja; H-3 `PINOUT.md` se contradice sobre la polaridad de `PD7`; H-4 `DE-7` sin cerrar;
+  H-5 `PINOUT.md` no menciona `JP2`.
+  **Bloquean el dossier:** H-6 `C41`/`C44`/`C45` citados y **inexistentes** (deuda de @esquematico confirmada);
+  H-7 la hoja documenta `D4`/`Q1`/`Q3`/`RB_Q1`/`RGD1`/6 clamps que no existen; H-8 `C33`/`C36`/`L3` obsoletos por
+  `CO2`+`CBLK1` borrados en la rev E — y **cortar `JB43` le saca al riel su única reserva (`CR2`)**;
+  H-9 `L10` cita `J1.3` donde va `J1.4`.
+  **Observaciones:** H-10 `JB15` lleva 8,5 mA, no 0; H-11 `JB11` lleva 8,5 y no 4,25 mA, pero **la conclusión
+  "no toca L10" es correcta y la suscribe**; H-12 `JP2` mete 28 µε de cero contra tolerancia de 0,70 mΩ y por
+  fretting **salta, no deriva**; H-13 sin clamps ni `D4` se excede el absoluto del ADS1220 a **3,7 V en `J1.4`** y
+  en ½ puente el cable llega al riel — **`CLAMPS=True` no cubre `/E_MAS_DOBLE`** y `M16` no puede detectar el modo
+  de falla; H-14 `E_REFN` quedó pegado a la malla en la bornera (lo creó la rev E); H-15/H-16/H-17.
+  **Proceso: la rev E se ruteó sin auditar; 5 de los 17 hallazgos son de ella.** Regla propuesta y adoptada por el
+  Director: **una rev no se congela como baseline de diff hasta que pasó el gate.**
