@@ -6,4 +6,12 @@
 - [PPS en Embels](pps-embels.md) — informe redactado en Downloads (carpeta de WhatsApp), faltan datos administrativos
 - [Supabase: qué proyecto en qué cuenta](supabase-cuentas-proyectos.md) — los 2 refs vivos, por que el free tier pausa y el guardian que lo evita
 - [Kiosco Ofiuco (cliente Paco)](kiosco-ofiuco-paco.md) — codigo, Supabase, deploy en Vercel, por que se pausaba y la password que viaja en el bundle
+- [Paradise (cliente Eduardo)](paradise-eduardo.md) — tienda+POS+admin en produccion; Supabase temporal en el proyecto del kiosco; faltan seña, alias, app password y los 300 productos
+- [EMSICA (cliente)](emsica-cliente.md) — sitio+campañas mail; M365, Brevo a medias, DKIM caído; qué pedirle a Jorge/Joaquín
 - [Biblioteca de código reusable](biblioteca-codigo-reusable.md) — REGLA PERMANENTE: chequear C:\Proyectos\biblioteca antes de escribir código; cosechar lo probado vía @bibliotecario
+- [OTA nunca ladrillo](ota-nunca-ladrillo.md) — regla dura: ningún nodo puede perderse por una reprogramación fallida; hash + .bak + rollback por arranques fallidos
+- [Bóveda de credenciales](credenciales-boveda.md) — dónde vive cada clave y qué cuenta tiene qué proyecto
+- [Menos componentes, menos consumo](menos-componentes-menos-consumo.md) — doctrina de Matías para nodos a pila: cada pieza se justifica por consumo o por falla evitada, o sale
+- [Nodo GIMAP y su visor](nodo-gimap-visor.md) — el firmware con giroscopio+piezos en vivo vive en un branch sin mergear, no en main; y sus 3 trampas
+- [Un visor sin datos no miente](visor-sin-datos-no-miente.md) — regla: sin dato fresco se vacía la pantalla; ya hubo dos incidentes de "señal linda de hardware muerto"
+- [Campañas: presencia, no venta](campanas-presencia-no-venta.md) — sembrar que EMSICA representa la marca, estilo LinkedIn; CTA blanda
