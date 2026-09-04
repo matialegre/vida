@@ -94,5 +94,15 @@ CLI: `neon` v4.14 (el viejo `neonctl` choca, no instalarlo). `neon projects list
 3. **No cambiar el login global de un CLI** para usar otra cuenta: se usa un token por proyecto.
 4. **Las claves que se sospechan filtradas se rotan, no se discuten.** Pendiente de rotación desde
    julio: bot de Telegram, claves de Supabase del firmware, y las que están en `config.h`.
+
+   ⚠️ **ROTACIÓN OBLIGATORIA (detectado 2026-09-04 por @verificador, sacado del árbol pero
+   sigue en el historial de git del repo `frioseguro`):**
+   - Token de Management API de Supabase (`sbp_355f…2e47`) — control total de la cuenta principal.
+   - JWT `service_role` del proyecto `nwugnhsktcihusopfldu` (proyecto ya muerto: verificar que no
+     exista; si existe, rotar).
+   - Bot de Telegram `8175168657:AA…` — estaba en `config.h`, `config_SANTA_CRUZ.h` y `DISPOSITIVOS.md`.
+   Cómo: Supabase → Account → Access Tokens → revocar y generar nuevo · BotFather → `/revoke`.
+   Hacerlo **el mismo día que se flashee el primer equipo con v3.1** (que ya lee las claves de
+   `secrets.h`, fuera de git), para tocar cada placa una sola vez.
 5. Si un proyecto free deja de recibir tráfico, **se muere solo**. Todo lo que importe necesita
    latido y vigía externo.
