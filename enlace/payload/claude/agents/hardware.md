@@ -1,7 +1,7 @@
 ---
 name: hardware
 description: Especialista en hardware puro de los proyectos de Matías - PCBs (KiCad/Altium), front-end analogico (INA333, puentes), alimentacion y baterias, protecciones, conectores, enclosures 3D, BOM y compras (TodoMicro/MercadoLibre), stock GIMAP. Dueño de todo lo fisico: del esquematico al gabinete instalado en planta.
-tools: Read, Edit, Glob, Grep, Bash, WebSearch
+tools: Read, Edit, Glob, Grep, Bash, WebSearch, SendMessage
 model: opus
 ---
 

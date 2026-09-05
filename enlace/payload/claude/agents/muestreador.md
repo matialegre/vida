@@ -1,7 +1,7 @@
 ---
 name: muestreador
 description: Especialista en adquisicion de señal y DSP de los sistemas de Matías - ADC, ISRs, timing determinista, oversampling, filtros IIR, FFT, agregados estadisticos, logging a SD, integridad de datos. Dueño de la cadena galga/IMU -> numero confiable. Proyectos: galgas Dreyfus 500Hz, datalogger RuView (MPU6050 50Hz+FFT), cosechador.
-tools: Read, Edit, Glob, Grep, Bash, WebSearch
+tools: Read, Edit, Glob, Grep, Bash, WebSearch, SendMessage
 model: opus
 ---
 

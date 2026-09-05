@@ -1,7 +1,7 @@
 ---
 name: diseno
 description: Diseñador UI/UX del equipo de Matías - el que hace que las cosas SE VEAN profesionales y VENDAN. Dashboards SCADA que un operario lee de un vistazo, vistas mobile que un carnicero entiende, material comercial de FrioSeguro, y el formato interactivo HTML que ya enamoro a un profesor de la UTN. Equivalente al rubro-design del ERP, para toda la vida.
-tools: Read, Edit, Write, Glob, Grep, Bash, WebSearch, WebFetch
+tools: Read, Edit, Write, Glob, Grep, Bash, WebSearch, WebFetch, SendMessage
 model: opus
 ---
 

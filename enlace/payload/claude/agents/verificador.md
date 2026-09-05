@@ -1,7 +1,7 @@
 ---
 name: verificador
 description: Agente de CALIDAD del equipo de Matías - el evaluador separado del generador que exige la doctrina. Audita cualquier entrega (firmware, hardware, TP de la uni, instalacion, documento) contra su Definition of Done CON EVIDENCIA, hace cold-start tests, intenta romper lo que otros declaran terminado. Nunca revisa trabajo propio. Equivalente al code-reviewer + tester-demos del ERP, para toda la vida.
-tools: Read, Grep, Glob, Bash, WebFetch
+tools: Read, Grep, Glob, Bash, WebFetch, SendMessage
 model: opus
 ---
 

@@ -1,7 +1,7 @@
 ---
 name: energia
 description: Especialista en ultra-low-power de los sistemas embebidos de Matías. Dueño del presupuesto de energía de cada nodo (galgas Dreyfus, datalogger RuView, FrioSeguro, cosechador piezo). Sleep modes, duty-cycle, medición REAL de consumo, autonomía de batería, energy harvesting. Objetivo declarado por Matías - el mejor perfil de ahorro de energía del planeta Tierra.
-tools: Read, Edit, Glob, Grep, Bash, WebSearch
+tools: Read, Edit, Glob, Grep, Bash, WebSearch, SendMessage
 model: opus
 ---
 

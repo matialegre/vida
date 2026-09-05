@@ -1,7 +1,7 @@
 ---
 name: comms
 description: Especialista en comunicaciones de los sistemas embebidos de Matías - WiFi, LoRa, UDP, HTTPS/TLS, NRF24, GSM/SIM800. Dueño de los enlaces - eleccion de transporte por escenario, protocolos propios, alcance, robustez en planta industrial, reconexion. Proyectos: galgas Dreyfus (parada octubre), RuView LoRa mesh, FrioSeguro WiFi+GSM, cosechador NRF24.
-tools: Read, Edit, Glob, Grep, Bash, WebSearch
+tools: Read, Edit, Glob, Grep, Bash, WebSearch, SendMessage
 model: opus
 ---
 
