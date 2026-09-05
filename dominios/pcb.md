@@ -4,6 +4,604 @@ Doc de dominio + bitacora. El agente lo lee al arrancar y lo actualiza al cerrar
 
 ## Bitacora
 
+## 2026-09-05 — GALGAS rev F: **ruteo rehecho DE CERO con FreeRouting en dos etapas**. Método sí, placa todavía no
+
+`C:\Proyectos\galgas\hardware\kicad\` — `LAYOUT.md` rehecho (corto, sin arrastrar el análisis
+viejo), `pcb/LEEME.md` al día, intento anterior archivado en **`revF_intento1/`** con su LEEME.
+**Sin gerbers, sin commit.**
+
+**Estado medido, sin maquillar:** tira **277 × 40 mm**, 63/63 componentes, `kicad-cli pcb drc
+--severity-all` → **0 violaciones**, pero **18 conexiones abiertas**, **26 puentes de alambre**
+(821 mm, el más largo 86,3) y **4 fallos de `pcb/verificar_f.py`**. **No llegué al objetivo**
+(≤ 15 puentes y DRC 0/0). Lo que sí quedó es un **método reproducible con un comando** y cinco
+mediciones que ordenan lo que falta.
+
+### El método (es el entregable real): `sh pcb/todo_f.sh`
+Ruteo en **DOS ETAPAS** con FreeRouting, porque **no hay forma de castigar F.Cu por costo de capa**:
+1. **Etapa 1 — una sola cara**: el DSN declara **F.Cu como `(type power)`** y FreeRouting hace
+   todo lo que entre en B.Cu, que es la única cara que se fabrica.
+2. **Bloqueo**: se importa y se marca todo `locked`; KiCad lo exporta al DSN como **`(type fix)`**
+   y el router no lo toca.
+3. **Etapa 2 — con alambre**: se rutea de nuevo con F.Cu habilitada. Lo que aparezca en F.Cu es
+   **el mínimo necesario**, y cada cadena conexa de F.Cu **es un puente**.
+Scripts nuevos: `dos_etapas.py`, `importar.py`, `fusionar_ses.py`, `contar_puentes.py`,
+`coser.py`, `coser_gnd.py`, `cerrar_f.py`, `verificar_f.py`, `al_dorso.py`, `mirar.py`, `todo_f.sh`.
+
+### Las cinco mediciones (cada una costó una corrida completa)
+1. **El `.rules` de FreeRouting 1.9 no sirve**: con CUALQUIER contenido —hasta un archivo vacío—
+   el programa se **cuelga** justo después de `Opening '<nombre>.rules'`. Y `(autoroute_settings)`
+   metido dentro del `.dsn` lo parsea a medias y revienta al escribir el `.ses`
+   (`p_board.library.packages is null`). Por eso el método es de dos etapas y no de costos.
+2. **El ancho SÍ compra puentes** (contra lo que yo había afirmado en la rev anterior y el
+   verificador refutó): mismo placement, **36 mm → 24 puentes, 40 mm → 17**. La causa es física:
+   el courtyard del RA-02 mide **27,8 mm de alto**, y con L5 estricta las dos bandas de borde son
+   el único paso del bus — a 30 mm dan ~1 carril, a 40 mm ~5. **Ancho elegido: 40,0**.
+3. **El anillo de `+3V0` por los dos bordes EMPEORA**: 19 → 23 puentes, 648 → 1.008 mm de alambre.
+   Los carriles de borde son el recurso escaso y un riel de 1,5 mm se come uno de cada lado.
+   Desactivado en `rutas_f.py`, con el número escrito al lado.
+4. **`JB_CUTTER` era inruteable y eso explicaba nueve "congestiones"**: tenía tres pads, **dos
+   numerados "1"** (salen al DSN como `1` y `1@1`) y separación de 0,5 mm contra aislación de 0,6.
+   FreeRouting no llegaba nunca al pad 2 y dejaba abiertas las **nueve** redes `JB**-B`. Huella
+   nueva **`JB_CASERO`**: dos pads de 1,2 × 1,8 a **0,70 mm** unidos por una tira de cobre dentro
+   de la huella (net tie de manual). Entre esos pads no pasa ninguna pista (harían falta 1,8 mm),
+   así que la tira no puede quedar en corto.
+5. **En KiCad un puente de alambre TIENE que ser una pista.** Probado con cuatro boards de ensayo:
+   pads con el mismo número, `net_tie_pad_groups`, `fp_line` y `fp_poly` de cobre dentro de la
+   huella **no crean conectividad** entre dos pads de la MISMA red. Conclusión que hay que
+   decirle a quien pidió el encargo: **"F.Cu con cero pistas" y "DRC sin conexiones abiertas" son
+   incompatibles**; elegí conectividad real (el alambre vive en F.Cu, que no se fabrica, y el
+   artwork sólo imprime B.Cu).
+
+### Placement: lo que se corrigió (y una desviación declarada)
+`J1` girado **270°** (con 90° `E_REFN` caía al norte con sus destinos al sur y `E+` al revés: las
+dos redes de excitación se cruzaban obligadamente) · columna **`JB1x` reordenada** norte→sur
+`JB13 JB12 JB11 JB14 JB15` (hallazgo del verificador, gratis) · **`JB2x` reordenada** por dónde
+está su destino en el CJMCU y **`JB3x` abiertos** a la banda que les toca · **`D4`, el único SMD,
+pasa a B.Cu** (arriba no existe en una placa de una cara) · agujeros de alivio de los `CABLE_*`
+movidos 1,4 mm (estaban a 0,45 del pad) y `CC1/CC2/CD1` a `C_Rect_L7.0mm_W2.5mm_P5.00mm` (la
+huella de doble paso trae dos agujeros a 1,25 mm y la mecha de 1,0 se lleva el tabique).
+**Desviación declarada:** el bulk del RA-02 queda a **~23 mm** de `U3.3` (la doctrina pide ≤ 20):
+con un courtyard de 27,8 mm de alto en una tira de 40 no entra nada al lado de ese pin.
+
+### Lo que falta (todo mío, y está escrito con el arreglo al lado en `LAYOUT.md §3`)
+1. **L5 violada**: 17 tramos de B.Cu bajo el RA-02 (tope 0) y 16 bajo el CJMCU (tope 4). Arreglo
+   conocido: `rule area` de keepout bajo los dos cuerpos **antes** de exportar el DSN (FreeRouting
+   respeta los keepouts del DSN). Va a subir los puentes: ese es el precio de L5.
+2. **El bloque analógico hay que ruteárselo A MANO y bloquearlo antes de la etapa 1** — es lo que
+   quedó sin hacer y es el motivo de que `/E_MAS`, `/NODO_B`, `/SENSE`, `/S_MAS`, `/S_MENOS` y
+   `Net-(JB15-B)` tengan tramos en F.Cu. Empezado en `rutas_post.py` (el paso obligado de `/S_MAS`
+   es el hueco de 5,8 mm entre `CC2` y `CC1` en x=233), pero chocaba con tres pistas del
+   autorouter: **el bloque hay que hacerlo entero, no un ramal**.
+3. **18 abiertas**: 12 islas de masa + 6 de señal. Las de señal son una pasada de `cerrar_f.py`
+   (6 puentes más); las de masa, `coser_gnd.py` buscando el vecino **que está en el plano** (unir
+   dos islas entre sí no cierra nada: ese fue el bug de la primera versión, ya corregido).
+
+**Salidas para mirar:** `salida/pcb_3d_top.png`, `pcb_3d_bottom.png`, `pcb_2d_bot.png`,
+`salida/z1..z3.png` (el cobre de B.Cu a 2.400 px por tercio de placa) y los tres PDF 1:1
+`artwork_cobre_espejado.pdf` / `artwork_cobre_directo.pdf` / `hoja_armado.pdf`. **183 agujeros en
+7 mechas.** Renders mirados: el placement lee de oeste a este como el protoboard y no hay
+componentes flotando ni superpuestos; el cobre de B.Cu sale a 45° y prolijo. Lo que está mal no
+se ve en el render — se ve en `verificar_f.py`.
+
+
+## 2026-09-05 — FRIOSEGURO / TERMOVIGIA **Mini LITE rev C.1**: levantados los **9 hallazgos** de @verificador — el corto de relés, y el DRC que no podía verlo
+
+@verificador **rechazó la rev C**: `/RELAY1` y `/RELAY2` estaban **en corto en el cobre** y el
+DRC informaba *0 violaciones*. Acá quedó arreglado el board y, más importante, **el harness
+que dejaba pasar eso**. Detalle completo y tabla hallazgo por hallazgo en
+`hardware/mini_lite/LAYOUT_LITE.md` §9.
+
+**El corto no era un descuido de ruteo, era una topología que no se había mirado.** El
+módulo tiene **IN1 al sur de IN2**, pero `RELAY1` nace en la **fila norte** (pin 35) y
+`RELAY2` en la **fila sur** (pin 15). Si las dos entran a `J6` **por el mismo lado**, el
+orden se invierte y en una sola cara se cruzan **sí o sí**: no hay ruteo que lo salve. La
+solución fue **que no entren por el mismo lado**: RELAY1 entra por el **oeste** (corredor
+y = 62, apenas arriba de la fila 20-38) y muere en `R15.2`, x = 103,84; RELAY2 se va **por
+debajo del módulo** (y = 32,8) y sube por la **calle x = 108** que queda entre `R15.2/R16.1`
+y `R15.1/R16.2`, entrando a `J6.3` **desde el este**. Dos territorios disjuntos, no dos
+pistas esquivándose.
+
+**De regalo, dos cotas que hay que respetar si alguien lo toca**: la horizontal de RELAY2
+está en **y = 32,8 y no en 31,5** porque a 31,5 estrangulaba el plano contra el pad de
+`D1.1` (0,3 mm de cobre) y **`J5.3` — la masa del módulo — quedaba en una isla suelta**; y
+la calle x = 108 pasa **por debajo del cuerpo** de R15/R16, a 4,16 mm del pad más cercano.
+
+### Lo que cambió en el harness (esto vale más que la placa)
+
+1. **`tracks_crossing` estaba en `ignore`**, con un comentario que decía que un cruce dispara
+   igual `clearance`/`shorting_items`. **Es falso**, y el corto es la prueba: cruce real,
+   misma capa, distinta red, reporte en cero. Ahora está en **`error`**. En una placa de
+   una cara es *el* chequeo, no un adorno de dos capas.
+2. **El gate ya no es el DRC.** Nuevo `pcb/conectividad.py`: **union-find sobre la geometría
+   del cobre** (pistas, pads y las 13 islas del plano, por muestreo del contorno del pad para
+   agarrar los termérmicos) y comparación contra el `.net`. Devuelve **cortos** (una isla con
+   pads de dos redes) y **abiertos** (una red repartida en varias islas). `verificar.py` lo
+   llama y **falla** con eso. Prueba de regresión corrida contra el board commiteado de la
+   rev C (`b1a8898`): canta
+   `CORTO entre /RELAY1 y /RELAY2 -> J6.2 J6.3 R15.2 R16.1 U1.15 U1.35`, exactamente el
+   hallazgo. Contra la rev C.1: **0 / 0**.
+3. **F.Cu tenía cero chequeos** (regla propia de aire 0 entre alambres + una métrica que no
+   podía fallar: "0,0 mm de cobre en la cara que no se fabrica" era una tautología). Ahora
+   la métrica dice la verdad (`F.Cu: 0 pistas de cobre · 20 tramos de alambre = 4 puentes`)
+   y hay **chequeo positivo**: toda punta de alambre cae en un pad y ningún alambre pasa por
+   arriba de un pad de otra red.
+4. **`puentes.py` contaba cadenas conexas, no alambres.** El puente de masa era un **árbol de
+   tres puntas** con derivación en `C5.2`: quien cortaba un alambre de 55,5 mm y lo soldaba
+   punta a punta **dejaba `C3.2` sin masa**. Ahora parte el árbol en los alambres que de
+   verdad se cortan (camino más largo primero) y publica los pads intermedios. **Son 4, no
+   3** — mismo cobre, cuenta honesta; el objetivo del encargo era ≤ 4.
+5. **Los dos artwork estaban asignados al revés.** La plancha **espeja**: lo que se imprime
+   para planchar es la vista **NO** espejada. Se renombraron **por uso**:
+   `para_planchar_1a1.pdf` y `vista_cobre_1a1.pdf`, y el de planchar lleva impresa la
+   **prueba física**: *apoyada con la tinta contra el cobre y las borneras hacia vos, `J2`
+   tiene que quedar a la DERECHA*. Planchar el espejado es la falla más cara de una placa
+   casera y no se ve hasta que no entra ningún componente.
+6. **Un solo número de puentes**: `artwork.py` lee `salida/puentes.json` en vez de contar por
+   su cuenta, así la hoja de armado y `puentes.md` no pueden decir cosas distintas.
+
+### Lo demás
+
+* **H-4**: la pista de RELAY2 pasaba a **0,63 mm** del agujero M3 `H7` (un separador metálico
+  la tocaba). Con el reruteo desapareció: barriendo las 8 M3, el peor caso ahora es
+  **H7 = 1,65 mm**.
+* **H-5**: el plano llegaba a **0,5 mm del borde**; `min_copper_edge_clearance` a **1,0** y
+  refill. Medido sobre el polígono relleno: **1,00 mm**. Con corte a sierra y lima, 0,5 se
+  levanta.
+* **H-7**: la hoja de armado **no marcaba una sola polaridad** y era lo único que iba a tener
+  el que suelda. Ahora: banda de cátodo de `D1`, `K`/`A` en los dos LED (+ "A = pata larga"),
+  `+` con flecha en `C1`, cuadrado de **PIN 1** en el zócalo — **todo derivado de `PADS`**,
+  no tipeado. Y los rótulos dejaron de pisarse: nombres de bornera bajados a y = 3,2 (a
+  y = 12,8 caían sobre los cuerpos de R5-R9), notas mudadas a la franja sur del módulo,
+  cajetín al noreste, y las refs rojas que duplicaban un rótulo azul, apagadas.
+
+**Evidencia:** DRC `--severity-all` **0 / 0 con `tracks_crossing` activo** · conectividad
+extraída del cobre **0 cortos / 0 abiertos / 0 alambres mal formados** · `chequear_solapes`
+0 solapes, L1 y L2 OK · `verificar.py` 0 fallos / 1 aviso (C2 a 8,3 mm del pin 19) · 107
+segmentos y **907,8 mm** en B.Cu · aire al borde **1,00** · 128 taladros en 6 mechas · los
+tres PDF y los renders 2D **mirados**, y los artwork **se auto-miden adentro del PDF**
+(`regla X = 50,000 mm OK`). **4 puentes, 95,2 mm de alambre, 130 × 90 mm.**
+
+**Estado del repo (H-9):** esta pasada **no commitea nada** — lo cierra el que coordina.
+Quedan sin trackear `pcb/conectividad.py`, `salida/para_planchar_1a1.pdf`, los tres archivos
+de `doble_faz_descartada/` y `salida/drc_tmp.json` (intermedio que `rutear_astar.py` consume;
+va a `.gitignore` o se commitea, pero que se decida). Se borraron
+`salida/artwork_espejo_1a1.pdf` y `salida/artwork_directo_1a1.pdf` (renombrados) y
+`salida/p1.png` (sobra). `termovigia_mini_lite.kicad_sym` figura modificado y **no lo toqué
+yo**: viene del lado del esquemático.
+
+**La lección, para la doctrina:** *optimizar para que el DRC pase* ya nos costó un rechazo
+por placement; acá costó un **corto**. Un chequeo apagado con un comentario que lo justifica
+es peor que no tenerlo, porque el comentario convence al que revisa. **La verificación de una
+placa tiene que extraerse de la geometría, no pedirse prestada a la herramienta que la
+dibujó.**
+
+### 2026-09-05 — @verificador RE-AUDITA la rev C.1 (commit `65030f7`): **APROBADO CON OBSERVACIONES**
+
+Segunda auditoria independiente, con herramientas propias y **sin usar** `verificacion.json`,
+`drc.txt` ni el `pcb/conectividad.py` de @pcb como fuente: parser propio de s-expresiones
+(ojo: el `.kicad_pcb` de KiCad 10 v20260206 referencia las redes **por nombre**, `(net "GND")`,
+no por codigo — el parser de la auditoria anterior hay que adaptarlo), shapely para la geometria,
+PyMuPDF para medir adentro de los PDF, PIL+scipy para los renders, y `kicad-cli` sobre un
+**clon limpio** del repo.
+
+**Los nueve hallazgos estan cerrados. Los verifique uno por uno con medicion propia:**
+
+1. **H-1 (el corto) — CERRADO.** Union-find sobre la geometria de B.Cu (107 segmentos, 128 pads,
+   13 islas del plano) mas los alambres de F.Cu por sus puntas: **0 cortos / 0 abiertos** contra
+   las **24 redes multipin** del `.net`. `/RELAY1` = {U1.35, R15.2, J6.2} y `/RELAY2` = {U1.15,
+   R16.1, J6.3} caen en **dos islas distintas**. Control positivo: la MISMA herramienta mia,
+   sobre `b1a8898`, canta `CORTO {/RELAY1,/RELAY2} -> J6.2 J6.3 R15.2 R16.1 U1.15 U1.35`. El aire
+   minimo entre redes distintas en toda la placa es **0,540 mm** (pad a pad en los zocalos): no
+   hay ningun 0,000.
+2. **H-2 — CERRADO y probado con control negativo.** `kicad_pro -> rule_severities.tracks_crossing
+   = "error"`, sin `drc_exclusions`. **Clon limpio** de `65030f7` mas `kicad-cli pcb drc
+   --severity-all`: **0 violaciones / 0 sin conectar**, y `tracks_crossing` **ya no figura** en la
+   lista de "Ignored checks". Control negativo: el board de la rev C con **estas** reglas ahora
+   reporta `[tracks_crossing] @(90,48)+(98,54) Track [/RELAY1] / [/RELAY2] on B.Cu` **y**
+   `[copper_edge_clearance] real 0,5005 mm`. El DRC volvio a ser evidencia.
+3. **H-3 (artwork) — CERRADO, y la prueba fisica impresa es CORRECTA.** Ajuste los 128 centros de
+   mecha de cada PDF contra los 128 pads del board: **error maximo 0,0000 mm** en los tres.
+   `para_planchar_1a1.pdf` sale con **X = +1** (misma orientacion que el board y que
+   `pcb_top.png`) y `vista_cobre_1a1.pdf` con **X = -1**. Verifique tambien los renders midiendo
+   la posicion de los 8 M3: en `pcb_top.png` los del modulo caen a la derecha (px 712 y 980) y en
+   `pcb_bottom.png` a la izquierda (px 43 y 311), o sea **`vista_cobre` coincide con
+   `pcb_bottom.png` y `para_planchar` esta espejado respecto de el**, que es lo pedido. Escala:
+   `U1.1-U1.19` = **45,7200**, `U1.1-U1.20` = 25,4000, `J2.1-J2.3` = 10,1600, `H1-H2` = 122,0000,
+   y **dos lineas de exactamente 50,000 mm** (regla X e Y) con 8 marcas de 5 mm en cada artwork.
+   Orientacion: en el board `J2.1` esta en x = 39 y `J1.1` en x = 88, o sea **J2 al OESTE**; en
+   `para_planchar` J2 sale a la izquierda del papel, y al apoyar la hoja con la tinta contra el
+   cobre (giro sobre el eje vertical, borneras hacia el operario) **J2 queda a la DERECHA**: la
+   prueba impresa dice exactamente eso. Rehice la derivacion solo y da lo mismo (la plancha
+   espeja, luego se plancha la vista de arriba). **La asignacion quedo bien.**
+4. **H-4 — CERRADO.** Barriendo los 8 M3 contra la union de todo el cobre de B.Cu, el peor es
+   **H7 = 1,650 mm** (los otros siete, 2,000 mm). Ademas ninguna pista invade el taladro de otra
+   red ni un NPTH (chequeo aparte: 0 casos).
+5. **H-5 — CERRADO.** Contra el contorno **real** (rectangulo 130 x 90 con las cuatro esquinas de
+   r = 3 mm, no el bbox): **1,0000 mm**, y nada del cobre sale del contorno. Los que marcan el
+   minimo son los pads de `SW1`; el plano queda en 1,0005.
+6. **H-6 — CERRADO.** Reconstrui los 20 tramos de F.Cu: **23 nodos, 7 de grado 1 y uno de grado 3
+   en `C5.2`**, 3 cadenas conexas de 55,5 / 26,0 / 13,7 mm. **Las 8 puntas caen exactamente en un
+   pad** y la unica derivacion es `C5.2`, que es la que `puentes.md` publica. La particion en
+   **4 alambres** (44,8 + 10,7 + 26,0 + 13,7) es correcta y no hay ninguna derivacion sin listar.
+   `puentes.md`, `salida/puentes.json` y el encabezado de los tres PDF dicen **4**: coinciden.
+7. **H-7 — CERRADO.** Ajuste `hoja_armado.pdf` (X = +1, error 0,0000: es vista desde arriba) y
+   ubique cada marca en coordenadas de placa, cotejando el catodo contra el `.net` (campo
+   `pinfunction`): `D1` pad 1 = **K** (net +5V) y esta al NORTE — la hoja dice "BANDA (K) ARRIBA"
+   y la "K" cae a 3,5 mm de `D1.1`, la "A" a 3,5 mm de `D1.2` (`Net-(D1-A)`). `LED1` y `LED2`:
+   pad 1 = K (GND) al oeste, pad 2 = A al este; las letras caen a 2,05 mm de la K y 2,36 mm de la
+   A, del lado correcto en los dos. `C1`: el "+" tiene **flecha azul apuntando al este**, hacia
+   `C1.1` (+5V), que es el pad correcto. `PIN 1`: hay un corchete azul de 1,4 mm centrado en
+   **x = 41,14**, la x exacta de `U1.1`, sobre la fila sur, que es donde esta el pin 1. Mire la
+   hoja renderizada: los rotulos que se pisaban (`LED1` sobre el cajetin, `J2 SONDAS` sobre `J3`,
+   `J1 5V 2A` sobre `+5V/GND`, `SW1 RESET` sobre la huella) **ya no se pisan**.
+8. **H-8 — CERRADO.** La metrica dice la verdad (`F_Cu_pistas_de_cobre: 0` mas
+   `F_Cu_tramos_de_alambre: 20`) y el chequeo positivo existe y **funciona** (mutantes, abajo).
+9. **H-9 — cerrado en el repo, no en el texto** (ver O-7).
+
+**Audite el `pcb/conectividad.py` de @pcb, no lo di por bueno.** Lo corri con datos extraidos por
+MI parser: sobre `b1a8898` devuelve el corto de H-1 y sobre `65030f7` devuelve **0/0** — la prueba
+de regresion que declara es real. Ademas le inyecte **5 mutantes**: (A) pista extendida hasta otra
+red -> detecta el corto; (B) borradas todas las pistas de `/DOOR3` -> detecta el abierto; (D) punta
+de alambre corrida 3 mm fuera del pad -> detecta; (E) alambre nuevo sobre pads ajenos -> detecta el
+corto **y** el "pasa sobre el pad"; **(C) una pista de B.Cu que ATRAVIESA una isla del plano con
+sus dos puntas y su punto medio fuera de la isla -> NO la detecta** (O-1). `verificar.py` mete
+cortos, abiertos y malformados en `fallos` y hace `sys.exit(1)`: **el gate es real**, no decorativo.
+
+**Ninguno de los "si pasa" de la auditoria anterior retrocedio** (todo remedido): una sola cara de
+verdad (**0 vias** — los 9 `(via` del archivo son `vias not_allowed` de rule areas —, **0 pads
+SMD**, los 128 pads `thru_hole`/`np_thru_hole` en `*.Cu`, una sola zona rellena y es de B.Cu);
+pad-pad minimo **0,540** (>= 0,4); pistas **0,50** de senal, **1,00** el +3V3 y **1,00 / 1,50** el
++5V y `Net-(D1-A)`; paso de bornera con **error 0,0000** en las cuatro (`J2` 5,0800 dos veces;
+`J1`, `J3` y `J4` 5,0000); bajo el modulo (caja kicad x 108-147, y 42-92) hay **solo** `R15 R16 J5
+J6 H5-H8`; `J5` y `J6` son +5V/+3V3/GND y GND/RELAY1/RELAY2/+3V3, igual que `DISENO_LITE` K7; **las
+13 islas del plano tienen al menos un pad** (0 huerfanas) y **`J5.3` NO quedo suelta**: vive en la
+isla `zone9.0` (864,2 mm2) junto a `C1.2` y `C2.2`, y esa isla se ata al resto de GND por el puente
+3 (`J1.2-C1.2`), que es justamente lo que `puentes.md` explica; los 128 taladros en **6 mechas**
+(97 de 1,0 - 8 de 1,1 - 2 de 1,2 - 11 de 1,3 - 2 de 1,6 - 8 de 3,2) coinciden pad por pad con
+`taladros.md`; 107 segmentos y **907,8 mm** en B.Cu; los tres PDF siguen con **"PRELIMINAR - NO
+FABRICAR (M1-M5 sin medir)"** impreso. Y los nets de los 128 pads coinciden con el `.net` **uno por
+uno** (las 22 diferencias son pines libres del DevKit, redes `unconnected-*` de un solo nodo).
+
+**OBSERVACIONES (ninguna bloquea; dueno: @pcb):**
+
+- **O-1 (harness, la mas importante).** En `conectividad.py` la union **isla-pista** se decide
+  muestreando **solo 3 puntos** (las dos puntas y el medio del segmento, lineas 124-127): una
+  pista que cruza una isla sin que ninguno de esos 3 puntos caiga adentro **no se ve** (mutante C,
+  reproducible). Hoy no pasa porque el relleno abre clearance alrededor de cada pista, pero el
+  gate no deberia depender de que alguien se acuerde de rellenar. Muestrear el segmento cada
+  ~0,2 mm, o intersecar de verdad.
+- **O-2 (harness).** Ni `conectividad.py` ni `verificar.py` comparan la **red de cada pad** contra
+  el `.net`: el paso 7 de `verificar.py` solo coteja *valor* y *huella* por componente. O sea que
+  la conectividad se valida contra si misma. Lo compare yo (0 desvios), pero el chequeo falta.
+- **O-3 (harness).** `verificar.py:44` modela cada pad como un **circulo de diametro
+  `max(size.x, size.y)`**. Hoy es exacto (los 128 pads son circulos), pero el dia que entre un pad
+  rectangular u oval el modelo agranda el pad y puede **tapar un abierto**.
+- **O-4 (harness).** El `aire_del_cobre_al_borde_mm` de `verificar.py:176-183` mide contra el
+  **rectangulo W x H** (ignora las esquinas r = 3) y solo mira **vertices de zona y puntas de
+  pista**: ni pads, ni puntos interiores. Da 1,0 y yo tambien mido 1,0000, asi que hoy no miente;
+  ademas el DRC lo cubre de verdad (`min_copper_edge_clearance = 1,0`, probado en el control
+  negativo). Pero como metrica propia es optimista.
+- **O-5.** Dos numeros publicados para lo mismo: `puentes.json`, `puentes.md` y los PDF dicen
+  **95,2 mm** de alambre y `verificacion.json` dice **95,3** (mi medicion: 95,27; 95,2 es la suma
+  de los redondeos y 95,3 el redondeo de la suma). El "un solo numero de puentes" de la rev C.1 se
+  aplico a la **cantidad**, no al largo.
+- **O-6.** Los tres PDF imprimen **"placa 130.1 x 90.1 mm"**; el `Edge.Cuts` mide **130,000 x
+  90,000** (el 0,1 es el ancho de trazo del contorno). Es el numero que alguien va a usar para
+  cortar la virgen.
+- **O-7 (estado, familia de H-9).** `LAYOUT_LITE.md` cierra con "**Esta pasada no commitea nada**"
+  y la entrada de `pcb.md` de la rev C.1 lista como sin trackear `pcb/conectividad.py` y
+  `salida/para_planchar_1a1.pdf`: **`65030f7` los tiene**. El texto quedo describiendo un estado
+  que ya no existe, que es el mismo defecto de H-9 una revision despues. Ademas
+  `hardware/mini_lite/gerbers/` (17 archivos) sigue **sin trackear**. Verifique que esos gerbers
+  **no estan podridos**: extraje los 12.295 trazos del `B_Cu.gbr` y contienen **los 107 segmentos
+  de la rev C.1 y ninguno de los 8 de la rev C**, y la serigrafia tiene los mismos 5.432 trazos
+  que una re-exportacion mia (las diferencias de texto son orden de aperturas y atributos `%TO`).
+- **O-8.** El texto "PIN 1" de la hoja de armado cae mas cerca de los pads 2 y 3 que del pad 1
+  (2,7 mm de `U1.3` contra 4,9 de `U1.1`); lo que salva la marca es el **corchete**, que si esta
+  en la x de `U1.1`. Mover el texto unos 3 mm al oeste.
+- **O-9.** El "+" de `C1` esta a **5,66 mm** de `C1.1` y a **5,37 mm** de `R9.2` (`/DOOR5`): mas
+  cerca del pad equivocado. La flecha desambigua, pero el simbolo tendria que estar pegado al pad.
+- **O-10 (sin cambios, ya estaba).** El alambre de `EN` pasa a **0,98 mm** de `R4.1` (+3V3). `R4`
+  es **NO POBLAR** y la hoja lo dice; si algun dia se puebla, ese alambre molesta.
+- **O-11 (a futuro).** `tracks_crossing` en `error` es lo correcto para B.Cu. Si alguna vez dos
+  alambres se cruzan **en el aire** sobre F.Cu, que es legal, el `.kicad_dru` solo relaja el
+  *clearance* F.Cu-F.Cu, no este chequeo. Hoy hay **0 cruces entre alambres**, asi que no molesta;
+  el dia que moleste, **acotar la regla por capa, no volver a apagarla**.
+
+**VEREDICTO: APROBADO CON OBSERVACIONES** como revision de layout. Los nueve hallazgos estan
+cerrados con evidencia que reproduje solo, incluidos los dos controles (positivo sobre `b1a8898`,
+negativo con las reglas nuevas). **No es autorizacion para planchar**: sigue en pie el bloqueo que
+el propio @pcb declara — **M1-M5 sin medir** (geometria del zocalo del DevKit y del modulo de rele)
+— y esta impreso en los tres PDF. Cuando Gonza mida con calibre y se regenere, vuelve a
+@verificador **solo por el placement** (M1-M5), no por lo de arriba. O-1 y O-2 son deuda de harness
+de @pcb: antes de la proxima placa por script, no antes de esta.
+
+*Metodo, para que se pueda repetir: parser propio de s-expresiones mas shapely (union-find sobre el
+cobre), PyMuPDF (128 centros de mecha ajustados contra el board, reglas de 50 mm, texto),
+scipy y PIL (posicion de los M3 en los renders), `git clone` limpio mas `kicad-cli` (DRC
+reproducible, control negativo sobre `b1a8898`, re-exportacion de gerbers) y 5 mutantes inyectados
+al gate de @pcb. No toque ni un archivo del repo de frioseguro.*
+
+## 2026-09-05 — FRIOSEGURO / TERMOVIGIA **Mini LITE rev C**: la placa de una cara cerrada con **3 puentes** (de 10) y **DRC 0**
+
+`C:\Proyectos\frioseguro\hardware\mini_lite\` — `termovigia_mini_lite.kicad_pcb`, `drc.txt`,
+`LAYOUT_LITE.md` (rehecho), `puentes.md`, `salida\` (`artwork_espejo_1a1.pdf`,
+`artwork_directo_1a1.pdf`, `hoja_armado.pdf`, `taladros.pdf`, renders 2D, `verificacion.json`).
+**Sin commit.** El placement y las rutas de la rev B quedan en `doble_faz_descartada\`.
+
+**REPORTE: envolvente 130 x 90 · 3 puentes de alambre · 95,3 mm de alambre.** Objetivo del
+encargo: <= 4. Contra la rev B: **de 10 puentes y 580 mm a 3 y 95**, y **ninguno de los tres
+es de senal de campo**: dos cosen el plano de masa y el tercero es el RESET.
+
+**Lo que lo hizo posible fue la rev C del esquematico, no el layout.** @esquematico reasigno
+los GPIO para que las seis entradas salgan por la **fila sur** y **en el mismo orden
+oeste->este que las borneras**. En una placa de una cara eso convierte cinco cruces en cinco
+rectas paralelas: `3V3(1) EN(2) 1-Wire(7) S1(8) S2(9) S3(10) S4(11) S5(12) GND(14) RELAY2(15)
+5V(19)` contra `SW1 · J2 · J3 · J4 · J1`. Dos secuencias monotonas y ningun abanico cruza a
+otro. Cada puerta quedo como una **columna vertical**: borne -> 100 ohm -> pin, con el pull-up
+y el filtro esperando arriba **en el pasillo del zocalo**, tomando el pad de su propio pin
+desde el norte. **J3 al OESTE de J4**, como pedia el diseno: con eso cayeron los dos puentes
+cortos de bornera de la rev B.
+
+**La unica decision de ruteo que quedo fue un reparto de territorio**: +3V3 y RELAY2 se
+estorbaban camino al modulo, asi que **el +3V3 va por el NORTE** (pasillo -> panel -> baja al
+modulo por x = 120) y **RELAY2 por el ESTE** (pasillo -> extremo este -> norte). La bajada del
++3V3 se puso en **x = 120 y no en 114 a proposito**: asi el plano de masa del panel sigue
+unido al del borde rodeando por la franja x 121..129,5, y no hizo falta un cuarto alambre.
+
+**Los tres puentes, con su motivo** (`puentes.md`, generado del board):
+1. **GND, 55,5 mm** — los cinco filtros de puerta tienen su pad de masa **en linea** dentro
+   del pasillo: **un solo alambre los toca a los cinco** y los cose al plano.
+2. **EN (RESET), 26,0 mm** — `EN` es el pin 2 y `+3V3` el pin 1: el pulsador esta al oeste y el
+   riel de 3V3 sale del pin de al lado **hacia el mismo lado**, con el front-end del 1-Wire en
+   el medio. Los dos no pasan; el reset es lo que menos molesta que sea un alambre.
+3. **GND, 13,7 mm** — el plano del sureste queda separado por el anillo de la entrada de 5 V.
+Los tres van **de pad a pad**: `agujeros_de_paso = 0`, no agregan un solo taladro.
+
+**Evidencia medida:** DRC `--severity-all` **0 violaciones / 0 sin conectar** ·
+`chequear_solapes` **0 solapes, 0 fuera de borde**, con **L1** (bajo el modulo: solo R15/R16,
+2,8 mm) y **L2** (pasillo: R10-R14 2,8 y C3-C7 6,5) verificadas por tabla de alturas ·
+`verificar.py` **0 fallos / 1 aviso**: 107 segmentos y **877,5 mm de cobre en B.Cu**, **0,0 mm
+de cobre en la cara que no se fabrica**, pista minima 0,50, **pad mas chico 2,00** (paso 2,54)
+y 3,00 el resto, taladro 1,00 con **corona 0,50**, **paso de bornera error 0,000** (J2 a 5,08;
+J1/J3/J4 a 5,00), **cero desviaciones .net <-> placa**, **LED1-LED2 = 44 mm**. **128 taladros
+en 6 mechas.** Renders 2D **mirados** y la hoja de armado revisada.
+*El unico aviso*: C2 quedo a **8,3 mm** del pin 19 contra 8,0 de referencia — el pin 19 es el
+ultimo de la fila y al lado esta la bornera de entrada; queda dicho.
+
+**Deudas declaradas (LAYOUT §7):** el bulk **C1 a 32 mm de JD-VCC** (acercarlo lo metia bajo
+el modulo, donde L1 no deja nada de mas de 4 mm; el riel va en 1,5 mm y el C2 del ESP32 si
+esta al lado de su pin) · **USB 60 mm adentro** (la caja se abre para reprogramar) · **M1-M5
+sin medir** · 9 referencias sin lugar en la serigrafia (no hay serigrafia; la hoja de armado
+las dibuja igual).
+
+**La leccion, que vale para la biblioteca:** en una placa de una cara **el orden de los pines
+del conector es parte del layout**. Los 7 puentes grandes de la rev B no eran un problema de
+ruteo sino de asignacion de GPIO, y se arreglaron en el esquematico en una tarde. Cuando el
+ruteo pide mas puentes de los presupuestados, **el primer lugar donde mirar es el netlist**.
+
+
+### 2026-09-05 — @verificador sobre la rev C: **RECHAZADO** (hay un corto RELAY1/RELAY2 en el cobre)
+
+Auditoria independiente del layout. **No use `verificacion.json` ni `verificar.py`**: parseo
+propio del `.kicad_pcb` (s-expresiones a mano) + shapely para la geometria + PyMuPDF para medir
+adentro de los PDF. Coordenadas en el sistema de `LAYOUT_LITE` seccion 5 (doc: `x_doc = x_kicad - 20`,
+`y_doc = 110 - y_kicad`).
+
+**H-1 (CRITICO, bloquea) — `/RELAY1` y `/RELAY2` estan CORTOCIRCUITADOS en B.Cu.**
+Los segmentos `(98,54)->(106,48)` y `(90,48)->(104,52)` en coordenadas KiCad (indices 107 y 116
+del `.kicad_pcb`) se cruzan en **doc (81,59 x 58,69)**, los dos en **B.Cu**, ancho 0,5, distancia
+= **0,000 mm**. Extraje la conectividad del cobre por union-find y da **una sola isla** con
+`J6.2 J6.3 R15.2 R16.1 U1.15 U1.35`. Se ve a ojo en `salida/pcb_bottom.png` (la X de dos pistas
+al oeste del modulo). Consecuencia: IO13 e IO15 peleando entre si, los dos reles conmutan
+juntos, y como IO15 es strapping, si IO13 arranca bajo el ESP32 bootea con el log silenciado.
+
+**H-2 (CRITICO, de harness) — el DRC no podia encontrarlo: `tracks_crossing` esta en `ignore`.**
+`termovigia_mini_lite.kicad_pro` -> `rule_severities.tracks_crossing = "ignore"` (tambien en la
+lista de "Ignored checks" de `drc.txt`). `LAYOUT_LITE.md:128` justifica ese ignore diciendo que
+"dos pistas que se crucen disparan igual `clearance` o `shorting_items`". **Es falso, y H-1 es la
+prueba**: cruce real, mismo layer, distinto net, y el reporte dice *0 violaciones*. Por lo tanto
+**toda la linea de evidencia "DRC 0/0" de `LAYOUT_LITE.md:9` no prueba ausencia de cortos** en
+esta placa. Mientras `tracks_crossing` este en ignore, el DRC de esta placa no es evidencia.
+
+**H-3 (bloquea fabricacion) — `artwork_espejo_1a1.pdf` esta bien espejado, pero asignado al uso
+equivocado.** Medido dentro del PDF con PyMuPDF, ajustando los 128 centros de taladro contra los
+128 del board: **escala 1:1 exacta, error maximo 0,0000 mm**; regla X y regla Y = 50,000 mm;
+`U1.1 a U1.19` = **45,7200 mm** (18 x 2,54), `U1.1 a U1.20` = 25,4000, `J2.1 a J2.3` = 10,1600,
+`J3.1 a J3.3` = 10,0000, `H1 a H2` = 122,0000. El `espejo` es **espejado en X** respecto del
+`directo` y de `hoja_armado.pdf` (que se declara "vista DESDE ARRIBA"), o sea el `espejo`
+**coincide con `pcb_bottom.png`**, no esta espejado respecto de el. Ahora el uso: con el cobre
+**abajo**, mirando la cara de cobre de frente se tiene que ver el espejo de la vista de arriba,
+que es lo que muestra `pcb_bottom.png`. En transferencia de toner el papel se apoya **con la
+tinta hacia abajo**, o sea la plancha **vuelve a espejar**: lo que hay que imprimir para planchar
+es la **vista de arriba**, es decir **`artwork_directo_1a1.pdf`**. `LAYOUT_LITE.md:115`,
+`pcb/artwork.py:19` y el encabezado impreso del propio PDF ("ESPEJADO - transferencia de toner /
+plancha") dicen lo contrario. Si se plancha el `espejo`, **la placa sale espejada entera**: es la
+falla mas cara de una placa casera y no se ve hasta que no entra ningun componente.
+**DoD para levantar H-3:** imprimir los dos, apoyarlos con la tinta contra una virgen y decir en
+cual de los dos J2 (sondas) cae del mismo lado que en `pcb_bottom.png`. Escrito en el PDF.
+
+**H-4 — cobre a 0,63 mm del agujero M3 `H7`** (doc 90,5 x 65,5; agujero de 3,2 mm del modulo de
+rele): la pista 106 de `/RELAY2` pasa a 0,63 mm del **borde** del agujero, contra el minimo
+pedido de 1,0. Barriendo un radio de 2,75 mm (cabeza M3) y 3,5 mm (arandela M3) alrededor de los
+8 agujeros, **H7 es el unico con cobre debajo** — y es RELAY2. Un separador o arandela metalica
+apoyada ahi toca la pista. Es el mismo error de familia que la "pista bajo agujero" de la Mini.
+
+**H-5 — el plano de masa llega a 0,5 mm del borde**, contra el minimo de 1,0 mm pedido para
+fabricacion casera (zona `zone#12`, bbox doc 0,5..129,5 x 0,5..89,5). No es un descuido del
+ruteo sino de la regla: `kicad_pro -> rules.min_copper_edge_clearance = 0.5`. Con corte a sierra
+o guillotina y despues lima, 0,5 mm de cobre al borde se levanta o queda con rebaba.
+
+**H-6 — `puentes.md` describe mal el puente 1.** Dice `de U1.14 a C7.2`, 14 tramos, como si
+fuera **un** alambre punta a punta. Reconstruyendo los 20 segmentos de F.Cu por conectividad, el
+puente 1 es un **arbol con tres extremos** (`U1.14`, `C7.2` y **`C3.2`**) y una **derivacion en
+`C5.2`** (nodo de grado 3). Quien corte un alambre de 55,5 mm y lo suelde punta a punta como dice
+la tabla **deja `C3.2` sin masa**. Los largos si estan bien: 26,0 / 55,5 / 13,7 = 95,3 mm.
+
+**H-7 — la hoja de armado no dice la orientacion de ningun componente polarizado.** Mire
+`hoja_armado.pdf` renderizado: `D1`, `LED1`, `LED2` y `C1` (electrolitico) estan dibujados como
+dos pads dentro de un rectangulo o circulo, **sin banda de catodo, sin marca de mas, sin
+chaflan, sin A/K**; no hay ni una sola marca de polaridad ni de pin 1 en toda la hoja
+(verificado tambien sobre el texto extraido del PDF). La hoja se declara reemplazo de la
+serigrafia (`LAYOUT_LITE.md:117`) y es lo unico que va a tener el que suelda: como esta, **no
+alcanza**. Ademas los rotulos se pisan justo donde importan: `LED1` sobre el cajetin,
+`J2 SONDAS` sobre `J3`, `J1 5V 2A` sobre `+5V/GND`, `SW1 RESET` sobre la huella de SW1.
+
+**H-8 (harness) — la metrica "0,0 mm de cobre en la cara que no se fabrica" no puede fallar
+nunca.** `verificacion.json` informa a la vez `cobre_en_la_cara_que_NO_se_fabrica_mm: 0.0` y
+`tramos_de_alambre_F_Cu: 20, largo_alambre_mm: 95.3`: F.Cu se declara "no es cobre" por
+convencion, asi que una pista de verdad ruteada por error en F.Cu se informaria igual como 0,0.
+Sumado a la regla propia de `termovigia_mini_lite.kicad_dru` (clearance **0 mm** entre pistas de
+F.Cu) y a H-2, **F.Cu es una capa sin ningun chequeo**. Hace falta un chequeo positivo: "todo
+segmento de F.Cu empieza y termina en un pad y no toca ningun pad de otra red".
+
+**H-9 (cold-start) — la bitacora y el LAYOUT dicen "sin commit" y esta commiteado.**
+`pcb.md:92` ("**Sin commit.**") y `LAYOUT_LITE.md:163` ("Nada commiteado") contra `git log`:
+**`b1a8898`** ya trae el `.kicad_pcb`, el `LAYOUT_LITE.md`, los tres PDF y `verificacion.json`.
+Ademas `doble_faz_descartada/placement_revB.py`, `puentes_revB.md` y `rutas_revB.py` estan **sin
+trackear** (el archivo de la rev B que `pcb.md:92` promete no existe para nadie mas), y
+`termovigia_mini_lite.kicad_pro` — el que tiene el `tracks_crossing: ignore` de H-2 — quedo
+**modificado sin commitear**: un clon limpio no reproduce el DRC de esta sesion.
+
+**Lo que SI pasa (verificado por mi, no citado del reporte):**
+* **Una sola cara de verdad**: 107 segmentos y 877,5 mm en B.Cu, **0 vias**, **0 pads SMD**
+  (los 128 pads son `thru_hole` / `np_thru_hole` en `*.Cu`), zonas de relleno **solo en B.Cu**.
+  Los 20 segmentos de F.Cu son el mapa de los 3 alambres y nada mas.
+* **Los cuatro rechazos de la Mini, rehechos y cerrados:** (a) **barrera entre pads**: la
+  separacion pad-pad mas chica es **0,54 mm** (zocalo, pad 2,0 a paso 2,54), no hay ningun 0,3;
+  (b) **pista bajo agujero**: ninguna pista pasa por un taladro de otra red (el unico caso
+  cercano es H-4, y es a 0,63 mm, no encima); (c) **coordenadas de pad vs de componente**:
+  `LAYOUT_LITE` seccion 5 publica bien los centros de **cuerpo** — LED1 (25,27 x 80,00) es el
+  punto medio de sus pads (24,00 y 26,54) y SW1 (5,75 x 21,75) es el centro de las 4 patas;
+  (d) **paso de bornera**: J2 = **5,080 / 5,080** (Phoenix MKDS-3), J1 = **5,000**,
+  J3 = **5,000 / 5,000**, J4 = **5,000 / 5,000**. Error 0,000 en las cuatro.
+* **Netlist contra placa**: extraje la conectividad del cobre y la compare contra
+  `termovigia_mini_lite.net`: **24/24 redes multipin cerradas, 0 pads faltantes, 0 abiertos**.
+  El unico defecto de conectividad es el corto de H-1.
+* **Pinout fisico del zocalo**: la huella numera las dos tiras en paralelo oeste-este (pad 1 y
+  pad 20 en el mismo extremo), que es lo que corresponde al DevKitC de 38 pines. Chequeado pin
+  por pin contra `PINOUT_LITE` seccion 2 y contra el pinout real del modulo: **pad 7 = IO32
+  (1-Wire), 8/9/10/11/12 = IO33/25/26/27/14 (puertas 1-5), 15 = IO13 (K2), 35 = IO15 (K1)**, y
+  de yapa cierran los testigos: 13 = IO12, 26 = GND, 29 = IO5, 32 = IO4, 36-38 = flash.
+  Coherente: 5V es el pad 19 y el USB queda en X = 69,86 (extremo este), la antena del lado del
+  pad 1.
+* **Aislaciones**: recorriendo pistas, pads y los 13 poligonos del plano contra todo lo demas,
+  el **unico** par de distinta red a menos de 0,40 mm es el corto de H-1. El aire plano-senal es
+  **0,600 mm** en todos los casos (nada de termicos flacos). Anchos: senal 0,50, +3V3 1,00,
+  +5V 1,00 / 1,50 — cumple. Pad minimo **2,00** con **corona 0,50** (J5/J6, taladro 1,0).
+  Agujero a agujero borde-borde minimo **1,54 mm**. Ninguna de las 13 islas del plano queda
+  flotante: todas tocan al menos un pad de GND.
+* **Puentes**: los 3 van de pad a pad (todos los extremos de grado 1 caen en un pad y la red del
+  pad coincide con la del alambre), **0 agujeros de paso**. Ninguno pasa por arriba de un cuerpo
+  alto ni entra en la zona L1 bajo el modulo (el de GND corre por el pasillo del zocalo, que es
+  su lugar). Roce mas cercano: el alambre de EN pasa a **0,98 mm** de `R4.1` (+3V3) — R4 es
+  **NO POBLAR**, asi que hoy no hay pata ahi; si alguna vez se puebla, ese alambre molesta.
+* **Modulo como shield**: `J5` = 1 `+5V` / 2 `+3V3` / 3 `GND` y `J6` = 1 `GND` / 2 `RELAY1` /
+  3 `RELAY2` / 4 `+3V3` — coincide con `DISENO_LITE` K7 (JD-VCC/VCC/GND y GND/IN1/IN2/VCC) y
+  con el jumper JD-VCC **sacado** (por eso VCC = 3V3 y JD-VCC = 5V y no se cortocircuitan). El
+  jumper queda **inalcanzable** con el modulo montado, pero esta documentado en tres lugares
+  (`DISENO_LITE` K7, riesgo 7, y "JUMPER JD-VCC: SACAR" impreso en la hoja de armado). OK.
+  Las dos tiras van **alineadas en x = 98** con 34,25 mm entre el pin mas cercano de cada una:
+  eso es **M2 / M3 asumidos, no medidos**. Bajo el modulo (L1) solo hay R15, R16, J5, J6 y los
+  cuatro M3: correcto.
+* **PRELIMINAR bien puesto**: los tres PDF llevan impreso "PRELIMINAR - NO FABRICAR (M1-M5 sin
+  medir)". Eso es lo unico que hoy separa a esta placa de fabricarse con el corto de H-1 adentro.
+
+**VEREDICTO: RECHAZADO.** Se levanta cuando: H-1 ruteado de nuevo y verificado con conectividad
+extraida del cobre (no con el DRC); H-2 con `tracks_crossing` en **error** y el DRC vuelto a
+correr; H-3 resuelto con la prueba fisica y los rotulos de los PDF corregidos; H-4 y H-5 por
+regla (`min_copper_edge_clearance` a 1,0) y reruteo; H-6 y H-7 en la documentacion. H-8 y H-9
+son deuda de harness y de estado, pueden ir despues pero antes de que alguien mas retome esto.
+Dueno de los arreglos: **@pcb** (yo no toco nada). Vuelve a @verificador antes de planchar.
+
+## 2026-09-04 (f) — FRIOSEGURO / TERMOVIGIA **Mini LITE rev B**: la placa de UNA CARA, ruteada de cero, **DRC 0** — y **10 puentes contra los ~4 del presupuesto**
+
+`C:\Proyectos\frioseguro\hardware\mini_lite\` — `termovigia_mini_lite.kicad_pcb`, `drc.txt`,
+`LAYOUT_LITE.md` (rehecho), `puentes.md`, `salida\` (`artwork_espejo_1a1.pdf`,
+`artwork_directo_1a1.pdf`, `hoja_armado.pdf`, `taladros.pdf`, renders 2D, `verificacion.json`).
+Toolchain en `pcb\`. **Sin commit.**
+
+**ENVOLVENTE FINAL: 130 x 90** (el fallback del DISENO §6, no los 120 x 80 sugeridos).
+El motivo esta medido: con 120 de ancho el **pasillo este** entre el extremo del zocalo
+(x = 66,2 con courtyard) y el modulo de rele quedaba en **9,8 mm**, y por ahi tienen que
+pasar CUATRO caminos norte-sur (bus de sondas, /DOOR1, IN1 e IN2) que ademas deben esquivar
+pads de 2,0 -> el paso real caia a ~4 mm. Con 130 x 90 ese pasillo pasa a 19,8 y el corredor
+de puertas de 18 a 22. Entra en una virgen de 15 x 10 con 10 mm de margen de corte.
+
+**PUENTES: 10, 580 mm de alambre, el mas largo 184 mm.** El DISENO §7.7 pone el limite en
+"~4, si no avisar". **Aviso dado, con diagnostico**: 7 de los 10 son el MISMO problema —
+`/DOOR1`, `/ONEWIRE`, `/RELAY1`, `/RELAY2` y `/1WIRE_BUS` tienen que cruzar una fila de pines
+del zocalo. El DISENO §7.3 los daba por resueltos "por el pasillo", pero **al pasillo no se
+entra por el costado**: con pad de 2,0 a paso 2,54 quedan **0,54 mm** entre pines y una pista
+necesita 1,5. Solo se entra rodeando los extremos, y ahi no entran cuatro caminos.
+**Lo que propongo para la proxima pasada** (esta escrito en LAYOUT §5): o girar el zocalo 90
+grados para que las filas queden este-oeste, o —mucho mas barato— **que @esquematico mueva
+DOOR1 de IO5 (pin 29, fila norte) a un pin de la fila sur**: solo eso saca el alambre de
+184 mm. Estimacion con cualquiera de las dos: 3-4 puentes.
+
+**Evidencia (medida, no declarada):** `kicad-cli pcb drc --severity-all` **0 violaciones /
+0 objetos sin conectar** · `chequear_solapes` **0 solapes, 0 fuera de borde**, y **L1** (nada
+mas alto de 4 mm bajo el modulo: solo R15/R16, 2,8) y **L2** (7 mm en el pasillo: R1, R2, R4,
+R11-R14) verificadas por tabla de alturas · `verificar.py` **0 fallos / 0 avisos**:
+172 segmentos y 802,6 mm de cobre en B.Cu, **0,0 mm de cobre en la cara que no se fabrica**,
+pista minima **0,50**, **pad mas chico 2,00** (los de paso 2,54) y **3,00** el resto, taladro
+minimo **1,00** con **corona 0,50**, **paso de bornera con error 0,000** (J2 a 5,08; J1/J3/J4
+a 5,00), **cero desviaciones .net <-> placa**, LED1-LED2 **40 mm** (@diseno3d pedia >= 10).
+**135 taladros en 6 mechas.** Renders 2D **mirados**.
+
+### Lo que manda el placement (y no lo decide el DRC)
+1. **El zocalo acostado parte la placa en dos mundos** y el reparto sale solo (fila sur ->
+   borneras; fila norte -> panel), que es lo que el esquematico ya habia previsto.
+2. **Entre dos pines a 2,54 NO PASA NINGUNA PISTA**: el pasillo de 20 mm es un BOLSILLO al
+   que solo se entra por los extremos. Ahi viven los **seis pull-up en una fila con un unico
+   hilo de +3V3**, que sube del pin 1 por x = 19,14, el unico carril libre al oeste de todas
+   las bajadas.
+3. **La franja entre los pads de las borneras y el borde** (y = 1,5 y 3,0) es la segunda
+   avenida y es **gratis**: toda pista que sale de un borne va hacia arriba, asi que nada de
+   lo que pasa por debajo la cruza. Ahi se resolvieron sin puente los cruces de orden de
+   bornes que si o si aparecian.
+4. **El filtro de 100 nF de cada puerta quedo EN EL CAMINO** (borne -> R serie -> C -> pin):
+   asi ninguna pista pasa por encima de un pad ajeno y el capacitor queda donde sirve.
+5. **SW1 y SW2 no van juntos, a proposito**: EN esta en el extremo oeste de la fila sur e IO0
+   en la norte; juntarlos costaba dos alambres largos. Cada uno quedo pegado a su pin.
+6. **El modulo de rele saca el cable de carga por el borde derecho**, el unico borde entero
+   sin conectores (dato de @diseno3d), y lleva la flecha en la serigrafia.
+
+### Dos decisiones de DRC que hay que conocer (estan en netclases.py con su motivo)
+* **`F.Cu` no es cobre en esta placa: es el mapa de los alambres.** Regla propia en el
+  `.kicad_dru`: entre PISTAS de F.Cu el aire minimo es 0 (dos alambres aislados se cruzan en
+  el aire); **contra los pads sigue valiendo la regla general**.
+* **`tracks_crossing` en *ignore***: en una placa de una cara, dos pistas que se crucen
+  disparan igual `clearance`/`shorting_items`; el chequeo solo aportaba ruido de los alambres.
+
+### Fabricacion casera: lo que se imprime
+`artwork_espejo_1a1.pdf` (el que se plancha), `artwork_directo_1a1.pdf`, `hoja_armado.pdf`
+(reemplaza a la serigrafia: courtyards, referencias, rotulos de la placa y **los 10 puentes
+en rojo punteado**) y `taladros.pdf` (135 agujeros **agrupados por mecha**). Los tres llevan
+marcas de registro en las cuatro esquinas, marca de centrado en cada pad y **dos reglas de
+50 mm, X e Y**. El script **reabre el PDF que escribio y mide**: `regla X = 50,000 mm OK` y
+el borde recto da `124,000 mm` (= 130 - 2 x 3 de radio), exacto.
+
+### Deudas declaradas (LAYOUT §7)
+Los 10 puentes · **C1 a 42 mm de JD-VCC** (el 5 V entra por el sur y el modulo esta al
+noreste; acercarlo lo metia bajo el modulo, donde L1 no deja nada de mas de 4 mm; el riel va
+en 1,5 mm y el C2 del ESP32 si esta a 5,9 mm del pin 19) · **USB 62 mm adentro** (la caja se
+abre para reprogramar, ya estaba asumido en el BOM) · **M1-M5 sin medir** · 9 referencias sin
+lugar en la serigrafia (no importa: no hay serigrafia, y la hoja de armado las dibuja igual).
+
+### Trampas nuevas del harness
+1. **Un puente de alambre no conecta nada para KiCad si sus extremos no son pads**: hace
+   falta un **agujero de paso** (el alambre baja y se suelda del lado del cobre). `gen_pcb.py`
+   los pone solo en cada extremo de F.Cu que no cae sobre un pad.
+2. **El A* hay que forzarlo a una sola capa en TRES lugares** (pares, objetivos y el router
+   de islas de masa): si queda uno suelto, mete vias que no se pueden fabricar.
+3. **`coser_rellenar.py` asumia dos zonas** (F y B) y explotaba con una sola.
+4. **Pads de 3,0 mm a paso 5,00 se tocan entre capacitores vecinos**: la fila de filtros
+   necesita 9 mm de paso entre origenes, no 5.
+
+**Proximo paso:** decidir con @esquematico el cambio de DOOR1 a un pin de la fila sur (o el
+giro del zocalo), rehacer el ruteo apuntando a 3-4 puentes, y recien ahi imprimir.
+
 ## 2026-09-04 (e) — FRIOSEGURO / TERMOVIGIA **Mini LITE**: doble faz con DRC 0, y despues **dos cambios de reglas** que la frenaron a proposito
 
 `C:\Proyectos\frioseguro\hardware\mini_lite\` — `LAYOUT_LITE.md` (estado completo),

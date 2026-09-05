@@ -2443,3 +2443,22 @@ Informe: `diario/nocturno-local-2026-09-04.md` · `QUE_FALTA` ítem 5b · bitác
 Dos cosas para un minuto tuyo, en el informe: `C:\Proyectos\datalogger` sigue sucio con el branch `08-31` **sin un solo commit, sexta noche**; y quedó un hallazgo que no toqué — **sin MPU6050 el nodo transmite `ax..gz = 0` para siempre**, indistinguible de un acelerómetro quieto, mismo patrón en el otro sensor.
 ===== FIN vie 04/09/2026  2:18:07,39 ===== 
 ===== TURNO NOCHE vie 04/09/2026 22:00:02,15 ===== 
+La verificación que había quedado pendiente ya no lo está.
+
+**`arduino-cli compile` → exit 0, 65 % flash, 16 % RAM, sin warnings.**
+
+Terminó poco después de que corté la espera. Como esa corrida era de un árbol intermedio (anterior al bump del buffer de ArduinoJson), **lo volví a correr sobre el commit ya pusheado `c1a1a64`** para que el número corresponda al código que vas a mergear. Las dos corridas dieron idéntico.
+
+Con eso las cuatro verificaciones sin hardware están cerradas:
+
+| # | qué | resultado |
+|---|---|---|
+| 1 | `test_temp_report.exe` (modelo puro) | **21 ok, 0 fail**, sin warnings |
+| 2 | `test_sensor_fault.exe` (branch base) | verde |
+| 3 | servidor, `unittest` | **48 tests OK** |
+| 4 | `arduino-cli compile` ESP32 | **exit 0**, 65 % flash, 16 % RAM |
+
+Actualicé `QUE_FALTA.md` (frioseguro, `4d861a2`) y el informe en MATI-HQ. De paso, al releer el informe encontré que un `\f` de `C:\Proyectos\frioseguro` se había convertido en formfeed al escribir el archivo, dejando la ruta del comando 4 rota — corregido.
+
+Lo único que queda abierto son **los 6 escenarios de banco** (desenchufar la sonda en caliente y ver el panel pasar de `-18.2°C` a `--.-°C`, etc.) y **aplicar las dos migraciones**, que sí necesitan hardware y base. Están listados en `docs/temperature-validity.md`.
+===== FIN vie 04/09/2026 22:16:25,48 ===== 

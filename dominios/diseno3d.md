@@ -1,5 +1,60 @@
 # Bitácora @diseno3d — diseño mecánico 3D
 
+## 2026-09-05 — TERMOVIGÍA MINI LITE: gabinete rediseñado para la placa rev C (130 × 90)
+
+La placa cambió de 110×80 (rev A/B) a **130×90 (rev C)**: todas las borneras
+J1-J4 se corrieron al borde sur y el USB del DevKit quedó 60 mm adentro. El
+gabinete viejo (`gabinete\termovigia_mini_lite.scad`, 110×80) quedó obsoleto:
+**se borró** (no se dupicó) y se escribió de cero `gabinete_lite.scad`.
+
+**Entregado** en `C:\Proyectos\frioseguro\hardware\mini_lite\gabinete\`:
+`gabinete_lite.scad` + `base.stl` + `tapa.stl` + `GABINETE_LITE.md` + 3 renders
+(`renders\base.png`, `tapa.png`, `ensamble.png`, todos mirados antes de
+reportar). Reusa `C:\Proyectos\biblioteca\3d\lib_gabinete.scad` (tolerancias
+FDM, `standoff()`, `rr()`) en vez de traer de nuevo las dos libs viejas
+(`lib_termovigia.scad`/`lib_modulos.scad`) — esta caja es más simple (sin
+logo, sin guías de luz, sin junta de cordón: no hacían falta) y no las
+necesitaba.
+
+**Números**: interior 131×91×33,2 (placa 130×90 +0,5 mm/lado, pedido
+explícito); exterior 135×95×35,2 cerrado, 152×95 en la cama (con las 4 orejas
+de tapa); pared/piso/tapa 2,0 mm. Volumen base ≈ 70,3 cm³, tapa ≈ 26,4 cm³.
+Las dos piezas dan `Simple: yes` en CGAL (manifold).
+
+**Decisiones**:
+- **4 ranuras de bornera en el borde sur, una por bornera** (J2 sondas, J3
+  puertas 1-3, J4 puertas 4-5+G, J1 5V) — nunca una abertura corrida. Anchos
+  estimados a partir de n_posiciones × paso (**MEDIR con calibre**: entre
+  centros hay solo 16-17 mm, el margen entre ranuras vecinas hoy es <1 mm en
+  el peor caso J2↔J3 — la primera cosa a confirmar antes de imprimir en serio).
+- **Sin ventana de USB** (el USB queda 60 mm adentro, LAYOUT_LITE §5): se
+  documentó que se abre la tapa para reprogramar.
+- **LEDs y los 2 pulsadores (SW1 reset, SW2 wifi) van en la TAPA**, no en
+  pared: son THT verticales y LAYOUT_LITE §5 dice explícitamente que los dos
+  pulsadores "se accionan desde la tapa".
+- **Bug de diseño cazado ANTES de imprimir, mirando el render**: la primera
+  versión de las orejas de tapa (tornillo M3 + tuerca cautiva) las puse como
+  un taco flotando a media altura de la pared — un **voladizo de 90°**
+  clásico (nada debajo, unido solo por el costado). Se rehizo como un
+  **refuerzo de piso a techo** (gusset de toda la altura de la pared, la
+  tuerca va en un bolsillo abierto por arriba cerca del rim). Cero soportes.
+- Otro bug cazado con el bounding box, no a ojo: `rr()` de la biblioteca
+  devuelve el rectángulo **centrado** en el origen; este archivo usa origen en
+  la esquina exterior sur-oeste, y sin corregirlo la caja salía con un bbox
+  de 211×139 en vez de 152×95 (la mitad de la geometría quedaba espejada
+  fuera de lugar). Se corrige una sola vez en `cuerpo_caja()` con un
+  `translate`, no en cada llamada a `rr()`.
+
+**MEDIR CON CALIBRE (antes de imprimir en serio)**: anchos reales de J1-J4
+(la que más urge), pila de alturas del shield de relé (8,5/1,6/15,5 mm) y del
+zócalo del DevKit (8,5 mm) — son estimaciones heredadas de la rev A/B, nunca
+medidas (mismo M1-M5 pendiente de `DISENO_LITE.md` §8), diámetro/alto real
+del botón del pulsador.
+
+**Próximo paso**: medir las 4 borneras reales con calibre antes de tocar el
+ancho definitivo de las ranuras (hoy están muy justas); imprimir primero la
+tapa como prueba (más rápida) para validar el calce de LED/pulsadores.
+
 ## 2026-09-04 — TERMOVIGÍA MINI: gabinete "lindo" para la PCB propia + shield de relés
 
 Pedido del Director (textual de Matías: *"hacé la carcasa linda para eso"*). La
