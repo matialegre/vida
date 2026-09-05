@@ -6,7 +6,8 @@ se queda mudo).
 **Repo tocado:** `C:\Proyectos\frioseguro` (**PLATA** — prioridad #1 de la
 jerarquía), zonas `firmware_modular/` + `servidor/`.
 **Branch:** `nocturno/local-2026-09-04-b-la-temperatura-que-no-se-midio`
-(pusheado, `c1a1a64`).
+(pusheado, `4d861a2`; el trabajo es `c1a1a64`, arriba sólo el resultado del
+compile anotado en `QUE_FALTA`).
 **Sale de `main` (`2ac3a7d`) con `nocturno/local-2026-08-29-la-sonda-que-se-cae`
 ya mergeado adentro** — depende de su `sensor_fault_model.h`. Al mergear este
 entra también aquél; **no hace falta mergear el 08-29 por separado**.
@@ -140,10 +141,9 @@ g++ -std=c++17 -Wall -Wextra -O2 -o tools/test_sensor_fault.exe tools/test_senso
 
 # 3) el servidor
 cd servidor/api && python -m unittest discover -s tests -t .
-```
 
-```bash
 # 4) el firmware compila
+cd C:\Proyectosrioseguro
 arduino-cli compile --fqbn "esp32:esp32:esp32:PartitionScheme=min_spiffs" firmware_modular
 ```
 
