@@ -112,3 +112,60 @@ Bitacora del evaluador independiente. Generator != evaluator: aca van los veredi
   de falla; H-14 `E_REFN` quedó pegado a la malla en la bornera (lo creó la rev E); H-15/H-16/H-17.
   **Proceso: la rev E se ruteó sin auditar; 5 de los 17 hallazgos son de ella.** Regla propuesta y adoptada por el
   Director: **una rev no se congela como baseline de diff hasta que pasó el gate.**
+
+- **2026-09-04 — DREYFUS/galgas — auditoría de la cifra "~50 puentes es el piso" (`LAYOUT.md` §0.4, @pcb). ❌ NO PASA: la cota MST no es una cota inferior y el número no está sostenido.**
+  Informe completo devuelto en la respuesta (esta sesión no persiste `.md` de informe; el Director lo transcribe a
+  `C:\Proyectos\galgas\hardware\VERIFICACION_PUENTES.md` si lo quiere en repo). No toqué `hardware\kicad\`; todos mis
+  scripts corrieron en scratchpad contra el board en modo lectura.
+  - **La cota MST NO es válida — refutada empíricamente, no por argumento.** Comparé, par de redes por par de redes,
+    lo que `cruces_minimos.py` cuenta como cruce contra lo que el cobre ruteado de la propia placa hace:
+    **60 de los 112 pares (54 %) que el MST declara "cruce inevitable" están ruteados HOY sin cruzarse.** Una cota
+    inferior que una solución factible viola 60 veces no es una cota. Contraejemplo mínimo citable:
+    `Net-(U2-PD4)` × `Net-(U2-PD6)` — la cuerda recta `U2.6(116.19,18.81)→SW1.2(143.71,24.50)` cruza a
+    `RL1.2(129.04,24.50)→U2.12(131.43,18.81)` en (130.2,21.6); en el cobre real PD4 baja a la banda sur (y≈27.0) y
+    PD6 sube a y≤24.5: **no se cruzan, y costó 3 mm de cobre y cero puentes**. Segundo: `JB13-B` × `JB15-B`, con
+    terminales genuinamente entrelazados, resueltos usando dos corredores distintos (x≈222.8 y x≈215.8).
+  - **Además la cota no es una cota ni siquiera en su propio sentido:** hay **35 pares que cruzan en el cobre real y
+    que el MST NO predijo**. No acota por arriba ni por abajo; no está correlacionada con el resultado.
+  - **Tres defectos de método, en el código:** (1) MST ≠ topología de ruteo — `+3V0` (15 pads) tiene un MST serpenteante
+    de 256,6 mm que solo genera **45 de los 145 cruces**; el riel real es un Steiner de dos carriles por los bordes
+    (y≈1,3 y y≈28,8) y participa en **13 cruces reales**. (2) Las cuerdas rectas atraviesan cuerpos de componentes y
+    los keepouts L5, por donde ninguna pista puede ir. (3) **Cruces ≠ puentes**: un alambre que salta un bus de 4 pistas
+    es 1 puente y 4 cruces. `cortar_cruces.py` levanta un tramo por cruce sin agrupar — de ahí salen los "48/53".
+  - **"Abrir a 40 mm no baja un cruce" es una tautología del instrumento, demostrada:** `cruces_minimos.py` calcula
+    `n_cruces` **antes** de leer el contorno (`caja = b.GetBoardEdgesBoundingBox()`, línea 67, se usa **solo en el
+    `print`**). Experimento: copié el board a scratchpad, estiré **solo** el contorno de 30 a 40 mm sin mover un pad,
+    y el tool devolvió salida **idéntica carácter por carácter** (`277 x 40 mm ... 145 | micro 55 | radio 46 |
+    ADC y galga 40 | alimentacion 4`). El tool es ciego al ancho por construcción; no midió nada.
+    **Un carril extra a lo largo de la tira vale ~4-8 cruces reales (2-4 puentes)**: en el muro del RA-02 la banda
+    norte da ~2 pistas y hacen falta 4 (SCK/MOSI/MISO + el riel `+3V0`, que ocupa el único carril de borde con 1,5 mm).
+  - **Reproducibilidad: los números de §0.4 no salen del repo.** Corrí el tool yo: dio **155 a las 21:24 y 145 quince
+    minutos después** (@pcb edita en vivo; `nodo_galga_v3.kicad_pcb` mtime 21:31). El board de hoy tiene
+    **0 segmentos en F.Cu** — o sea **cero puentes**, no 53 — y **127 cruces geométricos** (DRC: 89 `tracks_crossing`
+    + 48 `shorting_items`, 276 violaciones totales).
+  - **HALLAZGO CRÍTICO — el ruteo con el que se midió "138 cruces / está en el óptimo" es INFACTIBLE: viola la propia
+    regla L5 del proyecto en 59 tramos.** Corrí la geometría exacta de `verificar.py`: **`U1` = 38 tramos de B.Cu bajo
+    el cuerpo (L5 admite ≤1)** y **`U3` = 21 (L5 admite 0)**. Ese ruteo "óptimo" pasa por debajo del CJMCU y del RA-02,
+    que es justo donde no hay cobre permitido. Un número medido sobre una solución que no cumple las reglas no es ni
+    piso ni techo. **Dueño: @pcb.**
+  - **Mi estimación a mano, con la topología real: 10-20 puentes (punto medio ~14)**, no ~50. Fundamento: **el bus de
+    la placa tiene 6 redes de ancho**, verificado — las únicas que deben atravesar el RA-02 son `+3V0`, `J2-Pin_3`
+    (SCK), `J2-Pin_4` (MOSI), `J2-Pin_1` (MISO), `JB22-B` (CS) y `JB23-B` (DRDY); y **atravesando el CJMCU entero hay
+    UNA sola red (`+3V0`)**. Reparto: radio 2 · CJMCU+columna `JB1x` 2 · bloque analógico 3-5 · micro (los 3 que cruzan
+    el DIP: `JB42-A`, `/VBAT_RET`, RESET) 2-3 · fanout ISP/`JB3x` 2-3 · alimentación 1. Si L5 se aplica a rajatabla y
+    los módulos quedan como muros macizos, sube a ~22-28 — **pero entonces el driver es L5 y el ancho de la tira, no el
+    pinout**.
+  - **Reasignar pines del ATmega: NO conviene ahora, es el tercer término.** El SPI ya está óptimo (PB3/4/5 = pines
+    17/18/19, contiguos, fila norte, extremo este mirando al radio). Lo único mejorable es `CS` en PC0/pin 23 y `DRDY`
+    en PD2/INT0/pin 4, ambos en el extremo **oeste** y con ~80 mm de viaje: pasarlos a PB2/pin 16 y PB1/pin 15 ahorra
+    ~20 mm cada uno, **1-2 puentes**, y cuesta perder INT0 (DRDY pasaría a PCINT, y toca el camino crítico del driver
+    del ADS1220). Palancas mucho más baratas, en orden: **(1)** reordenar la columna `JB1x` — hoy está invertida
+    (`JB15`@y6,6 viene de `U1.6` que está en la fila **sur**, y `JB13`@y23,4 viene de `U1.10` que está en la fila
+    **norte**), lo que fuerza que dos haces se crucen en una franja de 4 mm: **vale ~2 puentes y es gratis**;
+    **(2)** sacar el riel `+3V0` de 1,5 mm del único carril del borde norte; **(3)** placement del bloque analógico
+    (31 de los 127 cruces reales están en x 220-260); **(4)** el ancho de la tira, si L5 manda.
+  - **Deuda de documentación (dueño @pcb):** `pcb/LEEME.md` encabeza **"rev E.1 (placa alargada sobre eje, 218 × 27)"**
+    y describe una grilla de 218 × 27, cuando la placa es **rev F, 277 × 30**. Es el patrón de *docs que mienten* otra vez.
+  - **Lo que NO cuestiono:** el placement por bloques, la decisión de simple faz, el criterio de `cortar_cruces.py` de no
+    levantar jamás las redes de medición ni las de potencia, y que el bloque analógico es el que de verdad tiene cruces
+    forzados. **Lo que se cae es el "piso de ~50" y el "no hay margen por ruteo".**
