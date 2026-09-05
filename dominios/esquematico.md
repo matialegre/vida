@@ -887,3 +887,69 @@ Doc de dominio + bitacora. El agente lo lee al arrancar y lo actualiza al cerrar
     (BOM_LITE 4.1: la bornera de 3 de PERFIL ALTO es lo unico no trivial) y mide M1..M5 -> @pcb rutea a
     120 x 80 en **una cara**, con las reglas de DISENO 7, y declara los puentes -> @firmware aplica
     `PINOUT_LITE.md` (MAX_DOOR_SENSORS 5, MAX_PROBES 8, RELAY_ON LOW, sin defrost/buzzer/DHT/SCT).
+
+- **2026-09-04 [FRIOSEGURO / MINI LITE] rev C: reasignacion de GPIO para que la placa se rutee en UNA CARA.**
+  Pedido de @pcb (ruteo rev B: 130x90, DRC 0, pero **10 puentes de alambre / 580 mm**, 7 de ellos por la misma
+  causa) y aprobado por el Director. Regenerado todo en `hardware\mini_lite\`. **Nada commiteado.**
+  - **La rev C no cambia ni un componente**: 45 componentes, misma BOM, mismos calculos K1-K7. Cambian los
+    numeros de GPIO y **el orden de dibujo del simbolo**.
+  - **La causa fisica, medida por @pcb**: entre dos pines del zocalo a 2,54 mm con pad de 2,0 quedan
+    **0,54 mm** y hacen falta ~1,5 -> **ninguna pista cruza una fila de pines**, y el pasillo entre las dos
+    filas es un bolsillo al que solo se entra por los extremos. Cruzar una fila = un alambre.
+  - **Las tres reglas que quedan escritas en DISENO 7** (nacen de esto): R1 entre pines no pasa nada;
+    **R2 cada senal sale de la fila que mira a su carga**; **R3 dentro de la fila, el orden de los pines es
+    el orden de las borneras (oeste->este)** -> dos secuencias monotonas, abanicos paralelos, cero cruces.
+  - **Mapa nuevo** (`pin fisico`): SUR = EN(2) < 1-Wire **IO32**(7) < DOOR1 **IO33**(8) < DOOR2 **IO25**(9) <
+    DOOR3 **IO26**(10) < DOOR4 **IO27**(11) < DOOR5 **IO14**(12) < RELAY2 **IO13**(15) < +5V(19).
+    NORTE = RELAY1 **IO15**(35), LED2 IO2(34), SW2 IO0(33), GND(20,26).
+    Cambios: 1-Wire IO4->IO32, DOOR1 IO5->IO33, DOOR2 IO13->IO25, DOOR3 IO14->IO26, DOOR4 IO25->IO27,
+    DOOR5 IO33->IO14, RELAY1 IO26->IO15, RELAY2 IO27->IO13.
+  - **Por que los dos reles no van los dos por el norte** (y hay que decirlo, porque parece arbitrario): al
+    este de **IO0 (pin 33, obligado por silicio** para el boton de carga) hay **un solo** pin usable, el 35
+    (IO15); el 34 es **IO2, strapping que no puede quedar en alto en el arranque** y el pull-up del rele lo
+    dejaria alto; 36-38 son de la flash. Por eso RELAY1 sale por el norte y **RELAY2 (pin 15, fila sur) entra
+    al PASILLO por su propio pad y sale por el extremo ESTE**, que esta vacio: es la unica senal que usa el
+    pasillo como avenida y no compite con nadie. **Sin puente.**
+  - **Los 5 pull-up de puerta pueden seguir en el pasillo** porque toman el pad **desde el norte** mientras la
+    senal llega al mismo pad desde el sur (el pull-up y el cap estan del lado del PIN, despues del 100R).
+    **El 1-Wire es al reves** -su pull-up esta del lado del BORNE- asi que R1/R4/R2 tienen que ir al SUR,
+    cerca de J2, con su +3V3 bajando por el oeste junto al de R3: eso mata el puente `/1WIRE_BUS`.
+  - **Condicion nueva de placement para @pcb**: **J3 (puertas 1-3) va al OESTE de J4 (puertas 4-5 + G)** —
+    en el layout rev B estaban al reves, y con eso se van tambien los dos puentes cortos de las borneras.
+  - **Beneficio que no es de ruteo**: **ninguna puerta queda en un pin de strapping** (IO5 quedo libre; en la
+    rev B habia que justificar por que no molestaba). RELAY1 en IO15 es seguro: R15 lo deja **HIGH** en el
+    arranque = condicion normal del strapping **y** rele abierto. Cuidado nuevo, escrito: **IO14 (DOOR5)
+    emite pulsos al arrancar** -> el firmware no debe creerle a las puertas los primeros ~200 ms.
+  - **El dibujo cambio a proposito**: la columna izquierda del simbolo del DevKit **es ahora la fila fisica
+    SUR** (pines 1-19) y la derecha la NORTE (20-38). El esquematico deja de ordenar por funcion y ordena
+    **como esta en la placa**: es lo que hace visible que las 6 entradas salen en fila y en orden. Dos
+    excepciones anotadas en la hoja: los pines 2 (EN) y 15 (IO13) son de la fila sur y se dibujan a la derecha
+    para no cruzar la hoja — **manda el numero de pin**. (`simbolo_esp32(K, izq=..., der=...)` en comun.py.)
+  - **Evidencia**: ERC `--severity-all` **0/0**; `chequear_solapes_sch` **0 solapes / 0 fuera de area**;
+    `.net` **46 redes leidas red por red** (ONEWIRE->U1.7, DOOR1..5->U1.8..12, RELAY1->U1.35, RELAY2->U1.15);
+    PDF + `salida/p1.png` y `z_esp.png` **mirados** (3 defectos corregidos: la tabla GPIO pisaba la referencia
+    de U1, la nota de @pcb pisaba los agujeros M3 y K7 se salia del area util por 2 mm).
+  - **Docs**: `PINOUT_LITE.md` rev C con la tabla **pin viejo -> pin nuevo** y el bloque `#define` de la
+    variante **`HW_MINI_LITE`** (aviso explicito: **no se puede reusar `HW_MINI`/`HW_KIT_V1`**, ahi IO26/IO27
+    son los reles y aca son DOOR3/DOOR4) · `DISENO_LITE.md` seccion 6 (**envolvente 130x90, fijada por @pcb**
+    con su medida del pasillo), **seccion 7 reescrita** con las tres reglas y lo que exigen del placement, y
+    **seccion 10 nueva** (rev C) · `BOM_LITE.md` con nota de que la compra no cambia.
+  - **Proximo**: @pcb re-rutea desde el `.net` rev C con J3/J4 intercambiadas y publica el `puentes.md` nuevo
+    (objetivo: <= 3) -> @firmware agrega `HW_MINI_LITE` -> @verificador audita el diff de 8 redes.
+
+- **2026-09-05 — @esquematico: DREYFUS/galgas — REV F.1, cambio de DOS nodos: `S_MAS`/`S_MENOS` cruzados en el ADC.**
+  Pedido del Director con verificación topológica de @pcb (`pcb/probar_swap.py`). Repo `C:/Proyectos/galgas/hardware/`,
+  todo por el generador. Sin commit. **Sólo** se tocaron `kicad/generar_nodo_galga.py` (+ lo regenerado) y
+  `NOTAS_REV_D.md`. **No** se tocaron `nodo_galga_v3.kicad_pcb`, `LAYOUT.md` ni `pcb/` (@pcb está trabajando ahí).
+  - **`U1.10` ↔ `U1.7`**: `S_MAS` pasa a `AIN2` y `S_MENOS` a `AIN1`. **`REFP1`/`REFN1` (`U1.11`/`U1.6`) sin tocar**
+    (`U1.11` es `REFP`, no `AIN1`). El orden de las filas del ADS1220 está invertido respecto del orden del filtro
+    `CC1/CD1/CC2`, y esa inversión obligaba a **un puente de alambre sobre el par diferencial de µV**; cruzado en el
+    esquemático —donde no cuesta nada— @pcb mide **cero cruces** y el bloque sensor queda en cobre puro.
+  - **Consecuencia declarada en el bloque 2 de la hoja, en negrita**: la lectura del ADC **sale negada**;
+    @firmware compensa con signo −1 o con el MUX inverso (`AIN2−AIN1`). No afecta al shunt-cal (el escalón
+    también cambia de signo) ni al apareamiento `RS1`/`RS2`. Motivo y consecuencia en **`C48`** de `NOTAS_REV_D.md`.
+  - **Evidencia**: `verificar_sch.py` **TODO OK** — ERC **0/0, `Ignored checks: None`** (`erc_revF1.rpt`) ·
+    `chequear_solapes_sch.py` **0 solapes / 0 rotados** · netlist rev F.1 (63 comp / 63 redes) ·
+    `DIFF_REDES_revF_revF1.txt`: **exactamente 2 nodos movidos** (`Net-(JB13-B)`: +U1.7 −U1.10;
+    `Net-(JB14-B)`: +U1.10 −U1.7) y **0 redes nuevas, eliminadas o renombradas** · PDF regenerado y mirado
+    (`salida/revF1_swap_adc.png`) · rev F.1 congelada en `kicad/revF1/`.
