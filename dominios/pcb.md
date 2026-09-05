@@ -376,6 +376,38 @@ M3 de placa en (4,4) (116,4) (4,96) (116,96) con **separadores de nylon**, altur
     se leia mal.
   - Regeneracion desde cero verificada (borrando cache y JSON): 18 paginas, 3,25 MB. Sin commit.
 
+## 2026-09-04 (i) — GALGAS rev F: **el ruteo llego al limite topologico** (~50 puentes)
+
+Rutee la tira ENTERA a mano (530 segmentos de cobre) con la tecnica pedida: el SPI sale de los
+pines CONTIGUOS del DIP (17/18/19), **baja al canal del zocalo** -- la unica avenida recta entre
+las dos filas -- y corre al este; ISP, radio y ADC colgados con stubs cortos EN EL ORDEN en que
+lo reciben, con los JB2x/JB3x sobre esos stubs.
+
+**El resultado que cierra la discusion:**
+| | |
+|---|---|
+| cota minima teorica del placement (MST) | **155** |
+| **cruces del ruteo a mano** | **138** |
+| separacion (decimas) | 120 |
+| abiertas | 33 |
+
+**El ruteo quedo POR DEBAJO de la cota del arbol minimo**: no hay margen por ruteo. Cerrar todos
+los cruces con alambre da **53 puentes (358 mm)** medidos, y los 109 agujeros de paso que eso
+agrega disparan el DRC a 504.
+
+**Numero final: ~50 puentes**, coherente con TRES mediciones independientes (48 en la E.3, 155
+de cota MST, 53 aca). **No baja abriendo la placa** (30/35/40 dan lo mismo) **ni ruteando
+mejor**. Baja solo si cambia el ORDEN DE LOS PINES: otro encapsulado, o reasignar que señal va a
+que pin del ATmega -- que hoy lo fija el esquematico y seria cambio de circuito, no de layout.
+
+**Estado entregado:** tira **277 x 30**, placement cerrado (63/63 sin solapes), ruteo a mano
+completo en cobre, **DRC 278 violaciones / 33 abiertas** (sin los puentes puestos). Artworks 1:1,
+hoja de armado, **175 agujeros en 7 mechas**, renders mirados. Sin gerbers, sin commit.
+
+**Lo que le toca decidir a Matias:** (a) aceptar ~50 alambres y que yo los deje puestos y
+numerados; (b) reasignar pines del ATmega en el esquematico para bajar los cruces -- es la unica
+palanca que queda y es de @esquematico, no mia; (c) doble faz.
+
 ## 2026-09-04 (h) — GALGAS rev F: **la placa GIRA (L14)**, y el ancho NO compra puentes
 
 Netlist **rev F** (63 comp / 63 redes): sin `JP2` ni `R1` (medio puente fijo con galga doble),
