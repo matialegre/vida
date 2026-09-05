@@ -376,6 +376,33 @@ M3 de placa en (4,4) (116,4) (4,96) (116,96) con **separadores de nylon**, altur
     se leia mal.
   - Regeneracion desde cero verificada (borrando cache y JSON): 18 paginas, 3,25 MB. Sin commit.
 
+- 2026-09-04 (j) [GALGAS rev F] **Reasignacion de pines: la busque, y NO conviene.**
+  `pcb/optimizar_pines.py` (nuevo): busqueda local sobre la asignacion respetando las
+  restricciones duras del ATmega (SPI 17/18/19, RESET 1, serie 2/3, alimentacion, PC2=strap,
+  VBAT_SENSE en un ADC). **Resultado: 155 -> 136 cruces (−12 %) reasignando; 145 (−6 %) solo
+  reordenando las columnas JB, que es placement mio; 128 (−17 %) las dos juntas.** En puentes:
+  de ~53 a **~44**. **No baja a 20.** La causa: de los 155 cruces **solo 96 tocan el micro**, y
+  de esos la reasignacion mueve **un solo extremo**. **Recomiendo NO hacerla**: 9 puentes menos
+  no pagan tocar esquematico + firmware + revalidar el bring-up, y encima `DRDY` perderia INT0.
+  **SI aplique el reorden de las columnas JB** (JB32 antes que JB31, JB23 antes que JB22): 10
+  cruces menos, gratis, sin tocar el netlist. La tabla señal->pin quedo en `LAYOUT.md` 0.5 por
+  si @esquematico la quiere igual.
+
+- 2026-09-04 (k) [GALGAS] **Dos correcciones mias, antes de que las encontrara el verificador:**
+  1. **Llame "cota inferior" a los 155 del arbol minimo y esta MAL.** El MST da la topologia mas
+     CORTA, no la que menos cruza: un ruteo real puede RODEAR y evitar un cruce a cambio de
+     longitud -- de hecho paso, mi ruteo dio **138** contra los 155 "minimos". Asi que **155 no
+     es un piso** y **la frase "el ruteo llego al limite topologico" fue una sobreinterpretacion
+     mia**. Lo que si es dato duro: mi ruteo da 138 cruces y pide 53 puentes; si existe un
+     trazado bastante mejor, no lo encontre. La cota de verdad (skewness del grafo) es
+     NP-dificil y **no esta calculada**. La metrica sigue sirviendo para **comparar** placements
+     (los anchos 30/35/40 dan identico), no para declarar optimalidad. Corregido en el docstring
+     de `pcb/cruces_minimos.py` y en `LAYOUT.md` 0.4.
+  2. **La placa salia rotulada "rev E.1" siendo la rev F**: el texto estaba TIPEADO en
+     `pcb/rotular.py`. Ahora la revision es **una variable** (`REV` en `generar_pcb.py`) que leen
+     la serigrafia, los artworks y el dossier. Es el mismo error que ya me habia costado los
+     keepouts de la rev D: dato duplicado a mano = desincronizado en silencio.
+
 ## 2026-09-04 (i) — GALGAS rev F: **el ruteo llego al limite topologico** (~50 puentes)
 
 Rutee la tira ENTERA a mano (530 segmentos de cobre) con la tecnica pedida: el SPI sale de los
