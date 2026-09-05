@@ -793,3 +793,71 @@ PRG357, preguntar al vendedor) · **M9 (interior de las 3 cajas de stock, vale $
 bornera 5,00, puentes del defrost); (b) hacer **M7** yo, con los módulos en la mano; (c) preguntar
 al vendedor la medida interior del PRG357; (d) cerrar el precio del cable de 3 hilos si Matías
 elige el escenario A de sondas; (e) buscar precio de baliza LED 12 V como alternativa a la sirena.
+
+## 2026-09-04 — GALGAS: **inventario confirmado por foto.** C-1, C-2, M1, M2, M3 y P3 cerradas; 2 sorpresas
+Matías mandó 9 fotos. Las miré una por una (más 2 recortes ampliados que hice de la serigrafía del
+adaptador del RA-02). Escribí **sólo** en `MODULOS_REV_D.md` (**§14 nuevo**) y acá. **No toqué
+`hardware/kicad/`** (@pcb está ruteando). Sin commit.
+
+**CERRADO:** **C-1** ATmega en **DIP-28** (`ATMEGA328P-U / 35473D 2A15E5H`, logo ATMEL) — ⚠ se ve **1**,
+la lista supone 3: queda "≥1 confirmado, cantidad total pendiente" · **C-2** **3 RA-02, todos con
+adaptador** = justo los que hacen falta · **M1** el RA-02 **entra en grilla** (adaptador azul, filas
+22,86 = 9×2,54, IPEX con pigtail puesto) · **M2** CJMCU **2×8 a 2,54, filas 20,32, ~20×20 mm** ·
+**M3** **NO hay `RESET`** — era texto de la publicación de la tienda, y las 16 leyendas coinciden pata
+por pata con la Tabla 5-1 · **P3** el pinout del RA-02 coincide con la numeración oficial de la huella.
+**Y lo mejor: la serigrafía del reverso del CJMCU dice `AVDD=3-5V`, `DVDD=3-5V`, `LOGIC=3-5V`** — el
+rango declarado del módulo **es el del chip** ⇒ **el hardware confirma por sí solo que no hay regulador**
+y que la medición ratiométrica se mantiene. **Los 20,32 mm coinciden con lo que @esquematico ya había
+puesto en `SEP_FILAS_CJMCU`: cero retrabajo.**
+
+**⚠ SALIÓ MAL 1 — el supercapacitor que tiene es el de MONEDA:** `1.0F 5.5V +70°C`, ⌀20, terminales de
+pestaña. **Es exactamente la parte que P8 descartó en C16** (clase Eaton KW-5R5C105H-R, **ESR 30 Ω**):
+`Req = 30‖20 = 12 Ω → ΔV = 1,44 V` ⇒ **el nodo se apaga en la TX igual que sin capacitor**. La tensión
+la cumple; **lo que no cumple es la ESR, que es todo el criterio de P8.** Marcado **NO SIRVE PARA EL
+NODO** (sirve para backup de RTC). **No cuenta como "tenemos supercapacitor".** Se refuerza: Itytarg
+2,2 F para banco (⚠ sin ESR de catálogo → medirla) y Eaton para producto. Ensayo opcional que sí vale:
+medirle la ESR con E11.6 — **sería la primera medición de ESR del proyecto y valida el procedimiento**
+antes de aplicárselo al Itytarg, que es el que decide.
+
+**⚠ SALIÓ MAL 2 — las pilas son MOTOMA ER14505 2600 mAh (MFG 07-2025), y todo el análisis usa EEMB y
+Saft.** Los tres números para @energia: (1) **capacidad 2600 mAh etiquetados vs 2400 de EEMB → +8 %, no
+empeora** (presupuestamos 2100 útiles: sigue conservador); (2) **pulso máximo: NO PUBLICADO por Motoma**
+— la clase ER14505 (EVE/PKCELL/HCB/Zeus) publica 200 mA pulso / 100 mA continuo, igual que EEMB, así que
+**se sigue presupuestando 200 mA y se dice que es número de clase**; con las 2 pilas en paralelo el pulso
+de C8 queda en 47–61 %, **así que el margen ya no depende de ese número**; (3) **R_int: NO PUBLICADA**.
+**El hallazgo real no es que difieran: es que MOTOMA no publica hoja de datos** (busqué: no hay datasheet
+indexado). **Estamos corriendo el presupuesto de energía sobre una etiqueta.** ⇒ **P5 (medir R_int con
+pulso de 87 mA) pasa de "pendiente" a única fuente de verdad**, 20 min con el INA219. Y ⚠ **`MFG 07-2025`
+= celdas de ~14 meses ⇒ pasivación**: la primera medición va a dar alto, **medir antes y después de
+despasivar** (el pulso de carga del supercap ES el procedimiento, C8).
+
+**Corrección al Director, y no es cosmética:** la fila superior del adaptador del RA-02 **no dice
+`DIO5 DIO0`, dice `DIO5 DIO4`** (lo amplié). **`DIO0` está en la fila INFERIOR, quinto pin.** Si alguien
+cablea DIO0 arriba, **la interrupción de TxDone/RxDone no dispara nunca** y el síntoma es "transmite y se
+cuelga esperando", que se depura durante días. También: **el primer pad de la fila inferior está
+serigrafiado `GND` donde el módulo pelado tiene `ANT` (pin 1)** → medir continuidad contra masa antes de
+cablear; nosotros sacamos la RF por IPEX, así que en los dos casos estamos bien, **pero si está unido a
+masa y alguien le rutea algo, es un corto**. Y un dato para @comms/@energia: **la lata dice `PA:+18dBm`**,
+no +20 — el caso de 120 mA **podría no ser alcanzable**, lo que jugaría a favor del margen de G13. **No
+rehago su cuenta: paso el dato con la foto.**
+
+**⚠ Nota de método, porque casi meto la pata.** Intenté medir la separación de filas del CJMCU **sobre la
+foto** y me dio ~17,8 mm, contradiciendo los 20,32 de la regla. **Estaba mal yo:** la foto está en ángulo
+y el paso vertical está **escorzado ~7 %** respecto del horizontal (93 px/paso en X contra 87 en Y).
+**Usar el paso horizontal para medir una distancia vertical es el error clásico de fotogrametría casera.**
+**Manda la regla.** Lo que la foto sí prueba sin ambigüedad es lo cualitativo. Y **las ~20 resistencias
+del cajón NO las pude leer y no las adiviné** (balance de blancos corrido; distinguir marrón/rojo/naranja
+ahí es adivinar): **pedido a Matías, medir 3 con el téster, 20 s** — puede achicar el renglón 6 ($14.900),
+aunque **no resuelve R1/R2/R3**, que piden 0,1 % y apareo y siguen congelados por C-4.
+
+**La lista del lunes:** **sale el renglón 4 (3 × RA-02, $59.970)**. **MÍNIMO `$146.229` — no se movió en
+ninguna de las cuatro rondas de correcciones.** Núcleo peor caso $231.530 → **$171.560** · RECOMENDADO
+$326.362 → **$266.392** (techo $287.041) · COMPLETO $344.258 → **$284.288** (techo $304.937). Sigue
+congelado el 7+8 (**$16.009**) hasta C-4. **El peor caso bajó de $362.186 a $284.288 (−21,5 %), casi todo
+por confirmar stock en vez de comprarlo: contar el cajón fue la actividad más rentable de la semana.**
+
+**Abierto:** **C-4** (`Rg`, 30 s, congela $16.009) · **C-1 cantidad** de ATmega · **M17** (orientación de
+las rejillas de la galga doble, @muestreador) · **M16** (ruido del ADC: la marca `ADS1220/2BK04/AR61` con
+logo TI es **nítida y coherente con un chip legítimo**, pero eso **baja la probabilidad, no cierra el
+punto**) · **P5** (R_int de la Motoma) · continuidad del pad `ANT`/`GND` del adaptador · valor de las
+resistencias del cajón.
