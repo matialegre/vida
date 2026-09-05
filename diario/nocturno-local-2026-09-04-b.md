@@ -143,7 +143,7 @@ g++ -std=c++17 -Wall -Wextra -O2 -o tools/test_sensor_fault.exe tools/test_senso
 cd servidor/api && python -m unittest discover -s tests -t .
 
 # 4) el firmware compila
-cd C:\Proyectosrioseguro
+cd C:\Proyectos\frioseguro
 arduino-cli compile --fqbn "esp32:esp32:esp32:PartitionScheme=min_spiffs" firmware_modular
 ```
 
