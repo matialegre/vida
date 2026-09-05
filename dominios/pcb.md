@@ -376,6 +376,55 @@ M3 de placa en (4,4) (116,4) (4,96) (116,96) con **separadores de nylon**, altur
     se leia mal.
   - Regeneracion desde cero verificada (borrando cache y JSON): 18 paginas, 3,25 MB. Sin commit.
 
+## 2026-09-04 (h) — GALGAS rev F: **la placa GIRA (L14)**, y el ancho NO compra puentes
+
+Netlist **rev F** (63 comp / 63 redes): sin `JP2` ni `R1` (medio puente fijo con galga doble),
+`J1` = MALLA/E+/G1/SENSE/E_REFN, nuevos `DE1/DE2` y `DR1/DR2` (1N3595) y `RS3` (Kelvin de REFP1),
+vuelve `D4`. **`/E_MAS` es el nuevo nudo estrella** (J1.2 + R2.1 + RS3.1 + los dos clamps).
+
+### L14: la forma la manda la mecanica, no el layout
+La placa va **pegada a un cilindro que gira**. El eje **Y es el que se curva** -> Y minimo (una
+placa ancha apoya en el centro y queda en el aire en los bordes); X libre a lo largo del eje.
+Y como **gira**, nada se sostiene solo: los 38 g de pilas y el supercap de 14,5 mm estan bajo
+fuerza centrifuga. Resultado: **TIRA de 277 x 30 mm**, con las pilas A BORDO y a lo largo.
+**Huella propia `PORTAPILAS_2xAA_PARALELO`**: dos AA lado a lado **en PARALELO** (los 2xAA de
+catalogo van en SERIE y no sirven: cada celda necesita su Schottky), con los 4 contactos de `J4`
+y **cuatro ranuras de 3 x 1,5 para precinto**, dos por celda. La mecanica esta EN la huella, no
+agregada a mano.
+
+### El resultado que no esperaba: **el ancho no compra puentes**
+Escribi `pcb/cruces_minimos.py`: une cada red por su **arbol minimo en linea recta** -- el camino
+que ningun ruteo puede mejorar -- y cuenta los cruces entre redes distintas. En una cara, cada
+cruce cuesta un puente. **Cota inferior por ancho:**
+
+| Y | cruces | micro | radio | ADC+galga | alim |
+|---|---|---|---|---|---|
+| **30** | **155** | 58 | 53 | 40 | 4 |
+| **35** | **155** | 58 | 53 | 40 | 4 |
+| **40** | **155** | 58 | 53 | 40 | 4 |
+
+**Identico en los tres.** Los cruces son **topologicos** (el orden en que salen los pines), no
+geometricos: abrir la placa no compra NADA. Coincide con lo medido en la E.3 (de 32 a 40 tampoco
+movio la aguja). **Recomendacion: Y = 30**, que ademas es el mejor para el cilindro y sale gratis.
+
+### Verificaciones que cerraron (M1, M2, C-1)
+* **`pcb/verificar_ra02.py`** (nuevo, entra en el DoD): compara la huella y el netlist **pin por
+  pin** contra el pinout del adaptador. **Los 16 coinciden**, y en particular **`DIO0` es el pin
+  5 de la FILA INFERIOR** -- si cayera arriba, TxDone no dispara nunca y el sintoma es
+  "transmite y se cuelga". Separacion de filas **22,86** ✓.
+* **CJMCU: 20,32** ✓. Se coloco **girado 90** para que los analogicos (6,7,10,11) queden al ESTE
+  (galga) y los digitales al OESTE (micro): el orden del flujo.
+* **CHECKPOINT anotado**: el primer pad de la fila inferior del adaptador dice `GND` pero en el
+  modulo pelado esa posicion es `ANT` -> **medir continuidad con tester antes de cablear**; si
+  fuera ANT y se manda a masa, se cortocircuita la salida del PA.
+
+### Estado y lo que falta
+**Placement CERRADO** (63/63, sin solapes) en 277 x 30, con el orden de etapas del protoboard:
+pilas+alimentacion -> ATmega -> RA-02 -> CJMCU -> puente/precision -> galga. **El ruteo de esta
+geometria no esta hecho**: es la proxima sesion. Lo que se sabe de antemano (y esta medido) es
+que va a pedir del orden de 40-50 puentes de alambre, que Matias ya acepto, y que **no bajan
+abriendo la placa** sino cambiando el encapsulado del micro o el orden de los pines.
+
 - 2026-09-04 (g) [GALGAS] **Limpieza y archivo de la rev E.1** (pedido del verificador). Los dos
   `.bak` sueltos NO se borraron: son de la **rev E.1**, que hoy es una de las dos salidas reales,
   asi que se archivaron como corresponde en **`revE1/`** (`LAYOUT.md`, `rutas.py`, `LEEME_REVE1.txt`).
