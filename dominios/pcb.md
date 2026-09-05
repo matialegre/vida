@@ -2251,3 +2251,11 @@ columnas, donde corta el riel) — si el corte no cae entre la columna 25 y la 3
 2 puentes; (b) medir con calibre si las tiras del DevKit estan a 25,4 mm (10 pasos) o 22,86 (9):
 si son 9, el zocalo baja a las filas **C y J** y se regenera; (c) medicion B del BOM 8.1 decide
 si se pueblan R5..R8; (d) los 5 cambios del `.scad` para @diseno3d.
+
+## 2026-09-05 — rev F.1 CERRADA y frenada por Matías (Director)
+- **Medido por el Director con `kicad-cli pcb drc --severity-all --refill-zones`: 0 violaciones / 0 unconnected.** 277 × 40 mm, simple faz (B.Cu), bloque sensor intacto.
+- **53 puentes de alambre, 1154 mm, el más largo 52,4 mm** (`contar_puentes.py`), 10 anclajes `ANCn` (pad pasante, no vías). Regla nueva en el `.kicad_dru`: dos alambres aislados pueden cruzarse (~50 cruces). Causa de fondo: RESET/PC2/AVCC en el canal del DIP se cruzan de a pares — no hay solución planar.
+- Herramientas: `pcb/alambrar.py` (tabla única de puentes, A* con cruces penalizados, anclajes automáticos, idempotente) y `pcb/ajustes_f1.py`.
+- Punto débil: 3 GND del RA-02 (U3.2/9/16) y CC1/CC2 en astillas de plano → a masa por alambre; ~8 alambres sobre la fila norte del radio.
+- **Decisión de Matías: "dejalo como está" y "cortala" (consumo de créditos).** Placa 1 se fabrica así. Reducir puentes (45 mm de ancho + L5 relajada bajo el CJMCU; el verificador estimó 22–28) queda para placa 2 sólo si hace falta.
+- Pendiente, sin agente: hoja de armado con los 53 numerados/largo/orden de soldado. Los artworks 1:1 y taladros se generan con los scripts existentes (ver commit de galgas).
