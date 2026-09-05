@@ -4,6 +4,300 @@ Doc de dominio + bitacora. El agente lo lee al arrancar y lo actualiza al cerrar
 
 ## Bitacora
 
+## 2026-09-05 (b) — FRIOSEGURO / TERMOVIGIA **Mini LITE rev C.2**: **ruteo rehecho de cero con FreeRouting**. Mismo placement, mismo netlist, **cero pistas viejas**
+
+Matías miró el ruteo de la rev C.1 (commit `d6c051e`) y lo llamó **espantoso**. Tenía razón:
+lo hacía un **A\* casero que solo sabía 90°**, mandaba el `+3V3` a dar la vuelta entera por la
+izquierda y dejaba lazos y quiebres que ninguna persona dibujaría. La placa estaba **aprobada
+eléctricamente** — lo que faltaba era que **se viera como una placa bien hecha**. Es el mismo
+error de familia que el rechazo de `interfaz_laser_dremel`: **DRC 0 no es placa buena**.
+
+`C:\Proyectos\frioseguro\hardware\mini_lite\`. **Sin commit** (lo cierra Matías).
+
+### REPORTE
+
+| | rev C.1 (A\* casero) | **rev C.2 (FreeRouting)** |
+|---|---|---|
+| cobre en B.Cu | 907,8 mm / 107 segmentos | **833,5 mm / 125 segmentos** |
+| ángulos | solo 0° y 90° | **0°/45°/90°, cero fuera de esos tres** |
+| puentes de alambre | 4 · 95,2 mm | **2 · 59,6 mm** (30,6 y 29,0) |
+| señales con alambre | el RESET | **ninguna: los dos puentes son de masa** |
+| vías / agujeros de paso | 0 | 0 |
+| envolvente | 130 × 90 | **130 × 90** (no hizo falta agrandarla) |
+
+**−8 % de cobre, la mitad de los puentes, ninguna señal colgando de un alambre**, y el
+placement **no se tocó**: no se movió un solo componente ni cambió el netlist ni una regla.
+
+**Gates, todos verdes:** `kicad-cli pcb drc --severity-all` → **0 violaciones / 0 sin
+conectar** (con `tracks_crossing` en **error**) · `pcb/conectividad.py` → **0 cortos /
+0 abiertos / 0 alambres mal formados** · `chequear_solapes` → **0 solapes, 0 fuera de borde,
+L1 y L2 OK** · `verificar.py` → **0 fallos / 1 aviso** (C2 a 8,3 mm del pin 19) · aire al
+borde **1,00 mm** · peor M3 sin cambios · 128 taladros en 6 mechas. Regenerados:
+`para_planchar_1a1.pdf`, `vista_cobre_1a1.pdf`, `hoja_armado.pdf`, `taladros.pdf`,
+`puentes.md`, `pcb_top.png`, `pcb_bottom.png`, `verificacion.json`, gerbers + `.glb` + `.step`,
+y `salida/antes_C1_bottom.png` para comparar. **`LAYOUT_LITE.md` §0 = la rev C.2**; el resto
+del documento queda como historia de la C.1.
+
+### Qué hizo FreeRouting solo, y qué hubo que hacerle a mano
+
+**Solo (y bien):** todo el abanico del zócalo, las cinco columnas de puerta, `/RELAY1` en una
+sola recta por y = 57,9 que sale del pasillo por el este, `/RELAY2` en una diagonal limpia de
+72 mm por el sudeste, el riel de 5 V por la franja sur y el frente analógico del 1-Wire.
+
+**A mano (`pcb/rutas.py`, se le entrega FIJO antes de rutear):**
+1. **Las cinco salidas de bornera de puerta** (6,0 mm rectos y **paralelos**): FreeRouting 1.9
+   **no las rutea**, y no dice por qué. Son las únicas cinco redes del DSN que deja sin tocar.
+   Descartado: nombre de red (renombré una, igual), el plano de GND (lo saqué, igual),
+   coordenadas (verificadas contra el `.dsn` pin por pin). Quedó sin explicación y con el
+   arreglo escrito.
+2. **El riel de `+3V3` entero.** Hay **un solo corredor bueno** oeste-este y **dos redes lo
+   quieren**. Con `+3V3` libre, el router le da el sudeste a `/RELAY2` y resuelve el `+3V3` con
+   **un alambre de 40 mm y cuatro dobleces**; con el riel norte puesto pero el resto libre,
+   agrega **además** una diagonal redundante, empuja `/RELAY2` al borde inferior (130 mm) y
+   **parte el plano en cinco islas**. Fijo entero: `/RELAY2` se queda con el sudeste y el
+   `+3V3` no pide nada. El riel va por la **banda norte (y = 86)**: **97,6 mm de recta** a 4 mm
+   del borde, sin un quiebre, y la tira de plano que aísla **no tiene ni un pad** (por el sur
+   no se puede: cortaría la franja donde viven `J2.3`, `J4.3` y `J1.2`, que son masa).
+3. **`+3V3` entra a `J5.2` horizontal desde el este**, no en diagonal: la diagonal pasaba a
+   **2,06 mm de `J5.3`** y le **cortaba la masa al módulo de relé**.
+4. **Los dos puentes de masa** (ver abajo).
+
+**Limpieza post-router (`pcb/limpiar.py`, idempotente):** borra **astillas** (< 0,05 mm — en
+una corrida había **catorce apiladas** sobre el pad de `R10.1`) y **hipos** (el tramito de
+0,1…0,3 mm que el router mete *entre* dos pedazos de la misma recta a 45°: `R16.1` salió como
+45° · 0,136 vertical · 45°), y fusiona quiebres de menos de 2°. Resultado: **cero segmentos
+fuera de 0°/45°/90°**.
+
+### Los dos puentes
+1. **`C3.2 → C6.2`, 29,0 mm** (soldado también en `C4.2` y `C5.2`): los cinco pads de masa de
+   los filtros de puerta están en línea; `C6.2`/`C7.2` ya tocan el plano y los otros tres
+   quedan en islas de un solo pad. El alambre **sube a y = 46,50** entre pad y pad porque en
+   línea recta pasaría a **1,66 mm** de las patas de R11–R13 (medido: el DRC lo canta como
+   `shorting_items`).
+2. **`J5.3 → C1.2`, 30,6 mm**: la masa del módulo queda encerrada entre el `+3V3` que entra a
+   `J5.2` y el riel de 5 V que entra a `J5.1` — las dos de potencia, ningún cobre las cruza.
+   El quiebre en (94,24 ; 29,00) es para salir del keepout del M3 `H7`→`H5`.
+
+Los dos van **de pad a pad**: `agujeros_de_paso = 0`.
+
+### La lección de harness (vale más que la placa): **el ruteo se CONGELA**
+
+**FreeRouting 1.9 no es determinista.** Corridas seguidas del *mismo* DSN dan 126, 130, 132,
+134 y 136 segmentos — y con el ruteo **cambian las islas del plano de masa**, así que los
+puentes (que son geometría fija en `rutas.py`) dejan de alcanzar: hubo corridas con GND en 2,
+3 y 5 islas, y `verificar.py` las rechazó. **Un board que no se reconstruye igual dos veces no
+es un diseño.** Por eso el ruteo aceptado se congela en **`pcb/rutas_congeladas.py`** (mismo
+formato que `rutas.py`, generado por `pcb/congelar.py` desde el `.kicad_pcb`) y `gen_pcb.py` lo
+carga junto con lo manual:
+* `sh pcb/todo_c2.sh` → reconstruye la placa entera, **sin java, en segundos**;
+* `sh pcb/rutear_c2.sh` → vuelve a correr FreeRouting y regenera el congelado — y **después
+  hay que volver a mirar los puentes de masa y los renders**.
+
+Dos trampas medidas en el camino: **no sirve congelar el `.ses`** (importar los dos `.ses`
+sobre un board reconstruido deja el board en **cero pistas**), y **no sirve filtrar por
+`locked`** (`frouting.py` bloquea *todo* antes de exportar el DSN de la etapa 2, así que al
+final no queda ninguna sin bloquear: la primera versión de `congelar.py` congeló **cero**
+tramos y lo dijo como si hubiera salido bien).
+
+**Autocrítica de proceso:** pedí demasiadas corridas de router persiguiendo un plano de masa
+sin islas, y Matías tuvo que cortar el ciclo desde afuera. La regla que queda: **el router se
+corre una vez, con límite duro, y lo que no cierra se paga con puente** — nunca con más
+corridas.
+
+### Harness, además: **O-1 de @verificador, cerrada**
+`conectividad.py` decidía la unión **isla-pista** muestreando **3 puntos** (las dos puntas y el
+medio): una pista que atraviesa una isla del plano sin que ninguno caiga adentro no se veía
+(mutante C de la auditoría). Ahora muestrea el segmento **entero cada 0,2 mm**
+(`_muestras_segmento`), que es menos que cualquier aire de relleno (0,6) o ancho de pista (0,5).
+
+**Renders mirados** (`salida/pcb_bottom.png`, más dos ampliaciones a 400 dpi): el `+3V3` es una
+sola recta por el borde norte en vez de un lazo, los abanicos del zócalo salen en diagonales
+paralelas de 45°, las dos borneras de puerta suben en cinco columnas rectas y paralelas, y no
+quedó ni un quiebre de los que hacía el A\*. **Archivos nuevos del toolchain:**
+`pcb/frouting.py`, `pcb/importar.py`, `pcb/limpiar.py`, `pcb/congelar.py`,
+`pcb/rutas_congeladas.py`, `pcb/rutear_c2.sh`, `pcb/todo_c2.sh`; la lista de ruteo manual de la
+C.1 quedó archivada en `doble_faz_descartada/rutas_revC1_manual.py`.
+
+
+### 2026-09-05 — @verificador AUDITA la rev C.2 (commit `1d71399`): **APROBADO CON OBSERVACIONES**
+
+Auditoria independiente sobre un **clon limpio** de `1d71399`, con parser propio de s-expresiones
++ shapely (union-find sobre el cobre), PyMuPDF (los tres PDF), `kicad-cli` y mutantes inyectados
+en `pcb/conectividad.py`. **Sin usar** `verificacion.json`, `drc.txt` ni la salida de @pcb como
+fuente. Coordenadas en mm del documento (origen abajo-izquierda, como `rutas.py`).
+
+**LO QUE PASA (medido por mi):**
+
+1. **Conectividad 0 cortos / 0 abiertos** contra las 24 redes multipin del `.net` (116 pads de
+   cobre + 8 NPTH, 125 segmentos B.Cu, 11 islas del plano). `/RELAY1` = {U1.35, R15.2, J6.2} y
+   `/RELAY2` = {U1.15, R16.1, J6.3} en **islas distintas**. Los 19 pads de GND en una sola raiz.
+   Las **11 islas tienen pad** (0 huerfanas). **Sin alambres**, GND queda en 5 grupos:
+   {plano grande + isla del panel + isla del pasillo este}, {J5.3}, {C3.2}, {C4.2}, {C5.2}: son
+   **exactamente** los que cierran los dos puentes de `puentes.md`. Ninguna isla depende de un
+   puente no listado. Red de cada pad = `.net` **uno por uno** (0 desvios, fuera de `unconnected-*`).
+2. **Puentes:** 11 tramos F.Cu, 4 puntas de grado 1 y **las 4 caen en pad** (C1.2, J5.3, C3.2,
+   C6.2); C4.2 y C5.2 son vertices intermedios sobre pad. 30,6 + 29,0 = **59,6 mm**; el puente 1
+   pasa a **6,33 mm** del centro de H5 (keepout 3,6 OK) y a 2,54 de J5.2 (es su pad vecino).
+3. **Aislaciones:** aire minimo entre redes distintas: pad-pad **0,540** (J5.2/J5.3), pad-pista
+   **0,501** (U1.20 GND vs +3V3 (20,80;57,21)-(16,38;61,63)), pista-pista 1,290, pad-plano 0,600,
+   pista-plano 0,600. Anchos: 0,5 senal / 1,0 +3V3 / 1,5 +5V. Cobre al **borde real (r = 3)**:
+   **1,0005**, nada fuera del contorno. **Los 8 M3 a 2,000 mm** del borde del agujero (C.1 tenia
+   H7 en 1,65: mejoro). Angulos B.Cu: solo 0 / 45 / 90 / 135 (31 / 18 / 41 / 35), 0 raros.
+4. **Artwork:** los tres PDF ajustan los 124 pads con **error 0,0000 mm**; `para_planchar` X=+1
+   (= `pcb_top.png`, vista desde arriba), `vista_cobre` X=-1 (= `pcb_bottom.png`: modulo a la
+   izquierda en los dos). Reglas: **dos lineas de exactamente 50,000 mm** por PDF. U1.1-U1.19 =
+   **45,7200**, U1.1-U1.20 = 25,4000. Encabezado: "rev C.2 ... 2 puentes de alambre" +
+   "PRELIMINAR - NO FABRICAR (M1-M5 sin medir)" en los tres; la prueba fisica ("J2 a la DERECHA,
+   J1 a la IZQUIERDA" con la tinta contra el cobre) sigue siendo correcta (J2 en x = 19, J1 en 68).
+5. **Reproducibilidad:** en el clon limpio `sh pcb/todo_c2.sh` (1 m 31 s, sin java) reconstruye
+   **136/136 segmentos identicos** (red, capa, ancho, puntas), 124 pads identicos, **11 islas del
+   plano identicas vertice a vertice**, 50 textos identicos: **diff de cobre = 0**. Los gerbers
+   commiteados coinciden con el board (B_Cu 11.792/11.792 trazos, F_Cu 11/11).
+6. **Hoja de armado:** D1 "K" a 3,5 mm de D1.1 (+5V, catodo, al NORTE) y "A" a 3,5 de D1.2;
+   LED1/LED2 "K" a 2,05 del pad 1 (K, oeste) y "A" a 2,36 del pad 2; corchete de PIN 1 centrado
+   en **x = 21,14** = U1.1; "+" de C1 con flecha al pad C1.1 (+5V). Rotulos: ninguno pisa un pad.
+7. **Nada retrocedio de C.1:** J2 5,0800 x2, J1/J3/J4 5,0000 (error 0), pad-pad 0,540 >= 0,4,
+   bajo el modulo solo R15 R16 J5 J6 H5-H8 (L1), 0 vias, 45 huellas en F.Cu.
+8. **O-1 de C.1 CERRADA de verdad.** Mutante C limpio: pista `Net-(J3-Pin_2)` de (37,0;6,0) a
+   (43,0;6,0) — puntas en los huecos de J3.1/J3.3 sin tocar pad, medio en J3.2 (misma red),
+   cruzando dos tiras del plano de 0,8 mm. **Muestreo nuevo: CORTO GND / J3-Pin_2. Muestreo viejo
+   de 3 puntos (reinyectado): 0/0.** Los otros mutantes siguen detectandose (A corto por pista
+   extendida, B abierto, D punta corrida 3 mm = abierto + "punta suelta", E alambre sobre pad
+   ajeno, G sin el puente J5.3-C1.2 = abierto en GND).
+
+**OBSERVACIONES (ninguna bloquea; dueno @pcb salvo que se indique):**
+
+- **O-1 (harness, la importante).** `pcb/drc.sh:3` y `pcb/fabricacion.sh:5` tienen
+  **`R="C:/Proyectos/frioseguro/hardware/mini_lite"` hardcodeado**. En el clon limpio,
+  `todo_c2.sh` corrio el DRC **sobre el repo vivo**, no sobre el board que acababa de reconstruir
+  (log: "Informe DRC guardado en C:/Proyectos/frioseguro/.../drc.txt"), y le piso `drc.txt` y
+  `salida/drc_tmp.json` al repo vivo (los restaure del backup). El "0 violaciones" que imprime la
+  cadena **no es evidencia del board reconstruido**. Lo corri aparte con `kicad-cli` sobre el
+  clon: **0 / 0**, asi que la placa esta bien, pero el gate esta apuntando a otro archivo. Usar
+  `$(dirname "$0")/..` como en `todo_c2.sh`.
+- **O-2 (angulos agudos, misma red).** Dos cunas de **45 grados** entre segmentos consecutivos:
+  (a) **+3V3 en (19,35;30,00)**: (21,14;31,79)->(19,35;30,00) y (19,35;30,00)->(21,20;30,00)
+  [R4.1], las dos de **1,0 mm**: es el ruteo **a mano** de `rutas.py` (punto 1, lineas 72-73);
+  la ranura entre las dos pistas tiene menos de 0,5 mm de aire en los primeros **1,96 mm** desde
+  el vertice. (b) **EN en (5,75;24,00)**: la pista de FreeRouting (5,75;24,00)->(6,67;24,92) nace
+  en el **medio** del tie manual de SW1 (2,50;24,00)-(9,00;24,00) y forma 45 grados con la mitad
+  este; ranura < 0,5 en **1,31 mm**. Las dos son **misma red**: no hay riesgo electrico, lo que
+  atrapa es acido/toner y deja un resto de cobre feo. Ni `limpiar.py` ni `verificar.py` miran
+  angulos entre segmentos. Si se arreglan: (a) entrar a R4.1 desde (19,35;30,00) a 90, o sacar
+  R4.1 del ramal; (b) que la pista no nazca en mitad del tie: darle a FreeRouting el tie como dos
+  tramos con vertice en (5,75;24,00), o rutear ese tramito a mano a 90.
+- **O-3 (astillas dentro de pad).** Dos tramos de `/RELAY2` de **0,136** y **0,253 mm**:
+  (103,66;64,89)->(103,66;65,02)->(103,84;65,20), enteros dentro del pad **R16.1** (r = 1,5):
+  no cambian el cobre. `limpiar.py` los salta por `en_pad` y la bitacora dice "hipos borrados":
+  quedan dos, cosmeticos.
+- **O-4 (puentes bajo cuerpos; dueno @pcb + hoja de armado).** El puente 2 pasa **por debajo del
+  cuerpo de R11 en (41,00;46,50), R12 en (49,00;46,50) y R13 en (57,00;46,50)** (resistencias
+  verticales de y = 42,84 a 53,00) y por dentro del pasillo del zocalo. El puente 1 cruza el eje
+  de **D1 en (78,00;22,01)** (D1 va de (78;13) a (78;28,24): el alambre pasa bajo el cuerpo del
+  SB540). `puentes.md` solo habla de las **patas** (3,66 mm a R11-R13) y no dice que el alambre
+  va **debajo de cuatro cuerpos**: quien arma tiene que soldar los dos alambres **aislados y
+  ANTES** de R11-R13 y de D1 (o montar esos cuatro parados). Falta en `puentes.md` y en la hoja.
+- **O-5 (harness).** `puentes.py` no es determinista en el **sentido** del alambre: el clon
+  reconstruido escribe "C6.2 -> C3.2, soldado tambien en C5.2, C4.2" y el commit dice
+  "C3.2 -> C6.2 ... C4.2, C5.2" (`puentes.md` y `puentes.json` cambian de una corrida a otra
+  con el mismo board). Contenido equivalente; ordenar el camino (p. ej. por x) para que el diff
+  sea 0 tambien en la documentacion.
+- **O-6 (docs).** `todo_c2.sh:3` dice "el ruteo entra desde los DOS .ses CONGELADOS" y la linea
+  8 + la bitacora dicen que los `.ses` no sirven y que entra desde `rutas_congeladas.py`. La
+  tabla de `LAYOUT_LITE.md` §0 dice "cero fuera de 0/45/90" y `limpiar.py` imprime "1 segmento
+  fuera (156,7)": es el alambre J5.3-(94,24;29,00), F.Cu; vale para B.Cu, aclarar.
+- **O-7 (estado).** La bitacora de @pcb dice "**Sin commit** (lo cierra Matias)" y el commit
+  `1d71399` existe: mismo defecto que H-9 / O-7 de C.1, otra vez. Ademas el working tree tiene
+  sin commitear `hardware/mini_lite/.gitignore` (+`salida/et*.dsn`, `et*.ses`, `logs/`),
+  `drc.txt` (solo timestamp) y `termovigia_mini_lite.kicad_sym` (65 lineas), y sin trackear
+  `TERMOVIGIA_KIT_V1.zip`, `TERMOVIGIA_SERVIDOR.zip`, `hardware/mini/salida/*.glb`.
+- **O-8 (heredadas de C.1, siguen abiertas):** texto "PIN 1" a **4,77 mm de U1.1 y 2,70 de U1.3**
+  (lo salva el corchete); "+" de C1 a **5,66 de C1.1 y 5,37 de R9.2** (lo salva la flecha);
+  los PDF dicen "placa 130.1 x 90.1"; y **O-2 de C.1** (comparar la red de cada pad contra el
+  `.net`) sigue sin hacerse en `verificar.py` (paso 7 compara valor y huella). Lo compare yo: 0.
+- **O-9 (margen).** El aire pad-pista minimo es **0,501 mm** (U1.20 GND contra la subida manual
+  del +3V3): cumple por 1 um. No bloquea; es el punto 3 de `rutas.py`.
+
+**VEREDICTO: APROBADO CON OBSERVACIONES.** Electricamente la C.2 esta bien y **se reconstruye
+identica** desde el repo; lo que hay que cerrar antes de planchar es **O-4** (que la hoja diga
+que los alambres van debajo de R11-R13 y D1) y, para que el gate no mienta, **O-1**. **Sigue sin
+ser autorizacion para planchar**: M1-M5 sin medir, impreso en los tres PDF. O-2/O-3 son
+cosmeticas: si se corrigen, vuelve **solo el chequeo de angulos y el diff de cobre**, no la
+auditoria entera.
+
+*Metodo: parser propio (`(net "nombre")`, KiCad 10), shapely (buffers de pad/pista, poligonos de
+relleno, union-find con tolerancia 0,5 um), PyMuPDF (marcas de mecha y textos), `git clone` +
+`git checkout 1d71399` + `sh pcb/todo_c2.sh` + `kicad-cli pcb drc` sobre el clon, y 8 mutantes
+sobre `conectividad.py` alimentado con mis propios datos. Deje el repo vivo como estaba.*
+
+
+### 2026-09-05 — Mini LITE **rev C.3**: cierre de las observaciones de @verificador sobre la C.2
+
+`C:\Proyectosrioseguro\hardware\mini_lite\` — pasada corta, **sin tocar placement ni netlist,
+sin volver a correr FreeRouting**. **Se commitea el Director** (el working tree tiene todo
+regenerado: board, `drc.txt`, los dos artwork, `hoja_armado.pdf`, taladros, `puentes.md`,
+`pcb_bottom.png`, `verificacion.json`, gerbers, glb/step).
+
+**Cobre (diff contra el board de `1d71399`: −8 / +4 segmentos, 128 pads iguales, 11 islas):**
+- **O-2a** `+3V3`: baja **recto por x = 21,14** de `U1.1` a y = 30 y dobla a 90° a `R1.1`; el
+  codo queda dentro del pad de `R4.1` (0,06 mm del centro), así que R4 sigue tocado y la cuña
+  de 45° entre dos pistas de 1,0 mm desapareció (`pcb/rutas.py`, punto 1).
+- **O-2b** `EN`: la pista nace en el **pad `SW1.1`** (9,00;24,00), sube a 90° y sigue por
+  y = 24,92; ya no nace en mitad del tie (`pcb/rutas_congeladas.py`, única edición a mano,
+  marcada en el archivo y en su encabezado).
+- **O-3**: `limpiar.py` paso 1c "colas dentro de pad": borra los rabos < 0,3 mm con las dos
+  puntas dentro del mismo pad y una de grado 1 (los dos de `/RELAY2` en `R16.1`). Trampa
+  del harness que costó una corrida: **hay que retener los wrappers de los tracks borrados**
+  (`_borradas.append(t)`); si Python los suelta, el siguiente `GetStart()` devuelve un
+  `SwigPyObject` pelado y el script muere.
+
+**Harness:**
+- `verificar.py` **paso 9 (ángulos y ranuras)**: vértice de dos tramos de la misma red
+  (incluidos los que nacen en T sobre otro tramo) con < 90° = **FALLO** (aviso si la ranura
+  queda entera dentro de un pad); dos tramos de la misma red sin tocarse con < 0,5 mm de
+  aire *real* (se descarta si hay otro cobre de la red en el medio) = aviso. **Probado
+  contra el board C.2: marca exactamente las dos cuñas (1,85 y 1,30 mm); C.3: 0.**
+- `verificar.py` **paso 10**: red de cada pad contra el `.net` (la O-2 de C.1 que seguía
+  abierta): 116 comparados, 0 desvíos.
+- **O-1**: `drc.sh` y `fabricacion.sh` usan `$(cd "$(dirname "$0")/.." && pwd -W)`; el DRC de
+  `todo_c2.sh` es sobre el board que acaba de reconstruir. **O-5**: `puentes.py` determinista
+  (tramos ordenados, sentido del alambre por nombre de pad; dos corridas → `puentes.md` y
+  `puentes.json` idénticos). **O-6**: comentario de `todo_c2.sh` corregido (el ruteo entra de
+  `rutas_congeladas.py`, no de los `.ses`); `limpiar.py` cuenta ángulos solo en B.Cu.
+- **O-4 (obligatorio antes de planchar)**: `puentes.py` mide contra los courtyards bajo qué
+  cuerpos pasa cada alambre (U1 excluido a propósito: el zócalo es dos filas con el pasillo
+  vacío). Puente 1 pasa bajo **D1**, puente 2 bajo **R11, R12, R13**. `puentes.md` tiene la
+  columna y una sección "orden de armado"; la **hoja de armado** pone al lado de cada alambre
+  "P1 AISLADO / ANTES de D1", "P2 AISLADO / ANTES de R11-R13" (rótulo de dos líneas ubicado en
+  el lugar libre más cercano, probando N/S/E/O contra courtyards y pads, con línea guía) y dos
+  líneas al pie con el orden. **Mirado en el PDF a 220 dpi**: no pisa pads ni cuerpos.
+- **O-8**: PDFs dicen **130,0 × 90,0** (se descuenta el ancho de línea del Edge.Cuts);
+  "PIN 1" al oeste del pin 1 a 3,85 mm (el primer intento, al sur-oeste, pisaba las refs de
+  R1/R4 — visto en el render, no en el DRC); "+" de C1 sobre su pad con la flecha bajando.
+
+**Evidencia:** `sh pcb/todo_c2.sh` dos veces → DRC 0 / 0, `conectividad` 0 cortos / 0
+abiertos, `verificar.py` 0 fallos (1 aviso: C2 a 8,3 mm), **diff de cobre entre corridas =
+0** (132/132 tramos, 11 islas vértice a vértice, 50 textos), `chequear_solapes.py` limpio,
+`fabricacion.sh` corrido sobre el board final. Sigue **PRELIMINAR: M1–M5 sin medir**. Para
+@verificador: vuelve solo el chequeo de ángulos y el diff de cobre, como dijo.
+
+### 2026-09-05 — @verificador re-chequea la rev C.3 (commit `20fa172`): **PASA CON DEUDA**
+
+Chequeo corto (solo lo que pedi al cerrar la C.2), con parser propio + shapely, `diff_cobre.py`, PyMuPDF y un clon limpio de `20fa172`. No use `verificacion.json` ni `drc.txt` como fuente.
+
+1. **Angulos:** mi chequeo independiente (vertices compartidos + nacimientos en T, B.Cu, misma red) da **C.2: 2 cunas de 45 (19,35;30,00) y (5,75;24,00) / C.3: 0** (121 tramos, solo 90/135/180). Board C.2 reinyectado en el clon con el `verificar.py` nuevo: **paso 9 marca exactamente las dos (1,85 y 1,30 mm)** + aviso de ranura 0,42 en EN; sobre C.3, 0 fallos.
+2. **Diff de cobre C.2->C.3: -8/+4 segmentos, todos de las tres correcciones** (+3V3 recto por x=21,14 con codo dentro de R4.1; EN nace en SW1.1; las dos astillas de /RELAY2 en R16.1). 128 pads iguales; el plano cambio **1,76 mm2 en dos parches** que estan exactamente donde se movieron EN y +3V3 (9/11 islas identicas vertice a vertice). Conectividad **0 cortos / 0 abiertos** (24 redes, RELAY1/RELAY2 en islas distintas, 19 GND en una raiz), pad-pista **0,501** (sigue siendo U1.20 vs +3V3, O-9), borde 1,0005, **8 M3 a 2,000**, bajo el modulo solo R15 R16 J5 J6 H5-H8, 0 vias: nada retrocedio.
+3. **Clon limpio:** `sh pcb/todo_c2.sh` **1 m 21 s sin java**, DRC 0/0 escrito en **`.../clon_c3/.../drc.txt`** (O-1 cerrada: ya no toca el repo vivo), `verificar.py` 0 fallos. Contra el commit: **132/132 tramos, 11 islas, 128 pads, 50 textos identicos; `puentes.md` y `puentes.json` diff 0** (O-5 cerrada). Nota cold-start: `pcb/placement.py` importa `../mini/comun.py` -- `mini_lite/` no es autocontenido (funciona en el repo, no si se copia la carpeta sola).
+4. **`puentes.md`:** columna "pasa BAJO el cuerpo de" (D1 / R11, R12, R13) y seccion "orden de armado" con AISLADO + ANTES: OK. **Hoja de armado:** "P1 AISLADO / ANTES de D1" en doc x[76,8..87,7] y[29,9..33,8] con guia al alambre en (82,67;23,95); "P2 AISLADO / ANTES de R11-R13" en x[34,5..48,0] y[36,6..40,3] con guia a (41,05;46,45). **Ningun rotulo pisa un pad** (P1 a 0,15 mm del borde de D1.1, P2 a 1,05 de R11.2); pie con las tres lineas completas, sin recorte de pagina.
+5. **Artwork exacto:** los tres PDF tienen **dos reglas de 50,000 mm** (X e Y), **U1.1-U1.19 = 45,7200**, U1.1-U1.20 = 25,4000; `para_planchar` y la hoja con J2 en x = 19 (izquierda = vista desde arriba), `vista_cobre` espejado (J2 en 111). Encabezados dicen "130.0 x 90.0" (O-8 cerrada).
+
+**DEUDA (dueno @pcb, no bloquea):** **D-1** en la hoja, la linea "ANTES de D1" cae **sobre la referencia serigrafica azul "D1"** (se lee "DANTES de D1", visto a 500 dpi) y su base toca el contorno del courtyard: `pisa()` de `artwork.py` cuenta courtyards y pads pero **no los textos de referencia**; una linea mas al norte (o probar dist 8 antes que 4,5) lo resuelve. **D-2** el working tree del repo vivo sigue con `hardware/mini/generar_sch.py` modificado, `~termovigia_mini.kicad_pro.lck` borrado y los dos `.zip` + `.glb` sin trackear (O-7, tercera vez). **D-3** el clon reconstruido deja `termovigia_mini_lite.kicad_pro` tocado (solo EOL LF->CRLF): cosmetico.
+
+**VEREDICTO: PASA CON DEUDA.** O-1, O-2, O-3, O-4, O-5, O-6 y O-8 estan cerradas con evidencia medida por mi; D-1 es de legibilidad de la hoja y se corrige en `artwork.py` cuando se toque la hoja de nuevo. **Sigue sin ser autorizacion para planchar: M1-M5 sin medir** (impreso en los tres PDF). No hace falta que vuelva por la C.3 salvo que cambie el cobre.
+
+*Herramientas: `kp.py`/`ang2.py`/`isl_diff.py`/`geo.py`/`diff_cobre.py` en mi scratchpad; clon en `scratchpad/clon_c3`. Deje el repo vivo como estaba.*
+
+
 ## 2026-09-05 — GALGAS rev F: **ruteo rehecho DE CERO con FreeRouting en dos etapas**. Método sí, placa todavía no
 
 `C:\Proyectos\galgas\hardware\kicad\` — `LAYOUT.md` rehecho (corto, sin arrastrar el análisis
