@@ -142,18 +142,21 @@ g++ -std=c++17 -Wall -Wextra -O2 -o tools/test_sensor_fault.exe tools/test_senso
 cd servidor/api && python -m unittest discover -s tests -t .
 ```
 
+```bash
+# 4) el firmware compila
+arduino-cli compile --fqbn "esp32:esp32:esp32:PartitionScheme=min_spiffs" firmware_modular
+```
+
 **Resultados de esta noche:** (1) **21 ok, 0 fail, sin warnings** ·
-(3) **48 tests OK**.
+(3) **48 tests OK** · (4) **exit 0, 65 % flash, 16 % RAM, sin warnings**.
+
+Sobre el (4): lo lancé temprano y a los ~15 min todavía no había terminado, así
+que escribí este informe dándolo por pendiente y seguí (disciplina de tiempo).
+Terminó solo poco después, y **lo volví a correr sobre el commit ya pusheado
+(`c1a1a64`)** para que el número corresponda al árbol que vas a mergear y no a
+una versión intermedia. Las dos corridas dieron lo mismo.
 
 ## Qué quedó SIN verificar
-
-**`arduino-cli compile --fqbn "esp32:esp32:esp32:PartitionScheme=min_spiffs"
-firmware_modular` — verificación PENDIENTE.** Se lanzó y estaba compilando de
-verdad (toolchain instalado, `cc1plus` activo, sin descargas), pero pasó el
-límite de ~10 min de la disciplina de tiempo y no llegó a terminar dentro del
-turno. Corré ese comando de día: es un `--verify`, no toca la placa. Lo que
-puede saltar ahí es sólo el wiring Arduino (`sensors.h` / `supabase.h`); el
-modelo puro ya compila limpio con `-Wall -Wextra` y pasa sus 21 checks.
 
 **Los 6 escenarios de banco** (detalle en `docs/temperature-validity.md`):
 desenchufar la sonda en caliente y ver el panel pasar de `-18.2°C` a `--.-°C` ·
