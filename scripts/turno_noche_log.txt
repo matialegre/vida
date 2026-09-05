@@ -2442,3 +2442,4 @@ Informe: `diario/nocturno-local-2026-09-04.md` · `QUE_FALTA` ítem 5b · bitác
 
 Dos cosas para un minuto tuyo, en el informe: `C:\Proyectos\datalogger` sigue sucio con el branch `08-31` **sin un solo commit, sexta noche**; y quedó un hallazgo que no toqué — **sin MPU6050 el nodo transmite `ax..gz = 0` para siempre**, indistinguible de un acelerómetro quieto, mismo patrón en el otro sensor.
 ===== FIN vie 04/09/2026  2:18:07,39 ===== 
+===== TURNO NOCHE vie 04/09/2026 22:00:02,15 ===== 

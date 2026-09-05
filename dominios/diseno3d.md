@@ -779,3 +779,94 @@ Lista completa al final de `PIEZAS.md`.
 **Próximo paso**: cuando se defina la impresora → medir carro, poner valores
 reales en los 4 .scad, re-renderizar (`openscad -D ...`, comandos en cada
 archivo) e imprimir primero la placa del carro como pieza de prueba de agujeros.
+
+---
+
+## 2026-09-04 (tarde) — Termovigía: se cierra la MINI y nace el gabinete de la LITE
+
+Retomé la sesión anterior, que se había cortado por límite de API. **Antes de rehacer, revisé qué
+había quedado en disco** — y estaba casi todo: el `.scad` de la Mini (16:33) ya tenía la salida de
+relés que la instancia anterior había detectado, y los STL de 16:35/16:47 ya la incluían. Lo que
+faltaba era lo de alrededor: los renders (anteriores al cambio), la hoja de impresión (todavía
+decía "no sale por prensacable") y el peso de los archivos.
+
+### 1. MINI (PCB 120 × 100 — Cerro Moro) — cerrada
+
+`C:\Proyectos\frioseguro\hardware\mini\gabinete\`
+
+- **Salida de relés K1/K2 confirmada en la pared +Y**: 2 × PG9 en x = +17 y +45, alineados con el
+  módulo (centrado en x = +31), con rótulos grabados en el piso. Es la única pared que no tenía
+  nada, así que **el cable de carga nunca comparte prensacable con uno de señal**.
+- **Medidas finales**: interior 144 × 128 × 42 · base 150 × 134 × 45 (178 × 134 con orejas) ·
+  **cerrada 155,5 × 139,5 × 48**.
+
+**Tres defectos que encontré y arreglé (ninguno se veía a ojo):**
+
+1. **Burbuja de aire sellada en la base.** El rótulo del piso `"PCB TERMOVIGIA MINI"` mide **74,2 mm**
+   a cuerpo 5 (lo medí, no lo estimé): arrancaba en x = −75,1, cruzaba la pared y sus letras "P" y
+   "C" quedaban enterradas bajo la ménsula de la columna de esquina, que las tapaba y cerraba una
+   cavidad de −10,5 mm³. **El STL dejaba de ser un solo cuerpo y CGAL igual decía `Simple: yes`.**
+   Lo cazó `chequear_stl.py` (componentes conexas), no el render ni el `assert`.
+   Arreglo: rótulo a cuerpo 4 corrido a x = −29 **+ `zona_rotulos_piso()`**, que interseca todos
+   los grabados del piso con la zona libre de columnas — red de seguridad para que no vuelva.
+2. **El prensacable `PUERTAS` chocaba con la columna intermedia**: centrado en su grupo caía en
+   y = −12,06 y la contratuerca se comía **3,27 mm** de la ménsula de y = 0. La caja no cerraba a
+   mano. Corrido a y = −17. Lo destapó un **`assert` nuevo**: los que había miraban sólo las
+   columnas de **esquina**; las **intermedias** no las chequeaba nadie.
+3. **Los 20 MB de `tapa_mini.stl` no eran culpa de `$fn`**: era **STL ASCII** (663 bytes por
+   triángulo contra 50 del binario). Y el segundo factor era que `text()` usa `$fn` para aplanar
+   las curvas de cada glifo: la lista de bornes de la cara interior (~250 caracteres) a `$fn=40`
+   costaba **72.800 triángulos, el 90 % del archivo**.
+   Arreglo: `--export-format=binstl`, `fn_texto = 16` aparte y `$fn` general 64 → 40.
+   **Resultado: base 5 MB → 708 KB · tapa 20 MB → 2,4 MB · los tres, 1 cuerpo y 0 aristas abiertas.**
+
+### 2. MINI **LITE** (PCB 110 × 80 — las 5 demos de Bahía) — nueva
+
+`C:\Proyectos\frioseguro\hardware\mini_lite\gabinete\` — `.scad` + 3 STL + 9 renders +
+`IMPRESION_LITE.md`. Comparte las dos librerías de la Mini **sin tocarlas**.
+
+- **Medidas finales**: interior 134 × 104 × 38 · base 140 × 110 × 41 (168 × 110 con orejas) ·
+  **cerrada 145,5 × 115,5 × 44**. ~100 g la base + ~45 g la tapa; **las 5 demos entran en un rollo**.
+- **No es un escalado de la Mini**: @pcb ruteó la LITE con otro reparto de bordes, así que el mapa
+  de paredes cambia. Abajo 3 sondas + 2 puertas + 5 V (4 prensacables); izquierda 3 sondas +
+  defrost (3); **derecha la salida de relés K1/K2**; **arriba la ventana de USB** (el DevKit va
+  rotado 180° y el USB mira al borde superior, no al lateral como en la Mini).
+- Bajé el alto interior de 42 a 38 (quedan 31,4 mm libres y 5,8 de aire sobre el relé): es la caja
+  barata, 4 mm menos es menos filamento y menos tiempo.
+- **Defecto propio de la LITE, encontrado y arreglado**: al amarrar la columna de esquina a las dos
+  paredes con dos ménsulas separadas, el rincón entre ellas queda como un **pozo vertical cerrado**
+  (−487 mm³, 3 componentes). Se resuelve con un solo `hull()` que incluya el vértice de la esquina.
+
+### 3. Lo que hay que confirmar
+
+- 🔴 **`LAYOUT_LITE.md` no existe todavía.** Las cuatro posiciones que @pcb va a fijar (LEDs,
+  pulsadores, USB, centro del módulo de relé) están en un bloque marcado `PROVISORIO` en el
+  `.scad`, sacadas de `..\pcb\placement.py` y convertidas a **centro de componente, no de pad**
+  (la conversión está anotada línea por línea). Cuando salga el LAYOUT se cambian esos cuatro
+  números y nada más.
+- 🔴 **Pedido a @pcb: LED1 y LED2 quedaron a 7,5 mm de paso.** Con ese paso no entran dos guías de
+  luz normales (el tubo de la Mini mide Ø8,0 y se fusionarían). Bajé la pared del tubo a 0,9 para
+  que cierre, y hubo que rehacer dos cosas de la tapa que se vieron feas en el render: los rótulos
+  `ENC`/`FUNC` se pisaban y se leía **"ENCUNC"**, y los dos anillos se solapaban 2,2 mm.
+  **Con ≥ 10 mm de paso se vuelve a la solución buena.**
+- Falta confirmar con @pcb hacia qué borde miran las borneras de contacto del módulo de relé
+  (`M2`/`M3` siguen `[MEDIR]` en `placement.py`).
+- Calibre (Gonza): las tres del módulo de relé (`rele_alto`, `rele_mod_e`, `rele_cab_h`) mandan la
+  altura de las **dos** cajas; más `zocalo_h`, `usb_c_alto`/`usb_dims`, `led_alto`, `born_alto`.
+
+### 4. Método que quedó (vale para todo lo que sigue)
+
+- **`chequear_stl.py` es el que encuentra lo que CGAL no ve.** `Simple: yes` no significa una sola
+  pieza: hay que contar **componentes conexas** y mirar el **signo del volumen** de cada una (una
+  componente de volumen negativo = burbuja sellada, no islote suelto).
+- **Exportar siempre `--export-format=binstl`.**
+- **Mirar los renders, no sólo generarlos**: los tres choques de texto de la tapa LITE no los
+  agarra ningún `assert`, se ven.
+- **Ojo con `--camera rot=180` para mirar la cara interior de una tapa**: esa cámara da vuelta
+  también el eje Y y el texto **parece** espejado cuando no lo está. Agregué en los dos `.scad` la
+  pieza `tapa_dada_vuelta` (gira la pieza, no la cámara), que es inequívoca. Me hizo dudar y casi
+  "corrijo" algo que estaba bien.
+
+**Próximo paso**: cuando @pcb publique `LAYOUT_LITE.md`, actualizar las 4 provisorias, poner
+`PROVISORIO = false`, re-renderizar (`sh _build.sh` + `sh _renders.sh`) y verificar con
+`chequear_stl.py`. Recién ahí tirar la primera base LITE como pieza de prueba de agujeros.

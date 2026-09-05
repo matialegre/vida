@@ -822,3 +822,68 @@ Doc de dominio + bitacora. El agente lo lee al arrancar y lo actualiza al cerrar
     y `M17`/`M18`/`M19` + `DE-19` (cable apantallado en el BOM) son mediciones de @hardware y Matías.
   - **Próximo**: @verificador re-audita la rev F con el diff → @pcb rutea con `nodo_galga_v3.net` rev F
     (L10..L13) → @firmware toma `DE-15` (alarma de riel) y la constante de calibración cuando cierre `M17`.
+
+- **2026-09-04 [FRIOSEGURO / TERMOVIGIA MINI **LITE**] rev B: la placa que se hace en casa con acido.**
+  Todo regenerado en `C:\Proyectos\frioseguro\hardware\mini_lite\` (`generar_sch.py`, nada a mano).
+  **`hardware/mini/` no se regenero** (solo se le agregaron a `comun.py` dos constantes de huella y un
+  parametro opcional en `simbolo_esp32`; su `.kicad_sch` no se toco). **Nada commiteado** (orden).
+  - **Entregables**: `termovigia_mini_lite.kicad_sch` rev B (A3, 6 bloques, **45 componentes**) + `.pdf` +
+    `.net` (**46 redes**) + `_bom.csv` (**21 lineas**) + `erc.txt` + `salida/p1.png` y 4 recortes ·
+    `DISENO_LITE.md` reescrito (secciones 1 conexionado completo, 2 rev A->rev B, 3 tabla antes/despues,
+    4 calculos K1-K7, 5 pasos de bornera, 6 envolvente, **7 notas de SIMPLE FAZ**, 8 M1-M5, 9 riesgos) ·
+    `PINOUT_LITE.md` (tabla GPIO con **pin fisico y tira**, config.h, strapping uno por uno, redes) ·
+    `BOM_LITE.md`.
+  - **Evidencia**: ERC `--severity-all` **0/0 con `Ignored checks: None`**; `chequear_solapes_sch`
+    **0 solapes / 0 texto fuera del area util**; PNG **mirado en 4 pasadas** (se corrigieron 3 defectos que
+    el chequeador no ve); `.net` **leido red por red**.
+  - **Que cambio (3 correcciones del Director durante la sesion, la ultima manda)**: (1) fuera la entrada de
+    **defrost entera** (bornera, PC817, 2k2 0,5 W, 1N4148, pull-up, RC) y **con ella la cota A1**: sin tension
+    de campo, todo el cobre es de baja tension y el plano de masa puede correrse entero por la unica cara;
+    (2) **puertas 2 -> 5** (IO5, IO13, IO14, IO25, **IO33**) con **MASA COMUN**, en **2 borneras de 3**
+    (6 posiciones); (3) **sondas: de 6 borneras de 3 vias a UNA sola bornera de 3** (V/D/G) de **perfil alto**
+    -- todas las sondas van EN PARALELO, la placa solo tiene tres redes de sonda. **Conexionado total: 4
+    borneras (2+3+3+3 = 11 posiciones, 55,2 mm de borde) + los 2 zocalos del shield de rele.** Los contactos
+    COM/NO/NC **no pasan por la placa**: estan en las borneras del propio modulo.
+  - **Componentes 47 -> 45**, a soldar 39 -> 37, BOM 30 -> 21 lineas, **posiciones de bornera 26 -> 11**,
+    piezas de bornera 10 -> 4. **Envolvente sugerida 120 x 80 (fallback 130 x 90), la fija @pcb**: con 55 mm
+    de borde el limite ya **no son las borneras sino el ruteo en una sola cara**.
+  - **Lo que aporto pensar en SIMPLE FAZ (y una correccion a lo que yo mismo habia escrito)**: en la primera
+    pasada declare que "los 5 GPIO de entrada son 5 pines fisicos consecutivos de la columna izquierda". **Es
+    falso**: en el DevKit de 38, IO4 e IO5 son los **fisicos 32 y 29 (tira DERECHA)**; IO13/14/25/33 son los
+    **15-12-9-8 (tira IZQUIERDA)** y **IN1/IN2 son los 10 y 11, en el medio de esas**. Lo correcto, y esta
+    escrito en la hoja y en DISENO 7: las 4 puertas 2..5 caen juntas y se rutean paralelas; **ONEWIRE, DOOR1,
+    IN1 e IN2 (4 pistas) cruzan por el pasillo libre de ~20 mm que queda ENTRE las dos tiras del zocalo** ->
+    4 pistas de 0,5 mm en 20 mm, cero puentes. Ademas: los 6 pull-up en UNA fila (un solo hilo de +3V3),
+    pad 3,0 / agujero 1,0 (1,3 en J2) con **corona >= 0,8 mm** porque sin metalizado la corona la sostiene el
+    estano de un solo lado, y los puentes que hagan falta **se declaran** en el LAYOUT.
+  - **Cambio de dibujo con motivo**: el simbolo del DevKit de esta placa usa un **orden de columna propio**
+    (`ESP_IZQ_LITE`) para que las 6 entradas queden en filas seguidas; el **mapa** de pines
+    (numero-nombre-tipo) sigue saliendo de `comun.py`. `simbolo_esp32(K, izq=...)` ahora acepta el orden;
+    `mini/` no cambia. El orden es dibujo, el mapa es dato: lo compartido es el dato.
+  - **Decisiones con cuenta, no por gusto**: (a) **el comun de las puertas es MASA y no positivo** -- un cable
+    que roza el chasis (a tierra) toca masa; con comun positivo el chasis quedaria a 3V3 y un segundo roce
+    daria PUERTA CERRADA falsa. Diafonia del retorno compartido: 10 m de 0,20 mm2 = 0,9 ohm x 1,65 mA =
+    **1,5 mV** contra VIL 0,83 V; (b) **K3 recalculado para el paralelo**: 8 sondas = 12 mA sobre R3 22R =
+    0,26 V -> 3,04 V, y el minimo del DS18B20 es 3,0 V -> **el limite de la placa son 8 sondas**; para mas,
+    R3 10 ohm y entonces el corto son 1,1 W (R3 de 2 W); (c) **IO33 verificado**: input-capable, RTC/ADC1_CH5,
+    **no strapping** -> sirve; el que si es strapping es **IO5** (timing de SDIO slave, viene del kit v1): una
+    puerta cerrada al arrancar lo deja en 0, el arranque no se altera, y queda escrita la salida (DOOR1 ->
+    IO32, fisico 7, libre); (d) 2 borneras de 3 y no 3 de 2: mismo borde, una pieza menos y **misma huella
+    que ya usa la placa**; (e) **J2 es la unica de paso 5,08** (MKDS-3 perfil alto, 2,5 mm2) porque es la
+    unica que tiene que aceptar 3-4 cables por tornillo -- declarado en la hoja, en el cajetin y en DISENO 5,
+    con la regla de que si @hardware consigue otro paso **se cambia la constante y se regenera**.
+  - **Los 3 defectos que solo se vieron MIRANDO el PNG** (el chequeador de solapes dio 0 en los tres): (1) el
+    `Value` de J3 ("PUERTAS 1-3") caia **sobre la fila de pines de J4** -- texto contra simbolo, que el
+    chequeador no compara; (2) los pull-up en una sola columna hacian que **el riel +3V3 de uno quedara pegado
+    debajo del anterior**: parecian dos resistencias en serie con un tap -> se escalonaron en x (64/69) **y el
+    rotulo de los escalonados va a la izquierda**, porque a la derecha se les cruzaba el capacitor de la fila;
+    (3) los **comentarios del cajetin** se cortaban por derecha (>70 caracteres) -- el chequeador no mira el
+    title block. Ademas el area util de la A3 mordio dos veces: el `ref_off=-7` de las borneras dejaba texto
+    en x=14,0 mm (el area arranca en 15,0) y dos bloques de notas se pasaban de y=250 mm.
+  - **Aviso a @pcb**: el `termovigia_mini_lite.kicad_pcb` y los gerbers/artworks que hay en la carpeta son de
+    la **rev A** y ya no corresponden a este `.net` (cambiaron todos los conectores y la numeracion). Rutear
+    de cero desde `termovigia_mini_lite.net` rev B.
+  - **Proximo paso**: @verificador audita el `.net` rev B (46 redes) y la eleccion de GPIO -> @hardware compra
+    (BOM_LITE 4.1: la bornera de 3 de PERFIL ALTO es lo unico no trivial) y mide M1..M5 -> @pcb rutea a
+    120 x 80 en **una cara**, con las reglas de DISENO 7, y declara los puentes -> @firmware aplica
+    `PINOUT_LITE.md` (MAX_DOOR_SENSORS 5, MAX_PROBES 8, RELAY_ON LOW, sin defrost/buzzer/DHT/SCT).
