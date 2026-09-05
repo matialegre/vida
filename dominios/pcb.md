@@ -403,6 +403,46 @@ M3 de placa en (4,4) (116,4) (4,96) (116,96) con **separadores de nylon**, altur
      la serigrafia, los artworks y el dossier. Es el mismo error que ya me habia costado los
      keepouts de la rev D: dato duplicado a mano = desincronizado en silencio.
 
+## 2026-09-04 (l) — GALGAS: **el ruteo se descarta y arranca de cero otro agente. Lo que hice mal**
+
+Matias abrio la placa en KiCad y la freno: **pistas encima de pads, `E_REFN` dando vueltas**.
+Tiene razon y el layout pasa a otro agente con otro metodo (FreeRouting en dos capas con F.Cu
+castigada, cada tramo de arriba convertido en alambre). No toco mas `hardware\kicad\`.
+
+**1. El metodo de ruteo no daba, y lo sostuve demasiado.** El A* red por red, sin rip-up, con
+0,6 de pista y 0,6 de aislacion en simple faz **no converge**: cada red que entra bloquea a la
+siguiente y no hay marcha atras. Peor: el paso de "cerrar lo que quedo abierto" **forzaba
+tramos por encima de pads ajenos** con tal de unir dos puntos. Eso no es un ruteo con
+violaciones, es un dibujo que no se puede fabricar.
+
+**2. Reporte "278 violaciones / 33 abiertas" como si fuera un numero de avance.** Es el fallo de
+fondo: **el numero era correcto y la conclusion era falsa**. 278 violaciones sobre 530 segmentos
+no es "casi", es una placa inmostrable, y yo lo presente como un estado entregable con su
+tabla y su render. **Genere el render y no lo mire con la pregunta correcta.** Mi propia
+doctrina dice que un DRC en 0 puede ser un espanto; me faltaba la otra mitad: **un DRC alto ya
+es un espanto y no hace falta mirarlo dos veces para saberlo**.
+
+**3. El arbol minimo en linea recta NO es cota inferior de puentes** (esto ya lo corregi solo,
+queda anotado aca para que no se repita): el MST da la topologia mas CORTA, no la que menos
+cruza; un ruteo puede rodear y evitar cruces a cambio de longitud. Los "155 minimos" no eran un
+piso, y sobre esa base afirme que el ruteo estaba "en el limite topologico". No lo estaba: era
+mi ruteo el que no daba mas.
+
+### REGLA NUEVA DEL DOMINIO (vale para toda placa, de aca en adelante)
+**Antes de reportar CUALQUIER numero de ruteo, mirar el render y escribir UNA FRASE diciendo si
+la placa se puede mostrar.** No "el DRC dio N": *"el DRC dio N y la placa se ve <asi>"*. Si no
+puedo escribir esa frase con honestidad, el numero no se reporta todavia. Las tres preguntas:
+* ¿hay pistas encima de pads o cruzando cuerpos?
+* ¿alguna red critica (`E_REFN`, el nudo estrella) da vueltas en vez de ir derecho?
+* ¿un revisor con experiencia diria "esto esta pensado" o "esto lo escupio un script"?
+
+### Lo que el agente nuevo hereda y NO hay que rehacer
+Placement 63/63 sin solapes (277 x 30, orden del protoboard) · huellas propias
+(`PORTAPILAS_2xAA_PARALELO` con las ranuras de precinto, `RA-02_THT` **verificada pin por pin
+con `DIO0` en la fila de abajo**, `JB_CUTTER`, `REED`) · `huellas_casero.py` · `artwork.py`
+(1:1 con regla de 50 mm) · `taladros.py` · `puentes.py` · `verificar_ra02.py` ·
+`armar_dossier.py` · la correccion de la cota en `LAYOUT.md` 0.4 · `REV` como variable unica.
+
 ## 2026-09-04 (i) — GALGAS rev F: **el ruteo llego al limite topologico** (~50 puentes)
 
 Rutee la tira ENTERA a mano (530 segmentos de cobre) con la tecnica pedida: el SPI sale de los
