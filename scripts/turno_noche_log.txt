@@ -2489,3 +2489,29 @@ Dos cosas salieron al arreglarlo que un fix de una línea habría dejado adentro
 Dos cosas quedan **anotadas y no tocadas**: pedido a @comms de firmar la sección C2.4.2 que agregué a `COMMS_REV_D.md` (es su contrato), y un drift en el `QUE_FALTA` de galgas — el pendiente del nodo v3 está duplicado como #3 y #4b; arreglarlo ahora garantizaba conflicto con ese branch.
 ===== FIN s�b 05/09/2026  2:11:35,65 ===== 
 ===== TURNO NOCHE s�b 05/09/2026 22:00:02,16 ===== 
+Noche cerrada. Resumen:
+
+**→ @backend** (servidor propio de Termovigía) — elegí PLATA, que es prioridad #1, y dentro de PLATA la única parte de la cadena de aviso que quedaba sin mirar.
+
+## Lo que encontré
+
+`servidor/api/tareas.py::_despachar_avisos()` devolvía la fila fallida a la cola **con el mismo `due_at`, ya en el pasado**. Se reintentaba 30 s después contra el mismo error y a los 5 intentos quedaba `failed`: **la vida entera de un aviso al cliente eran dos minutos**. Dos minutos de Telegram con 502 y el aviso moría para siempre, en silencio.
+
+Tres cosas más del mismo bucle, que no estaban en el plan:
+- `canales.enviar('push')` y `SEGURIDAD.md` §4.5 prometían *"la fila queda en la cola, no se pierde"*. **Era falso** — una org con reglas sólo `push` pagaba y no recibía nada, nunca.
+- `ORDER BY due_at LIMIT 50` con filas trabadas: **50 avisos rotos de un cliente tapaban la cola de los otros cuatro**.
+- Los envíos estaban dentro del `with pool().connection()` (50 × 10 s sobre un pool de 5, compartido con el endpoint de ingesta), y una sola transacción al final hacía que un reinicio a mitad de tanda mandara la alerta **dos veces**.
+
+## Lo entregado
+
+`logica/reintentos.py` puro (stdlib, mismo criterio que `logica/silencio.py`): backoff 1/2/5/10/20/30 min en columna nueva `proximo_intento_at` (`due_at` no se pisa, es el paso del escalado); se abandona por el primero de dos topes — 12 intentos o 6 h desde que el aviso vencía; tres clases de falla y sólo `transitorio` se reintenta (un 403 = bot bloqueado no se desbloquea reintentando); y lo que se abandona **se avisa**, en un solo mensaje por pasada. Migración `072` append-only.
+
+**Verificado:** `cd servidor/api && python -m unittest discover -s tests -t .` → **57 OK** (42 era el baseline de main, 15 nuevos). Los 5 tests de regresión los corrí contra la política vieja reimplantada: **fallaron los 5**.
+
+**Sin verificar (pide la base andando):** los 5 escenarios en `docs/notification-retry.md`.
+
+Branch `nocturno/local-2026-09-05-b-el-aviso-que-se-rinde` (`758560f`), pusheado. Trabajé en un worktree aparte porque el árbol de frioseguro tiene tu KiCad sin commitear — **quedó idéntico**, no lo toqué.
+
+Dos cosas para vos: el **ítem 18 del QUE_FALTA pide un fix que ya está hecho** en el branch del 08-18 (por poco lo hago dos veces), y hay **dos migraciones `070_*`** pendientes en branches distintos — no chocan, pero conviene saberlo al mergear.
+===== FIN s�b 05/09/2026 22:13:13,57 ===== 
+===== TURNO NOCHE dom 06/09/2026  2:00:01,99 ===== 

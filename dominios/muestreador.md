@@ -491,3 +491,35 @@ instrumento** — que es el ensayo D0.
 **Nota de método:** todo el análisis reusó `evidencia_campo/generar_evidencia.py::cargar_todo()`
 en vez de reescribir el parser (las tres trampas del formato ya estaban resueltas ahí).
 `data/field_captures` **sólo lectura, nada escrito** (`git status` de `data/` limpio).
+
+---
+
+## 2026-09-06 (nocturno local) — la PC como testigo del enlace: continuidad del chorro GIMAP
+
+**Branch `nocturno/local-2026-09-06-el-hueco-que-no-se-ve` en `datalogger`** (sale del
+09-04; pendiente de merge). Informe: `diario/nocturno-local-2026-09-06.md`.
+
+**Regla que queda escrita:** *el que muestrea no puede certificar que la muestra llegó.*
+El nodo GIMAP publica `gaps`, `recon`, `mudo_s`, `tx_err` y `uptime_s` — todo eso es el nodo
+hablando de sí mismo. **UDP broadcast no acusa recibo**: un paquete que muere en el aire no
+deja rastro del lado del emisor, y el visor lo cerraba solo empalmando las muestras de los dos
+lados. Un empalme de 200 ms en el medio de una señal de vibración **falsea la frecuencia y no
+se ve después** — ni en la pantalla ni en el CSV. La continuidad se mide **del lado del
+receptor, con el `seq`**, y es un dato distinto del que informa el nodo: si la `fs` medida en
+la PC cae y `gaps` no se mueve, la pérdida es de la red; si se mueven los dos, es el nodo que
+no llega a muestrear. Ese cruce es diagnóstico y hasta ahora no se podía hacer.
+
+**Corolario que no era obvio:** el duplicado es el mismo error al revés. Una PC con cable Y
+WiFi en la misma LAN recibe cada broadcast dos veces; dibujarlas las dos repite tramos y baja
+la frecuencia aparente (medido: 560 muestras dibujadas donde había 440). Cualquier receptor de
+broadcast del portfolio tiene este problema latente.
+
+**Herramienta reusable:** `tools/continuidad_gimap.py` — puro (sin sockets, sin threads, sin
+reloj propio), 5 clases de paquete, `fs` efectiva medida sobre ventana móvil. Sirve para
+cualquier chorro numerado, no sólo el de GIMAP. **Candidato a cosecha** cuando el branch se
+mergee. [@bibliotecario]
+
+**Sigue abierto y es mío:** el paquete **no lleva tiempo propio** — el eje horizontal se
+reconstruye suponiendo `fs`, así que el jitter del muestreo sigue invisible. Meterle un
+contador de microsegundos a la cabecera cambia el formato de trama (contrato con
+`rx_gimap.py`, el test de protocolo y el firmware): es decisión, no fix de noche.
