@@ -2259,3 +2259,11 @@ si se pueblan R5..R8; (d) los 5 cambios del `.scad` para @diseno3d.
 - Punto débil: 3 GND del RA-02 (U3.2/9/16) y CC1/CC2 en astillas de plano → a masa por alambre; ~8 alambres sobre la fila norte del radio.
 - **Decisión de Matías: "dejalo como está" y "cortala" (consumo de créditos).** Placa 1 se fabrica así. Reducir puentes (45 mm de ancho + L5 relajada bajo el CJMCU; el verificador estimó 22–28) queda para placa 2 sólo si hace falta.
 - Pendiente, sin agente: hoja de armado con los 53 numerados/largo/orden de soldado. Los artworks 1:1 y taladros se generan con los scripts existentes (ver commit de galgas).
+
+## 2026-09-06 — rev G (ruteo desde cero, mover + agrandar autorizado) — CORTADA a medio cerrar
+- Matías autorizó reposicionar y agrandar. El agente subió la placa a **277 × 50 mm** y ruteó de cero con FreeRouting en dos etapas.
+- **Medido por el Director:** DRC **0 violaciones**, **21 redes abiertas**; **25 puentes / 804 mm** (por zona: ALIM 1, MICRO 7, RADIO 9, ADC 6, SENSOR 2). 3 puentes sobre el techo de 60 mm (JB23-B 124 mm, JB22-B 80,8, +3V0 78,8).
+- Contra rev F.1: **53 → 25 puentes, 1154 → 804 mm.** El cobre además quedó en corredores con pistas rectas (mirado en `salida/foto_pcb.png`).
+- **Matías: "cortala así como está".** Congelada en `salida/nodo_galga_v3_revG_incompleta.kicad_pcb`. **No es fabricable** (21 abiertas).
+- **Para el ácido hoy sirve la rev F.1** (commit 9b82c63): DRC 0/0, artworks 1:1 y taladros ya generados y enviados.
+- Si algún día se retoma: cerrar 21 abiertas + partir los 3 puentes largos. Es media hora, no un rediseño.
