@@ -2462,3 +2462,30 @@ Actualicé `QUE_FALTA.md` (frioseguro, `4d861a2`) y el informe en MATI-HQ. De pa
 
 Lo único que queda abierto son **los 6 escenarios de banco** (desenchufar la sonda en caliente y ver el panel pasar de `-18.2°C` a `--.-°C`, etc.) y **aplicar las dos migraciones**, que sí necesitan hardware y base. Están listados en `docs/temperature-validity.md`.
 ===== FIN vie 04/09/2026 22:16:25,48 ===== 
+===== TURNO NOCHE s�b 05/09/2026  2:00:01,97 ===== 
+Noche cerrada. Una tarea, hecha completa.
+
+## Qué elegí y por qué
+
+**galgas** (P0 octubre + presión comercial de Dreyfus). De los QUE_FALTA de los 4 repos, esto no estaba en ninguno de los 30 branches abiertos y es 100 % software.
+
+**`CMD_SET_POTENCIA` contestaba que sí y no cambiaba nada.** El firmware escribía la potencia pedida al radio en `EST_MEDIR`; dos estados y 30 s de sleep después, `EST_TX` abría con `sx1278SetPotenciaDbm(energiaPotenciaTx())` y la pisaba antes de que ninguna trama la usara. Y el comando se ecoaba igual en `ack_eco`. **La prueba de alcance —lo único para lo que este comando existe— se corría entera a 17 dBm mientras el operador creía barrer de 2 a 20.** Con Dreyfus preguntando por cobertura en planta las próximas dos semanas, ese es el número que importa. De los siete comandos del downlink era el único que mentía, y es el mismo "OK vacío" que el firmware condena tres veces en sus propios comentarios.
+
+Dos cosas salieron al arreglarlo que un fix de una línea habría dejado adentro: el sondeo del riel del self-trigger habría empezado a certificar una TX distinta de la real (regla firmada por @energia el 04-09), y el override **tiene** que vencer — bajar la potencia por radio deja al nodo inalcanzable por diseño, porque el downlink necesita como nonce el `seq` de la trama que el receptor acaba de escuchar.
+
+## Verificado sin hardware
+
+- `tools/test_potencia_tx.exe` → **36 checks, 0 fallos**, sin warnings (3 bloques son regresión).
+- `check_pinout_nodo_v3.py --mutantes` → OK, **79/79 muertos** (+8 nuevos sobre el baseline de 71 que corrí antes de tocar nada) + 5 reglas estáticas nuevas.
+- Compilación **DIP-28 y TQFP-32**: exit 0, sin warnings, 28 % flash / 6 % RAM.
+
+**Sin verificar (pide banco):** 4 escenarios con el receptor mirando el RSSI — que `SET_POTENCIA 2` lo haga caer de verdad, el `0`, el vencimiento a la hora, y que con la pila baja el comando no se ecoe.
+
+## Entregado
+
+- Branch `nocturno/local-2026-09-05-la-potencia-que-nadie-cambio` (`ee2908a`, pusheado). Sale de `main`; **colisiona sólo con el branch del 09-03 y sólo en el checker** (añadido contra añadido, se queda con los dos lados).
+- `QUE_FALTA.md` de galgas actualizado (item 4c) y `diario/nocturno-local-2026-09-05.md` en MATI-HQ, pusheado (`050e881`).
+
+Dos cosas quedan **anotadas y no tocadas**: pedido a @comms de firmar la sección C2.4.2 que agregué a `COMMS_REV_D.md` (es su contrato), y un drift en el `QUE_FALTA` de galgas — el pendiente del nodo v3 está duplicado como #3 y #4b; arreglarlo ahora garantizaba conflicto con ese branch.
+===== FIN s�b 05/09/2026  2:11:35,65 ===== 
+===== TURNO NOCHE s�b 05/09/2026 22:00:02,16 ===== 
