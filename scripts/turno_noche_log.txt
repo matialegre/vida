@@ -2515,3 +2515,33 @@ Branch `nocturno/local-2026-09-05-b-el-aviso-que-se-rinde` (`758560f`), pusheado
 Dos cosas para vos: el **ítem 18 del QUE_FALTA pide un fix que ya está hecho** en el branch del 08-18 (por poco lo hago dos veces), y hay **dos migraciones `070_*`** pendientes en branches distintos — no chocan, pero conviene saberlo al mergear.
 ===== FIN s�b 05/09/2026 22:13:13,57 ===== 
 ===== TURNO NOCHE dom 06/09/2026  2:00:01,99 ===== 
+Noche cerrada. Una tarea, hecha y verificada.
+
+## → @muestreador + @frontend (lo trabajé yo directo, es una sola cadena)
+
+**Repo:** `C:\Proyectos\datalogger` (P0, "terminarlo primero antes de Dreyfus").
+**Branch:** `nocturno/local-2026-09-06-el-hueco-que-no-se-ve` (pusheado, `9b35eda`). Sale del 09-04 — **al mergear éste entra también aquél**.
+
+### El hallazgo
+El visor del nodo GIMAP **no miraba el `seq`**. Un paquete muerto en el aire eran 40 muestras — 200 ms de registro — que desaparecían, y las de los dos lados se pegaban sin costura: onda continua, linda, sin ningún indicio. En un banco de vibraciones eso es un empalme en el medio de la señal: la frecuencia que se lee de ahí está mal y no se detecta después.
+
+Tres disfraces: el nodo **no puede avisarlo** (UDP broadcast no acusa recibo); en pantalla ya había un número que parecía ser ése (`gaps`, que lo cuenta el nodo sobre su propio muestreo); y `--gaps-falsos` del emisor sintético **existía desde hace rato y confirmaba al emisor, no al visor**.
+
+**De yapa:** una PC con cable **y** WiFi en la misma LAN oye cada broadcast dos veces y el visor las dibujaba las dos — medido, **560 muestras dibujadas donde había 440**.
+
+### Lo entregado
+`tools/continuidad_gimap.py`, puro y compartido por el visor y `rx_gimap.py`. Cinco clases de paquete (continuo / hueco / duplicado / desordenado / reinicio), rayas rojas en el hueco, cartel ámbar, chips `perdidos en el aire` / `fs medida acá` / `duplicados`, y columna `perdidos_antes` en el CSV.
+
+### Evidencia
+- 56 chequeos verdes (3 bloques de regresión), **10/10 mutantes muertos**.
+- Punta a punta contra `127.0.0.1`: visor viejo → 600 muestras, 0 huecos, ninguna clave de enlace. Visor nuevo → `perdidos: 6`, 16,2 %, 3 marcas de hueco.
+- **Mirado en el navegador**: `docs/evidencia/visor-huecos.png`.
+- Sin regresión en las 4 suites previas.
+
+**Sin verificar (pide el nodo enchufado):** hueco real por distancia al AP, el caso de las dos interfaces, reinicio a mano, y cruzar `fs medida acá` contra `gaps` en un ensayo largo.
+
+Trabajé en un worktree aparte: tus dos árboles de `datalogger` quedaron intactos con tus archivos sin commitear. MATI-HQ actualizado (informe, PORTFOLIO, `dominios/muestreador.md`, `QUE_FALTA` ítem 5c) y pusheado.
+
+**Candidato para la próxima noche**, ya anotado: si el MPU6050 no responde, el nodo transmite `ax..gz = 0` para siempre — indistinguible de un acelerómetro quieto, y nada en el estado lo dice.
+===== FIN dom 06/09/2026  2:15:59,78 ===== 
+===== TURNO NOCHE dom 06/09/2026 22:00:02,18 ===== 
