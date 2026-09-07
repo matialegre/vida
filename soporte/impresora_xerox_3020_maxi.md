@@ -30,6 +30,8 @@ perfil; (3) recargarle la red a la impresora con el asistente, por USB.
 | **Wi-Fi** | SSID **`BVNET-99aa`** · clave **`C80F709D`** (de fábrica) · WPA2-Personal/CCMP · 2,4 GHz canal 9 · 87 % de señal · BSSID `f0:63:f9:31:99:b0` |
 | IP reservada | `192.168.100.100` — **VERIFICADA el 2026-09-07**: la impresora la tomó y el `arp -a` devolvió su MAC. BVC la hizo bien |
 | Puerto en Windows | `IP_192.168.100.100` (por IP, no por nombre) + `USB001` de respaldo |
+| Servicios abiertos | **9100** (RAW) · **631 (IPP)** · **80** (panel web, `http://192.168.100.100`) |
+| Impresión desde celular | **SÍ, funciona** — el 631 está abierto y el cliente ya imprimía así antes. *(Yo había afirmado lo contrario de memoria; Matías lo desmintió con la experiencia del cliente y el `Test-NetConnection` le dio la razón. No afirmar capacidades de un modelo sin medirlas: un `Test-NetConnection` al 631 lo contesta en dos segundos.)* |
 | PC | usuario `Maxi`, Windows 11, **Windows PowerShell 5.1** (no 7) |
 
 **El SSID se dedujo de la MAC del gateway**: gateway `f0-63-f9-31-**99-aa**` →
