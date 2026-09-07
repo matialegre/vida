@@ -3,11 +3,18 @@
 **Síntoma**: andaba por red y a los pocos días dejó de imprimir. Estado `Error` en
 Windows, sin más explicación.
 
-**Causa real**: la impresora **se cayó del Wi-Fi**. No era el driver, ni la PC, ni
-la IP. No estaba en la red en absoluto.
+**Causa real**: **el perfil de Wi-Fi guardado se corrompió** — en la impresora y,
+por separado, también en la PC. Misma red, misma clave, 87 % de señal: lo que
+falló fue la configuración guardada, no la red. No era el driver ni la IP.
 
-**Solución**: quedó **conectada por cable USB** (puerto `USB001`). Imprime y no
-depende del módem del proveedor.
+**Solución final**: **imprime por Wi-Fi**, con la IP fija `192.168.100.100`
+(puerto `IP_192.168.100.100`) **y el cable USB dejado puesto como respaldo**
+(`USB001`). Quedó mejor que antes del problema, porque antes el puerto iba por
+NOMBRE y ahora va por IP.
+
+**El orden que funcionó**: (1) USB para que imprimiera ya y para confirmar que la
+impresora estaba sana; (2) arreglar el Wi-Fi de la PC borrando y recreando su
+perfil; (3) recargarle la red a la impresora con el asistente, por USB.
 
 ---
 
@@ -20,8 +27,15 @@ depende del módem del proveedor.
 | Nombre de red | `XRXE84DEC285A2A` (es `XRX` + la MAC, convención Xerox) |
 | Driver | `Xerox_Phaser_3020_Windows_Print_Drivers_Utilities_V1.07` |
 | Red del lugar | `192.168.100.x`, gateway `192.168.100.1` — **módem de BVC, sin router propio** |
-| IP reservada | `192.168.100.100` — **BVC dice haberla reservado (2026-09-07). SIN VERIFICAR**: ver abajo |
+| **Wi-Fi** | SSID **`BVNET-99aa`** · clave **`C80F709D`** (de fábrica) · WPA2-Personal/CCMP · 2,4 GHz canal 9 · 87 % de señal · BSSID `f0:63:f9:31:99:b0` |
+| IP reservada | `192.168.100.100` — **VERIFICADA el 2026-09-07**: la impresora la tomó y el `arp -a` devolvió su MAC. BVC la hizo bien |
+| Puerto en Windows | `IP_192.168.100.100` (por IP, no por nombre) + `USB001` de respaldo |
 | PC | usuario `Maxi`, Windows 11, **Windows PowerShell 5.1** (no 7) |
+
+**El SSID se dedujo de la MAC del gateway**: gateway `f0-63-f9-31-**99-aa**` →
+red `BVNET-**99aa**`. Sirvió para descartar las otras cuatro redes `BVNET-0F8F-*`
+que se veían en el lugar (son de otro equipo, probablemente el de las cámaras):
+meter la impresora ahí la habría dejado en otra red, sin ver a la PC.
 
 **No tienen usuario ni contraseña del módem**: cualquier cambio de red hay que
 pedírselo a BVC. Esa es la limitación de fondo del lugar.
@@ -58,6 +72,46 @@ Invoke-CimMethod -InputObject (Get-CimInstance Win32_Printer -Filter "Name='Xero
 Estado pasó de `Error` a `Normal` y la página de prueba salió. **Confirmado en
 papel por el cliente**, no solo por el `ReturnValue 0`.
 
+### Paso 2 — el Wi-Fi de la PC (era un problema aparte, apareció en el camino)
+
+La PC tampoco se conectaba a `BVNET-99aa`: la mostraba con una **X** en la lista.
+Misma clave de siempre, 87 % de señal. **El perfil guardado estaba corrupto.** Se
+arregló borrándolo y recreándolo:
+
+```powershell
+netsh wlan show networks mode=bssid | Select-String "BVNET-99aa" -Context 0,8   # señal y seguridad reales
+netsh wlan delete profile name="BVNET-99aa"
+# recrear por XML con la clave (ver el bloque completo en el historial) y:
+netsh wlan connect name="BVNET-99aa"
+```
+
+**Hacerlo con red de seguridad**: se entró a la PC por el hotspot del celular del
+cliente, se guardó ese SSID antes de tocar nada y el script volvía solo si en 20
+segundos no conectaba. Sin eso, un intento fallido deja la máquina inaccesible.
+
+### Paso 3 — el Wi-Fi de la impresora
+
+Con la impresora **conectada por USB**, el asistente del paquete V1.07 →
+**Conexión de red inalámbrica** → red `BVNET-99aa` → clave `C80F709D`. Al llegar a
+"Configuración de red inalámbrica completa" pide desconectar el USB: se
+desconecta y **se cancela el resto del asistente** (el driver ya estaba
+instalado; seguir solo agrega puertos duplicados).
+
+```powershell
+# verificación: la impresora tomó .100 y el puerto pasa a ir por IP
+Test-NetConnection 192.168.100.100 -Port 9100        # TcpTestSucceeded : True
+arp -a | Select-String "e8-4d-ec"                     # 192.168.100.100  e8-4d-ec-28-5a-2a
+Add-PrinterPort -Name "IP_192.168.100.100" -PrinterHostAddress "192.168.100.100"
+Set-Printer -Name "Xerox Phaser 3020" -PortName "IP_192.168.100.100"
+# y limpiar los duplicados, incluido el (2) que crea el asistente al pasar por acá
+Remove-PrinterPort -Name "XRXE84DEC285A2A"
+Remove-PrinterPort -Name "XRXE84DEC285A2A(0)"
+Remove-PrinterPort -Name "XRXE84DEC285A2A(1)"
+Remove-PrinterPort -Name "XRXE84DEC285A2A(2)"
+```
+
+Quedaron solo `IP_192.168.100.100` y `USB001`. **Papel confirmado.**
+
 ## Trampas que costaron tiempo (leer antes de repetir esto en otro lado)
 
 - **El puerto era un NOMBRE, no una IP.** Por eso el diagnóstico inicial de "le
@@ -71,19 +125,28 @@ papel por el cliente**, no solo por el `ReturnValue 0`.
   teléfonos dejan de responder con la pantalla apagada.
 - **Una reserva DHCP no sirve si el equipo no está conectado** — solo entrega la
   IP cuando el aparato la pide.
-- **La reserva de `192.168.100.100` NUNCA SE VERIFICÓ y no hay que darla por
-  buena.** Lo único que hay es que BVC dijo haberla hecho. Como la impresora
-  jamás volvió al Wi-Fi, nunca pidió IP y la reserva nunca se puso a prueba: el
-  `ping 192.168.100.100` dio "host de destino inaccesible", que es lo contrario
-  de una comprobación. Puede estar bien, mal, o cargada con otra MAC.
-  **Se comprueba así**, y recién el día que la impresora vuelva al Wi-Fi:
-  `Test-NetConnection 192.168.100.100 -Port 9100` y `arp -a | Select-String
-  "192.168.100.100"` — la MAC que aparezca tiene que ser `e8-4d-ec-28-5a-2a`. Si
-  es otra, esa IP se la quedó otro equipo y hay que volver a hablar con BVC.
+- **Durante horas la reserva estuvo SIN VERIFICAR y no había que darla por
+  buena** — lo único que había era que BVC decía haberla hecho, y el `ping` daba
+  "host inaccesible", que es lo contrario de una comprobación. Se verificó recién
+  al final, cuando la impresora volvió al Wi-Fi y tomó la IP con su MAC. *Regla:
+  una reserva no está hecha hasta que un `arp -a` muestra la MAC correcta en esa
+  IP.*
 - **`USB001` puede existir sin cable conectado** (queda de instalaciones
   anteriores). La prueba real es `Get-PnpDevice -PresentOnly`.
-- **Reinstalar el driver deja puertos duplicados**: quedaron tres
-  (`XRXE84DEC285A2A`, `(0)` y `(1)`). Se borran con `Remove-PrinterPort`.
+- **Reinstalar el driver deja puertos duplicados**: llegaron a ser cuatro
+  (`XRXE84DEC285A2A`, `(0)`, `(1)` y `(2)`). Se borran con `Remove-PrinterPort`.
+- **Un perfil de Wi-Fi corrupto se ve igual que un problema de red o de clave**:
+  la PC mostraba la red con una X, con 87 % de señal y la clave correcta guardada.
+  Ni alcance, ni banda, ni filtrado de MAC, ni contraseña cambiada — todas
+  hipótesis que se probaron y cayeron. Se arregla borrando y recreando el perfil.
+- **`break` dentro de `ForEach-Object` corta el script entero**, no solo el
+  bucle: en el script de reconexión nunca se llegó a imprimir el resultado final.
+  Usar `foreach` o una bandera.
+- **`Test-Connection` tira "Error genérico"** si la placa de red está en
+  transición (justo al cambiar de Wi-Fi). No significa que falló la conexión.
+- **El nombre de la red se puede deducir de la MAC del gateway**: gateway
+  `f0-63-f9-31-99-aa` → SSID `BVNET-99aa`. Útil cuando hay varias redes parecidas
+  y hay que saber cuál es la del módem correcto.
 
 ## La lección de método
 

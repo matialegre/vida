@@ -806,3 +806,110 @@ el proyecto.** No se tocó `egdlgprnanrlvmjfshrv` (kiosco/Paradise/flota vieja) 
 - `HALLAZGO_PARADISE.md` **sin cambios**: la flota todavía vive en `egdlgprnanrlvmjfshrv`, así que no
   corresponde marcar la mudanza. Los pasos 2 y 3 (Paradise y kiosco) siguen pendientes igual — mudar la
   flota no los resuelve.
+
+## 2026-09-07 — COTIZADOR EMSICA: backend completo, probado contra base real. Supabase BLOQUEADO por el token.
+Proyecto nuevo (`C:\Proyectos\emsica-cotizador`). Contrato: `docs\SPEC.md` + el manual real
+(`docs\MANUAL_DE_VENTAS_original.docx`, leido entero: 4.963 caracteres). Frontend en paralelo
+contra la misma spec; su contrato quedo en `docs\BACKEND.md` (firmas exactas). **NO se commiteo**
+(pedido explicito). Nada se toco de Termovigia ni se pago nada.
+
+**LO PRIMERO, PORQUE BLOQUEA: `POST /v1/projects` -> 403 Forbidden.** Verificado hoy, endpoint por
+endpoint, con el `sbp_fccf...` de la boveda: `GET /v1/projects` 200 (ve `ccyrncqyvabzcjobggfm`),
+`GET /v1/organizations` 200 pero `[]`, `POST /v1/projects` **403**. Es el MISMO token de permisos
+finos del 2026-09-04 (flota): no es cuota, es permiso — con una org inexistente el mismo POST da 404.
+**Hay lugar**: el limite free es de 2 proyectos **por cuenta**, `termovigia@gmail.com` tiene 1, y la
+org `emsica` (`gxwhzmzqevzjtjhvpsmx`) esta vacia esperando. **Destraba: 1 minuto de Matias** en
+`supabase.com/dashboard/account/tokens` logueado como `termovigia@gmail.com` -> token de acceso total
+-> `CREDENCIALES\supabase.md`. Con eso se crea en sa-east-1 y las 8 migraciones entran **sin tocar una
+linea de SQL**.
+
+**COMO SE VERIFICO IGUAL, sin esperar el token**: proyecto **Neon desechable**
+`emsica-cotizador-pruebas` (aws-sa-east-1, PG 18), creado con el CLI de Neon en la org de Termovigia
+(`neon projects delete <id> --org-id org-noisy-waterfall-08727863` lo borra). Neon es Postgres pelado:
+no trae `auth` ni los roles `anon`/`authenticated`, asi que hay `pruebas\shim_auth_pruebas.sql` que los
+crea **solo ahi** — **no es una migracion y no va a Supabase** (pisaria el auth de verdad). Que las 8
+migraciones apliquen ahi sin un cambio es justamente la prueba de que entran en Supabase.
+
+**QUE QUEDO**: schema `cotizador`, **15 tablas** (las 13 de la spec §4 con los nombres TAL CUAL +
+`config` + `contadores`), **todas con RLS y policy**, 6 vistas de lo calculado, 32 funciones, 41 policies,
+8 migraciones append-only con corredor propio (`pruebas\aplicar.py`) que guarda el SHA-256 y **se niega
+a seguir si alguien edita una migracion ya aplicada** (probado: se le agrego una linea a `0001` y
+aborto).
+
+**EVIDENCIA: 82 verificaciones OK / 0 fallas** (`pruebas\probar_reglas.py`), corriendo como la app
+—rol `authenticated` con JWT, o sea con la RLS puesta—. Las cuatro reglas del encargo, ROTAS a proposito:
+1. **codigo de articulo duplicado** -> `23505`, y tambien en minusculas y con espacios (el unico va
+   sobre `upper(btrim(codigo))`: `PT100` = `pt100` = `" PT100 "`).
+2. **dos guardados simultaneos pidiendo numero** -> 3 y 4, consecutivos, y **el segundo espero 1,62 s
+   medidos** (candado de fila, no `max()+1`). Ademas: **un guardado cancelado NO deja hueco**
+   (cancelado=5, siguiente=5).
+3. **presupuesto con item sin precio** -> `23502`; precio 0 -> `23514`; presentar uno vacio -> `23514`.
+4. **editar un presupuesto presentado** -> `42501` en las 6 vias (condiciones, moneda, precio de un item,
+   agregar item, re-aplicar factor, volverlo a borrador). La unica salida es `revisar_presupuesto()`.
+Mas: DELETE rechazado en las 15 tablas, `anon` **sin un solo permiso** en el schema, sesion sin JWT ve
+cero filas y no escribe, y cero identificadores fuera de `[a-z0-9_]` (regla de flota 0009).
+
+**LA DECISION QUE MAS SE PENSO: numeracion sin huecos NO es una `sequence`.** `nextval()` no se deshace
+con el ROLLBACK, asi que cada guardado cancelado se come un numero — y un legajo/presupuesto es un
+comprobante que EMSICA anota en la caratula. Se usa un contador por `(tipo, anio)` con
+`insert ... on conflict do update ... returning`, que toma el candado de LA FILA: la segunda transaccion
+espera, y si la primera cancela el incremento se deshace con ella. Precio: los guardados del mismo tipo
+se serializan mientras dura la transaccion (para decenas por dia, gratis). **El criterio (anual vs
+corrida) NO se adivino**: el manual muestra legajo 21, pedido 57033 y presupuesto 47178, rangos que no
+se parecen. Default legajo=anual, pedido/presupuesto=corrida, **configurable en `cotizador.config`**, y
+es la pregunta #1 para EMSICA. Hay que definirla ANTES del primer legajo real.
+
+**TRES BUGS QUE SOLO ENCONTRO LA BASE**
+1. **`es_sesion_valida()` no podia usar `current_user`**: adentro de una funcion SECURITY DEFINER
+   `current_user` es SIEMPRE el duenio, asi que cualquier RPC habria pasado el chequeo de sesion aunque
+   no hubiera ninguna. Se discrimina por el GUC `role` (lo que PostgREST hace `SET ROLE`; en conexion
+   directa vale `none`), que el DEFINER **no** toca. Sin esto, ademas, la semilla de `0006` no podia
+   correr desde la migracion.
+2. **`borrar_ejemplos()` moria con `23503`** si alguien abria un legajo DE VERDAD eligiendo un cliente
+   de ejemplo — que es exactamente lo que va a pasar el primer dia, porque la lista arranca con los de
+   ejemplo. La transaccion entera se caia y **no borraba nada**. Migracion `0007`: el dato de ejemplo
+   con historial real colgando **no se borra, se desactiva y se informa**
+   (`desactivados_por_tener_historial`), mismo criterio que flota 0010. De paso `cargar_ejemplos()` se
+   hizo idempotente sobre los catalogos, porque despues de borrar quedaba una fila desactivada y el
+   siguiente "cargar ejemplos" moria con `23505`.
+3. **Y el mismo patron una tercera vez** (`0008`): si el presupuesto de ejemplo se PRESENTA — que es lo
+   que hace cualquiera que pruebe el circuito entero con los datos de ejemplo — el trigger de congelado
+   se dispara tambien en el DELETE y `borrar_ejemplos()` moria con `42501`, otra vez sin borrar nada.
+   **Regla para llevarse: cada regla de inmutabilidad hay que probarla contra la unica operacion que
+   legitimamente tiene que atravesarla.** Las tres las encontro el test, ninguna se veia leyendo el SQL.
+
+**Lo que la app gana respecto del sistema viejo, y esta en la base, no en la pantalla**
+- **`v_comparacion_precios`**: el mismo item cotizado por varios proveedores, ordenado, con el mejor
+  marcado y la diferencia contra el mejor. Dos detalles que importan: el ranking compara **precio NETO**
+  (100.000 con 10 % de bonificacion le gana a 95.000 sin bonificacion — hay test), y se rankea **por
+  moneda**, porque comparar dolares con pesos sin tipo de cambio es mentir (pregunta #4).
+- **`armar_presupuesto()`** es el "traer" que el manual recomienda NO usar porque tarda: aca es una sola
+  consulta que toma la mejor cotizacion de cada item y arma el presupuesto entero.
+- **`v_presupuestos`** trae el margen en plata y en porcentaje. Ojo con la confusion: con factor 1,4 el
+  margen sobre la venta es **28,57 %**, no 40 %. Se exponen los dos (`margen_pct` y `factor_promedio`).
+
+**Identidad**: patron de flota `0011` copiado tal cual — persona = fila, `p_usuario_id` explicito en
+todas las RPC, `cotizador.persona()` como UNICO lugar donde se valida el actor, policies que aceptan
+cualquier persona activa, y `es_admin()` que sigue atado a credencial a proposito. `anon` no recibe
+**ningun** permiso: el navegador habla con una funcion de Vercel (puerta angosta con lista blanca, sin
+rama de DELETE) que se conecta con una **cuenta de oficina**, no con la `service_role` — la de servicio
+saltearia la RLS y convertiria un bug de la puerta en acceso total.
+
+**Datos de ejemplo** (`0006`): legajo 1 `abierto` con 2 pedidos esperando, legajo 2 `cotizado` con 2
+pedidos respondidos y dos items cotizados por dos proveedores distintos. Todo `es_ejemplo=true` y con
+"(ejemplo)" en el nombre. **Los datos reales de EMSICA no los tenemos y no se inventaron como suyos**:
+son plausibles del rubro (valvulas, transmisores PT100, manometros, termovainas). Los 3 macros tienen
+texto marcador de posicion porque **el texto real lo tiene que pasar EMSICA** (pregunta #2).
+
+**Archivos**: `supabase\migrations\0001_schema.sql` ... `0008_congelado_vs_borrado_autorizado.sql` (8),
+`pruebas\aplicar.py`, `pruebas\probar_reglas.py`, `pruebas\shim_auth_pruebas.sql`, `docs\BACKEND.md`,
+`docs\PREGUNTAS_EMSICA.md` (10 preguntas + 2 bonus), `.env.example`, `.gitignore`. `.env` con el DSN de
+Neon queda **fuera de git**.
+
+**Falta y BLOQUEA**: el token de acceso total -> proyecto Supabase -> exponer el schema `cotizador` en
+PostgREST (sin eso el frontend no ve nada; lo aprendimos en flota) -> cuenta de oficina + `api/cotizador.js`.
+**Falta y no bloquea**: el PDF (es del frontend; la base ya le da `v_presupuestos` + `v_presup_items` +
+`macro_texto`), y las respuestas de EMSICA.
+**Para @verificador**: `python pruebas\aplicar.py --dsn <dsn> --shim --desde-cero` y despues
+`python pruebas\probar_reglas.py --dsn <dsn>`, exigir **82 OK / 0 fallas**; repetir contra Supabase
+cuando exista el proyecto. Nada es produccion antes de eso.
