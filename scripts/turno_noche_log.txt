@@ -2545,3 +2545,34 @@ Trabajé en un worktree aparte: tus dos árboles de `datalogger` quedaron intact
 **Candidato para la próxima noche**, ya anotado: si el MPU6050 no responde, el nodo transmite `ax..gz = 0` para siempre — indistinguible de un acelerómetro quieto, y nada en el estado lo dice.
 ===== FIN dom 06/09/2026  2:15:59,78 ===== 
 ===== TURNO NOCHE dom 06/09/2026 22:00:02,18 ===== 
+Listo. Todo commiteado y pusheado.
+
+## Turno cerrado — 2026-09-06-b
+
+→ **@firmware** (la máquina de estados del aviso) + **@backend** (que la alerta llegue a `alerts`). El primer turno de la noche ya había ido a datalogger, así que este fue a **PLATA**.
+
+**Repo:** `C:\Proyectos\frioseguro` · **Branch:** `nocturno/local-2026-09-06-b-la-puerta-fantasma` (pusheado)
+
+### Lo que encontré
+Un equipo **sin sensor de puerta** avisaba "puerta abierta". `doorSensorsInit()` ponía la puerta principal en `enabled = true` fijo, ignorando `config.doorEnabled`; con el pull-up interno y nada enchufado, GPIO5 lee HIGH — y HIGH significa *abierta*. Un comercio que sólo contrató temperatura recibía, a los 2 minutos del primer arranque, un Telegram falso, y publicaba `door1_open: true` permanente en la nube.
+
+Y `supabase.h` tenía la defensa correcta escrita pero muerta: elegía entre `doors[0].isOpen` y `sensorData.doorOpen` según ese `enabled` que era siempre `true`. `sensors.h` sí respetaba la config y calculaba el valor bueno en cada ciclo — que no se usaba jamás.
+
+De paso cerré los **tres hallazgos que el branch 07-20 dejó documentados desde julio** y que estaban marcados como "para banco con un reed real": ninguno de los tres necesitaba hardware. El principal: el cliente configuraba "avisame a los 5 minutos" y el equipo avisaba a los 2, contra un `#define` de 120 s, mientras `config.doorOpenMaxSec` viajaba por Preferences, Supabase y la web sin gobernar nada.
+
+Más el patrón que ya apareció tres noches seguidas: `alertSent = true` afuera del `if` de internet — con el router caído el aviso se daba por dado y no salía nunca.
+
+### Verificación (sin hardware)
+- `test_door_alert.cpp` → **34 checks, 0 fallos, sin warnings**; **3 mutantes** que reimplantan los defectos mueren (8, 5 y 3 fallas).
+- Modelo Python del 07-20 actualizado → **16 tests OK**; `--demo-hallazgo` pasó de exit 1 a exit 0.
+- `arduino-cli compile` → **exit 0, 65 % flash, 16 % RAM, 0 warnings**. El primer intento falló y eso valió: el compilador encontró dos usos de `isOpen` en `supabase.h` que mi grep no había visto.
+
+**Sin verificar (pide reed y banco):** 6 escenarios en `docs/door-open-notice.md`; el principal es arrancar sin reed y confirmar que ya no llega el aviso falso.
+
+**Nota de merge:** sale de `main` con el branch 07-20 mergeado adentro (su propio doc pedía actualizar modelo y tests en el mismo commit). Colisión sólo con el `09-01-b`, en el tramo de envío, y los dos lados quieren lo mismo. En `QUE_FALTA` el ítem quedó como 21 y el 09-05-b también usó el 21 — hay que renumerar si entran los dos.
+
+**Para la próxima noche:** `power_monitor.h` tiene los mismos dos bugs y esta vez sí está sin integrar. El corte de luz es EL evento para un comercio.
+
+El worktree temporal se eliminó y el árbol de `frioseguro` quedó idéntico, con el KiCad sin commitear de Matías intacto.
+===== FIN dom 06/09/2026 22:15:52,87 ===== 
+===== TURNO NOCHE lun 07/09/2026  2:00:02,05 ===== 
