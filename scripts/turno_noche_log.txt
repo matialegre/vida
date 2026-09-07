@@ -2576,3 +2576,31 @@ Más el patrón que ya apareció tres noches seguidas: `alertSent = true` afuera
 El worktree temporal se eliminó y el árbol de `frioseguro` quedó idéntico, con el KiCad sin commitear de Matías intacto.
 ===== FIN dom 06/09/2026 22:15:52,87 ===== 
 ===== TURNO NOCHE lun 07/09/2026  2:00:02,05 ===== 
+Listo. Una tarea, hecha y verificada.
+
+## Qué elegí y por qué
+
+**galgas** (P0 octubre, con el frente comercial abierto). La tarea: **el nodo transmite y nadie recibe**. No es una figura — `esp_rx_receptor` no tiene una sola línea de LoRa, así que **ninguna trama de este nodo fue decodificada nunca por nada**, y el contrato que las describe (`COMMS_REV_D.md` C2) está escrito en dos copias que nadie comparó: las tablas del doc (de donde va a salir el receptor) y `armarTrama()`/`armarTramaDiag()` (lo que sale al aire). Las tramas se parsean **por offset**: si esas copias se corren un byte entre sí el sistema **no falla**, entrega un número plausible y falso al LCD, a Supabase y a la comparación A vs B.
+
+El propio doc lo pide y lo llama "el más importante de todos" (C5.2.1), y **4 de las 5 barreras no necesitan el receptor** para escribirse.
+
+## El hallazgo
+
+**El `id 0x00` se descartaba en silencio.** C2.0 manda descartar todo `id` fuera de la tabla, y diez líneas más abajo dice que el default de fábrica `0x00` transmite igual y se muestra como `NODO SIN ID` — *"falla ruidosa, no silenciosa"*. `0x00` **es el estado de fábrica**: un nodo recién flasheado, el momento exacto de la instalación en el REDLER, se vería **idéntico a un nodo que no transmite**. Se resuelve separando decodificar (sale bien) de mapear a cadena (no sale). Anotado como **C2.0.1** para que @comms firme.
+
+Más dos correcciones a la barrera 5 con el número al lado: el piso de `vbat` es 1500 mV y no 2000 (con 2000 se descartarían las últimas tramas de un nodo agonizante — BODLEVEL 1,8 V), y `n = 0` es legal.
+
+## Entrega y verificación
+
+`firmware/shared/trama_revd.h` (puro, incluido por el test) + `tools/test_trama_revd.cpp` + `tools/check_trama_revd.py` + `docs/trama-revd.md`. **No toqué el firmware del nodo.**
+
+- `./tools/test_trama_revd.exe` → **124 checks, 0 fallos, sin warnings**
+- `python tools/check_trama_revd.py --mutantes` → **OK, 17/17 mutantes muertos**
+- header solo en **c++11** con `-Wpedantic` → limpio; `check_pinout_nodo_v3.py` sigue OK
+
+**Sin verificar (necesita banco):** la trama de oro no vino del aire — hay que capturar una real con el sniffer y pasarla por `trDecodificarA3()` (ensayo 2.c). Hasta entonces es un contrato verificado contra sí mismo, y así quedó escrito.
+
+Branch `nocturno/local-2026-09-07-la-trama-que-nadie-leyo` (`7ad6d50`) pusheado. Trabajé en worktree aparte: el árbol de `galgas` quedó idéntico, con tu rev G de KiCad sin commitear intacta. Diario y `QUE_FALTA` actualizados, MATI-HQ pusheado (`fa96cd8`).
+
+De paso: `QUE_FALTA` de galgas decía "pendiente de merge" de tres branches que **ya están en `main`** (09-01, 09-03, 09-05). Puse el aviso arriba en vez de reescribir los párrafos.
+===== FIN lun 07/09/2026  2:20:15,53 ===== 
