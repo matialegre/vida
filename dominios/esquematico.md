@@ -953,3 +953,14 @@ Doc de dominio + bitacora. El agente lo lee al arrancar y lo actualiza al cerrar
     `DIFF_REDES_revF_revF1.txt`: **exactamente 2 nodos movidos** (`Net-(JB13-B)`: +U1.7 −U1.10;
     `Net-(JB14-B)`: +U1.10 −U1.7) y **0 redes nuevas, eliminadas o renombradas** · PDF regenerado y mirado
     (`salida/revF1_swap_adc.png`) · rev F.1 congelada en `kicad/revF1/`.
+
+- **2026-09-08 [FRIOSEGURO / CERRO MORO] Cableado de sondas: un cable de 3 hilos por reefer, 25 m, 3 sondas en la punta.**
+  `C:\Proyectos\frioseguro\hardware\mini\CABLEADO_SONDAS_CERRO_MORO.md` (sin tocar esquematicos). **Veredicto: SI se puede**,
+  como cadena (tronco 25 m + 12 m dentro del reefer, stubs <= 3 m = el cable de la sonda moldeada), no como repartidor en la puerta.
+  Bus real = **37 m**: Cat5e 2,15 nF -> 2k2 6,6 us (entra, 1,5x) / **1k5 (R18 = 4k7) 4,5 us, 2,2x = recomendado** / 990 3,0 us;
+  cable comun 100 pF/m -> 2k2 NO (11,5 us). **Los 6 sensores en un pin NO** (74 m, 13 us con 2k2, estrella en el master):
+  **un bus por reefer** -> Mini tiene 1 bus (IO4) y IO18 libre = rev pendiente (copiar R1/R18/R2/D3/D4 + bornera, y cambiar D2
+  P6KE6.8CA por TVS < 50 pF); **Base v2 tiene 1 bus (GPIO4, 4k7) y 0 GPIO libres**: no es la placa de Cerro Moro. Con bus por pin
+  el reefer se identifica por pin sin mapear ROM (`getTempCByIndex` hoy ordena por serie, no por posicion). Protocolo de banco
+  con 6 pasos y criterio (ROM 100/100, CRC 0/300, t_sub <= 5 us, VOL <= 0,4 V) + despeje de C real del cable. Incognitas: cable
+  "Daisa" (si es blindado, 150-250 pF/m: ni 990 alcanza), clones sin IL garantizado, 3 hilos y no parasito.

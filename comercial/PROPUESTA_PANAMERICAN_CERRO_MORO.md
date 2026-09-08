@@ -1,124 +1,120 @@
 # PROPUESTA — Monitoreo de temperatura de los reefers del campamento Cerro Moro (Santa Cruz)
 
-> @comercial · **v8.0, 2026-09-04** · **UN SOLO presupuesto: 5 módulos = 1 doble de exterior + 4 simples de interior**
-> **Configuración DEFINITIVA, cerrada por chat con Andrés el 4-sep 15:23.** Matías preguntó *"¿los de afuera uno, y los otros uno cada uno sería?"*; Andrés: **"Así sería"**. Y sobre el cable: **"No es mucho lo de los cables. Los saco de acá."**
-> - **Los 2 reefers de la intemperie están JUNTOS** → **UN módulo doble**, en **caja estanca IP65 apta para exterior** (Matías ya mandó una al sitio).
-> - **Los 4 reefers de adentro van con UN MÓDULO CADA UNO** — incluido el que hoy está fuera de servicio: **su módulo se instala igual**, y el día que el reefer vuelva sólo se le conectan las sondas.
-> - **Total: 5 módulos.** Repuesto: **1 módulo doble**, que cubre a cualquiera de los cinco (es la misma placa).
-> - **Por reefer, siempre igual: 3 sondas + 1 sensor de puerta + 1 señal de defrost.**
-> - **Ya no hay cable entre reefers de interior.** La única tirada entre contenedores es la del par de afuera, que está pegado. La nota al pie *"No incluye cable ni tendido entre reefers"* **se mantiene tal cual**.
-> **Precio: inicial USD 5.000** — 1 doble de exterior **700** + 4 simples de interior **600** + repuesto doble **350** + puesta en marcha **1.550** (62 h). **Margen parejo del ~32 % en los tres módulos** (Matías liberó el precio del doble el 4-sep: *"no dejes fijado a 850 el exterior... pensalo vos bien"*). **Sube respecto de la v6.1 (4.600) porque hay un equipo más, y se dice así.** El abono **no** se toca: **USD 100 por reefer por mes = 500/mes**, sin escalón, completo desde el primer mes · el **tendido de cable no se cotiza** — a cargo del cliente · **en el documento del cliente no se dice el material del gabinete ni se menciona impresión 3D**.
-> **⚠ CONTEXTO QUE MANDA EL MENSAJE: Andrés ya recibió por WhatsApp hoy a las 14:01 el PDF de la v6.1 con USD 4.600.** Esta versión sube a 5.000. En el WhatsApp de §6.1 eso se dice **de frente y corto**, sin justificarse de más. El interno explica en dos líneas cómo se sostiene la diferencia.
-> **Se mantiene de la v6.1:** la firma con UTN/GIMAP/Montagne, los hitos relativos y la propuesta sin cláusulas condicionales.
-> **Se mantiene de la v5.2:** sin destinatario, sin nombrar a Panamerican, hitos en semanas desde "aceptación + anticipo", 50/50, formas A y B, sin validez, USD con pago en pesos al BNA de la fecha de pago.
+> @comercial · **v9.0, 2026-09-08** · **UN SOLO presupuesto: 3 módulos dobles, uno por cada par de reefers, con la caja sobre la unión**
+> **Configuración cambiada por Andrés el 8-sep por WhatsApp:** *"con tres módulos solucionamos lo de Cerro Moro, un módulo para dos reefer; al estar juntos de a dos es fácil hacer la conexión; pongo la caja sobre la unión de los dos y saco las sondas".* Matías aceptó, **mantiene 3 sondas por reefer** (*"3 es mucho mejor para calibración"* — y Andrés **midió casi 3 °C entre la puerta y el fondo** de un reefer) y le dijo: *"rehago el presupuesto, queda más o menos lo mismo, porque le tengo que meter un poco más de electrónica adentro de la caja y programación".*
+> - **3 módulos dobles**: 1 de **exterior** estanco IP65 (los 2 de la intemperie) + 2 de **interior** (los 4 bajo techo, de a dos). **Uno de los 4 está fuera de servicio y ya queda cubierto por su módulo, con sus sondas incluidas.**
+> - **Por módulo: 6 sondas, 2 puertas, 2 defrost, 2 relés.** A cada reefer le llega **un solo cable de 3 hilos** desde el módulo y las 3 sondas se reparten adentro (puerta, medio, fondo) — no 9 hilos.
+> - **Repuesto: 1 módulo doble completo** (6 sondas + 2 reed), reemplaza a cualquiera de los tres.
+> - **Precio: inicial USD 4.800** — doble de interior **900 × 2** + doble de exterior **950** + repuesto **400** + puesta en marcha **1.650** (66 h). **Margen parejo ~32 % en los tres ítems, el mismo criterio de la v8.0.** Baja 200 sobre los 5.000 de la v8.0 (−4 %): *"más o menos lo mismo"*, y se dice así — menos cajas, pero cada una lleva más electrónica y más programación. **Abono INTACTO: USD 100 por reefer/mes = 500/mes.** B anual **10.200**. Anticipo 50 % **2.400**.
+> - **Sexto reefer: sin costo de equipo** (antes USD 260). Sólo el abono pasa de 500 a 600. Se dice como ventaja.
+> - **Fecha 8-sep-2026, ref `PROP-CM-2026-09-08`, BNA vendedor billete $ 1.530 (bna.com.ar, 8-sep 09:50).**
+> - **Reglas fijas de Matías, verificadas sobre el texto del PDF:** nunca "Ing.", sin "en funcionamiento", sin "instalado en", sin nombrar a Panamerican, firma como está.
+> **Generadores:** `comercial/panamerican/armar_cliente_v7.py` (dict `PRECIOS` = única fuente de verdad + `calcular()`; la cuenta del margen está en su docstring), `armar_interno_v7.py`, `render_v7.py` (guarda de frases prohibidas ampliada con TODA la configuración vieja: "5 módulos", "cinco", "simples", "USD 260", 5.000, 10.400, 1.550, 700, 1.535, 4-sep…). Verificación independiente del PDF contra `calcular()`: **TODO OK** (8-sep).
+> **Historial:** v9.0 (8-sep, 3 dobles, 4.800) ← v8.0 (4-sep 15:23, 1 doble ext + 4 simples int, 5.000) ← v7.0 (4-sep, 3 dobles, 4.115) ← v6.1 (4-sep, 2 simples ext + 2 dobles int, 4.600; **es el PDF que Andrés recibió a las 14:01**) ← v5 (4-sep, 5 simples, 4.540 + cuenta del caño) ← v4/v3/v2/v1. Las versiones anteriores están íntegras en el historial de git de este archivo.
+> **Se mantiene de la v8.0:** margen parejo, hitos relativos desde "aceptación + anticipo", 50/50, formas A y B, sin validez, sin destinatario, sin material de gabinete ni impresión 3D, firma con UTN/GIMAP/Montagne, USD con pago en pesos al BNA de la fecha de pago.
 > **Matías decide el número final, siempre.** Todo monto de acá abajo es propuesta con la cuenta a la vista.
-> Doctrina: `PLATA.md`. Base técnica: `ALCANCE_1WIRE.md` (@muestreador), **`BOM_CERRO_MORO.md` rev A (@hardware, 4-sep — precios ML y JLCPCB verificados en vivo; de ahí salen los costos reales)**, `BOM_MINI.md` (@esquematico, 4-sep), `ESTADO_HONESTO.md`, firmware `firmware_revival` leído el 3-sep y **auditoría del firmware de módulo doble `VERIFICACION_V3.1_2026-09-04.md` (APTO CON CORRECCIONES)**.
+> Doctrina: `PLATA.md`. Base técnica: `ALCANCE_1WIRE.md` (@muestreador), **`BOM_CERRO_MORO.md` rev A (@hardware, 4-sep)**, `BOM_MINI.md` y **`PINOUT_MINI.md`** (@esquematico — un bus 1-Wire en GPIO 4 y **GPIO 18/23 reservados para un 2.º bus**), `ESTADO_HONESTO.md`, firmware `firmware_revival` leído el 3-sep, auditoría del firmware doble `VERIFICACION_V3.1_2026-09-04.md` (APTO CON CORRECCIONES).
 > **El comprador NO es Pan American Silver:** es "una empresa" que Andrés todavía no identifica. El documento del cliente va **sin destinatario, sin logo ajeno y sin nombrar a Panamerican**. El archivo conserva el nombre por historial.
 
 ## Qué cambió en esta versión
 
-**1. Adentro, un módulo por reefer. Lo confirmó Andrés en el chat.** Matías preguntó textual *"¿los de afuera uno, y los otros uno cada uno sería?"* y Andrés contestó **"Así sería"**. Con eso se cae la idea de emparejar los de adentro: **4 reefers bajo techo = 4 módulos simples, uno cada uno.** Afuera no cambia nada: los dos están pegados y comparten **un módulo doble estanco**. **Total 5 módulos.**
+**1. Tres módulos dobles, uno por par, con la caja sobre la unión. Lo armó Andrés con la caja en la mano.** Los 6 reefers están de a dos: 2 afuera y 4 adentro en dos pares. *"Pongo la caja sobre la unión de los dos y saco las sondas."* Es la configuración con **menos cable de todas las versiones**: cero entre contenedores, seis tiradas cortas de la unión a cada reefer. **3 puntos de red** en vez de 5.
 
-**2. El módulo del reefer fuera de servicio se instala igual, y eso cambia cómo se cuenta.** Antes el sexto reefer era *"un canal libre en un módulo doble"*. Ahora es más simple y más fuerte de vender: **su módulo ya está puesto, alimentado y dado de alta**. El día que el reefer vuelva a servicio no hay que abrir ninguna caja ajena ni tocar la configuración de otro reefer: **se le conectan sus 3 sondas, su sensor de puerta y su señal de defrost — USD 260 — y el abono pasa de 500 a 600/mes.**
+**2. Un solo cable de 3 hilos por reefer, tres sondas adentro.** Matías mantuvo las 3 sondas (*"3 es mucho mejor para calibración"*) y el argumento ahora tiene **dato del sitio**: Andrés midió **casi 3 °C entre la puerta y el fondo**. Con una sonda, ese reefer miente. Las tres van por un solo cable y se reparten adentro: puerta, medio, fondo.
 
-**3. El precio SUBE a USD 5.000, y hay un solo motivo.** Un equipo más que en la v6.1 (5 contra 4) y un reefer más con su propio módulo. **No se acomodó ningún unitario para llegar a ese total**, y de hecho **el total no se movió cuando se recalcularon los precios** (ver punto 4): salió 5.000 con el 850 fijado y vuelve a dar 5.000 con el margen parejo. Es coincidencia y la digo como tal.
+**3. El sexto reefer entra sin costo de equipo.** El doble de su par ya trae sus 3 sondas, su reed y su defrost. Antes eran USD 260; ahora es conectar y subir el abono a 600. **Se dice como ventaja en el PDF** (§05 Ampliación).
 
-**4. Margen PAREJO en los tres módulos: ~32 %. Simple 600, doble 700, repuesto 350.** Matías liberó el precio del doble el 4-sep (*"no dejes fijado a 850 el exterior, depende de lo que vayas a cobrar con los individuales... pensalo vos bien"*) y el Director puso el criterio: **un solo margen aplicado parejo**, porque 25 % en el simple y 44 % en el doble es indefendible el día que alguien pone los dos precios uno al lado del otro — y en una compra corporativa eso pasa. **Elegí 32 % sobre precio de venta** (§3.1). **Contra la v6.1, el simple pasa de 600 a 600: queda igual**, pero ahora con margen sano en vez de flaco. **El doble cae en 700**, que es donde tiene que caer: más que un simple y **mucho menos que dos**, porque comparte el ESP32, la fuente, la placa, el alta remota y el punto de red. **El total no cambia: 5.000.**
+**4. USD 4.800, con el mismo margen parejo (~32 %) de la v8.0.** Matías le dijo a Andrés *"queda más o menos lo mismo"*, y la cuenta lo sostiene sola: dos cajas menos, pero cada doble lleva **más electrónica** (2.º bus 1-Wire con su protección, 2.ª entrada de defrost, borneras y prensacables ×2: +8), **la plataforma se reparte entre 3 y no entre 5** (333 c/u en vez de 200), **dos buses a probar en banco** (+10 de armado), y la puesta en marcha suma **8 h de software** para repartir por reefer (−4 h por 3 altas en vez de 5). Interior **900**, exterior **950**, repuesto **400**, puesta en marcha **1.650** → **4.800**. **−200 (−4 %)**. Cuenta completa en §3.1. **Alternativa para sostener 5.000** (36 %, desparejo) en §3.1, no recomendada.
 
-**5. La puesta en marcha sube de 1.450 a 1.550, y sube en el único renglón que corresponde.** Son **5 altas remotas, 5 credenciales, 5 OTA verificadas y 5 pruebas de puerta y defrost** en vez de 3: **+4 h, de 58 a 62 h a USD 25**. Todo lo demás queda igual. **Las 10 h del software del doble no bajan aunque ahora lo use un solo módulo instalado**: el código se escribe una vez y el repuesto también lo lleva.
+**5. El abono NO se toca: 500/mes.** Por reefer vigilado, no por caja. Y esta vez la regla juega al revés y también sirve: si preguntan "¿con menos equipos no baja el mensual?", la respuesta está escrita desde la v2.
 
-**6. El abono NO se toca: USD 100 por reefer por mes = 500/mes.** El abono se cobra por reefer vigilado, no por caja instalada (§3.4). Que ahora haya 5 módulos en lugar de 3 no cambia lo que se vigila y se registra: **5 reefers**. Cuando entre el sexto, **600/mes**. *Y esto ahora juega a favor: si preguntan "pusieron dos equipos más, ¿el mensual no sube?", la respuesta ya estaba escrita desde la v2.*
+**6. El riesgo que VOLVIÓ: el firmware doble es crítico para los tres módulos** (como en la v7.0; en la v8.0 había salido del camino crítico porque los simples corrían lo que ya anda). Sin él no reporta ningún módulo nuevo. Estado: APTO CON CORRECCIONES, sin fecha de cierre. Plan B parcial: cada doble arranca vigilando un solo reefer (3 de 5). **Hay que decírselo al Director.** Y **una caja sin energía deja dos reefers sin vigilancia, siempre**: para eso el repuesto, y así está escrito en "Lo que hay que saber".
 
-**7. El riesgo se movió, y esta vez el saldo es claramente bueno.** Está completo en §2.5:
-- **(+) SE DESACTIVÓ EL RIESGO MÁS GRANDE de la v7.0: el firmware de módulo doble ya no es crítico para todo el pedido.** Los 4 módulos de interior son **simples** — 3 sondas, 1 puerta, 1 defrost — que es exactamente lo que el firmware que hoy corre en `REEFER_01_SCZ` ya hace, **sin tocar `SONDAS_MAX`** (está en 4). El doble lo necesitan **un solo módulo instalado y el repuesto**: si se atrasa, arrancan igual **4 de los 6 reefers**.
-- **(+) El cable prácticamente desapareció**, y con el dato del propio Andrés: *"No es mucho lo de los cables. Los saco de acá."* Adentro no hay tirada entre reefers — cada módulo se monta en su contenedor. **De 3 tiradas (v7.0) a una sola**, la del par de afuera. **La nota al pie no cambia.**
-- **(+) Una falla ciega un reefer, no dos** — salvo en el módulo de afuera.
-- **(−) 5 puntos de red en vez de 3.** Es lo único que empeora, y es real: cada módulo tiene que llegar solo al WiFi del campamento. **Pasa a ser la pregunta más importante de §5.2**, y hay que contestarla antes de despachar.
+**7. Decisión de placa antes de pedir la PCB: poblar el 2.º bus 1-Wire de la Mini** (GPIO 18, pines ya reservados en `PINOUT_MINI.md`), sin el TVS D2 que rompe el bus a 25 m. Con **un bus por reefer** el reparto de sondas es por pin, el defrost de un reefer no puede callar al otro por diseño y una sonda en corto no tumba las del vecino. Es la "más electrónica" que Matías le dijo a Andrés. **Después de JLCPCB ya no se cambia.**
 
-**8. Tres sondas por reefer, no cuatro** (decisión de Matías). 15 sondas en servicio. El argumento de por qué más de una **sigue valiendo entero con tres**: peor punto, redundancia ante falla y verificación cruzada (tres es el mínimo que permite saber **cuál** se desvió).
-
-**Sigue eliminada la opción C** de la v2 ("sin inversión inicial", comodato con permanencia 24 meses): *"el de la inversión inicial no lo ofrecería"* (Matías). Quedan **A** (equipos + servicio mensual) y **B** (anual adelantado).
+**8. Cuarta vuelta de configuración no hay.** Tres presupuestos en cuatro días es el límite: la próxima conversación con Andrés es de aceptación, no de configuración.
 
 ---
 
-## PARTE 1 — Documento del cliente (@diseno maqueta 2 páginas A4)
+## PARTE 1 — Documento del cliente (2 páginas A4, generado por `armar_cliente_v7.py`)
 
 > Copiar de acá hasta la línea de corte. Nada más. Escrito para que **lo presente alguien que no es vendedor** y se lea en dos minutos.
 
 **Termovigía — Monitoreo de temperatura de reefers**
 **Campamento Cerro Moro (Santa Cruz) — 5 reefers en servicio**
+**Tres módulos, uno por cada par de reefers** — 1 módulo estanco de exterior + 2 módulos de interior, cada uno para dos reefers que están juntos. Presupuesto del 8 de septiembre de 2026, ref. PROP-CM-2026-09-08.
 
-**Qué es.** Un sistema que mide la temperatura de cada reefer las 24 horas y avisa al celular cuando algo se sale de rango. Hoy ya hay un equipo instalado y reportando desde el campamento: se puede ver en vivo en el celular antes de decidir nada. **Mientras se evalúa esta propuesta ese equipo sigue midiendo y reportando**, y el panel se puede abrir en cualquier momento: los resultados se muestran durante el proceso, no después.
+**Qué es.** Un sistema que mide la temperatura de cada reefer las 24 horas y avisa al celular cuando algo se sale de rango. Por cada reefer, siempre lo mismo: **3 sondas, 1 sensor de puerta y 1 señal de defrost**, y **un solo cable de 3 hilos** desde el módulo hasta el reefer. Hoy ya hay un equipo instalado y reportando desde el campamento. **Mientras se evalúa esta propuesta ese equipo sigue midiendo y reportando**, y el panel se puede abrir en el celular en cualquier momento: los resultados se ven durante el proceso, no después.
 
-**Armado según cómo está el sitio.**
-- **Los 2 reefers que están a la intemperie están juntos**, así que van con **un solo módulo**, en **gabinete estanco IP65 apto para exterior**: frío, viento y lluvia son la condición normal de trabajo de ese equipo, no una excepción.
-- **Los 4 reefers que están bajo techo llevan un módulo cada uno.** Así cada contenedor es independiente: si un equipo se queda sin energía no arrastra a ningún otro reefer, y no hay que pasar cable de un contenedor a otro.
-- Total: **5 módulos** para los 6 reefers, y **por cada reefer siempre lo mismo: 3 sondas, 1 sensor de puerta y 1 señal de defrost**.
+**Qué módulo va en cada reefer.**
+
+| Dónde está el reefer | Qué le va | Qué lleva cada reefer | Equipos |
+|---|---|---|---|
+| **2** a la intemperie, juntos | **Un módulo para los dos**, en gabinete **estanco IP65 apto para exterior**, montado sobre la unión de los dos contenedores. Comparten módulo porque están pegados: a cada reefer le llega un solo cable, corto, desde la caja. | 3 sondas · 1 sensor de puerta · 1 señal de defrost · 1 cable de 3 hilos | **1 módulo** de exterior, para 2 reefers |
+| **4** bajo techo, de a dos | **Un módulo por cada par**, en gabinete de interior, montado sobre la unión de los dos. Están de a dos, así que cada par comparte un módulo. Uno de los 4 está hoy fuera de servicio: **su módulo y sus sondas ya quedan incluidos**. | 3 sondas · 1 sensor de puerta · 1 señal de defrost · 1 cable de 3 hilos | **2 módulos** de interior, para 2 reefers cada uno |
+
+**Total: 3 módulos para los 6 reefers** — **5 en servicio hoy** y el sexto ya cubierto por el módulo que comparte con su vecino.
 
 **Qué hace.**
 - Mide la temperatura de cada reefer todo el tiempo, con **3 sondas por reefer**, y la guarda en la nube (12 meses de historial).
-- Avisa al celular de las personas que se definan cuando un reefer se sale del rango acordado por más tiempo del acordado.
+- Avisa al celular de quien se defina cuando un reefer se sale del rango acordado, por más tiempo del acordado.
 - Avisa si **queda la puerta abierta** más de los minutos que se definan (sensor magnético en cada reefer).
 - Avisa cuando una sonda se desconecta o cuando un módulo deja de reportar.
-- **No molesta durante el descongelamiento:** toma la señal de defrost de cada reefer y calla las alarmas **de ese reefer** mientras dura el ciclo, para que nadie aprenda a ignorar los avisos.
+- **No molesta durante el descongelamiento:** toma la señal de defrost de cada reefer y calla las alarmas **de ese reefer solamente** —el que comparte módulo sigue vigilado— para que nadie aprenda a ignorar los avisos.
 - Puede **accionar una sirena o baliza**: cada módulo trae 2 salidas a relé libres para eso.
 - Genera solo el **registro mensual de temperatura por reefer**, para tener el papel cuando alguien lo pide.
 - Funciona con la red de internet que ya hay en el campamento: no hay que contratar nada más.
 
 **Por qué 3 sondas por reefer y no una.** Es la diferencia entre una instalación seria y un termómetro con WiFi.
-1. **Un reefer no tiene "una" temperatura.** Cerca de la puerta, cerca del evaporador, arriba y abajo puede haber varios grados de diferencia. Con una sonda se mide un punto y se supone el resto; con tres se mide **el peor punto**, que es el que decide si la carga se arruinó. En una auditoría lo que vale es el peor punto, no el promedio.
-2. **Si una sonda falla, el reefer sigue vigilado.** En un sistema cuyo trabajo es avisar, quedarse ciego es la peor falla posible: con una sola sonda cualquier problema deja el reefer sin vigilancia hasta que alguien viaje 1.500 km. Con tres, se pierde una y quedan dos midiendo.
+1. **Un reefer no tiene "una" temperatura.** En uno de los reefers del campamento ya se midió **casi 3 °C de diferencia entre la puerta y el fondo**. Con una sonda se mide un punto y se supone el resto; con tres —puerta, medio y fondo— se mide **el peor punto**, que es el que decide si la carga se arruinó y el que vale en una auditoría, no el promedio.
+2. **Si una sonda falla, el reefer sigue vigilado.** En un sistema cuyo trabajo es avisar, quedarse ciego es la peor falla posible: con una sola sonda, cualquier problema deja el reefer sin vigilancia hasta que alguien viaje 1.500 km. Con tres, se pierde una y quedan dos.
 3. **Las sondas se controlan entre sí.** Tres es el mínimo que permite saber **cuál** se desvió: si una se aparta de las otras dos, se detecta y se avisa. Con una sola sonda, una deriva de 2 o 3 °C es invisible: el registro parece perfecto y está mintiendo. *(Se entrega en el hito 2.)*
-4. **Se calibran las tres contra la misma referencia** (baño de hielo) y las diferencias quedan registradas. Eso es lo que convierte el registro en algo defendible ante un auditor.
+4. **Se calibran las tres contra la misma referencia** (baño de hielo) y las diferencias quedan registradas: eso es lo que hace defendible el registro ante un auditor. Y las tres van por **un solo cable de 3 hilos**: se reparten adentro del reefer, no hay que pasar nueve.
 
-**Qué se instala.** **Un módulo de exterior** (gabinete estanco IP65, para los dos reefers que están juntos a la intemperie: uno solo atiende a los dos) y **cuatro módulos de interior, uno por cada reefer que está bajo techo**. Cada módulo trae su fuente y **2 salidas a relé**, y por cada reefer van **3 sondas, 1 sensor magnético de puerta y 1 entrada de señal de defrost**. Se suma un **kit de repuesto que queda en el campamento y puede reemplazar a cualquiera de los cinco**. El montaje lo hace personal del campamento con los equipos preconfigurados desde Bahía Blanca y guía por videollamada: por eso esta propuesta no tiene línea de instalación ni viáticos.
+**Cada módulo se prueba con el cable real antes de viajar.** Los equipos **se arman y se verifican uno por uno en banco de prueba** —las 6 sondas leyendo, las dos puertas, las dos señales de defrost y las salidas de alarma—, y **cada salida a reefer se prueba con 25 metros de cable antes de despachar**, más de lo que va a haber en el sitio. Para un lote que va a quedar a 1.500 km, esa verificación es la diferencia entre uno que llega andando y uno que hay que diagnosticar por teléfono.
 
-**Cada módulo se prueba con el cable real antes de viajar.** Los equipos no salen de una línea de montaje: **se arman y se verifican uno por uno en banco de prueba** —todas las sondas leyendo, las puertas, las señales de defrost y las salidas de alarma— y **cada módulo se prueba con 25 metros de cable puestos**, la distancia real del sitio. Para un lote que va a quedar a 1.500 km del proveedor, esa verificación es la diferencia entre un equipo que llega andando y uno que hay que diagnosticar por teléfono.
+**Ampliación. El sexto reefer, sin costo de equipo.** El reefer que hoy está fuera de servicio comparte módulo con su vecino, y ese módulo **ya trae sus 3 sondas, su sensor de puerta y su entrada de defrost**. Cuando vuelva **no hay que comprar ningún equipo ni tocar nada de lo instalado**: se le conectan y el servicio mensual pasa de USD 500 a USD 600. Queda dicho acá para no renegociar nada el día que pase.
 
-**El sexto reefer.** De los 4 reefers de adentro, uno está hoy fuera de servicio, **y su módulo se instala igual, montado y dado de alta junto con los demás**. Cuando el reefer vuelva a funcionar **no hay que comprar ningún equipo ni tocar la instalación de los otros**: se le conectan sus 3 sondas, su sensor de puerta y su entrada de defrost por **USD 260**, y el servicio mensual pasa de USD 500 a USD 600. Queda dicho acá para no tener que renegociar nada el día que pase.
+**Puesta en marcha y ajuste en sitio (15 semanas, por hitos, incluidos en el precio).** **Los plazos se cuentan desde el inicio, y el inicio es la aceptación de esta propuesta con su anticipo.**
 
-**Puesta en marcha y ajuste en sitio (15 semanas, por hitos).** Los hitos son compromiso de entrega con plazo; no se facturan aparte, están incluidos en el precio. **Los plazos se cuentan desde el inicio, y el inicio es la aceptación de esta propuesta con su anticipo.**
-
-| Hito | Qué queda funcionando | Plazo |
+| Hito | Qué queda funcionando · cómo se comprueba | Plazo |
 |---|---|---|
-| 1 | El equipo que ya está instalado, con sus 3 sondas dentro del reefer, calibradas contra una misma referencia, rangos definidos y primera alerta real recibida en el celular | a las 2 semanas de iniciado |
-| 2 | Los 5 módulos montados y los 5 reefers reportando; ningún dato ni aviso se pierde si se corta la red; aviso de módulo que deja de reportar; **aviso de sonda que se desvía de las otras del mismo reefer**; puertas y defrost validados en campo; una semana entera sin falsas alarmas | a las 5 semanas |
-| 3 | Acceso seguro: cada módulo y cada usuario con su propia credencial | a las 10 semanas |
-| 4 | Actualizaciones de los equipos a distancia, sin tocarlos | a las 12 semanas |
-| 5 | Panel para la empresa (usuarios de solo lectura), accionamiento de las salidas de alarma desde el panel e informe mensual descargable | a las 15 semanas |
+| 1 | El equipo ya instalado, con sus 3 sondas dentro del reefer, calibradas contra una misma referencia, rangos definidos y primera alerta real en el celular. *Se acepta con:* captura de la alerta en el celular, el registro en la nube y la planilla de calibración de las 3 sondas. | a las 2 semanas de iniciado |
+| 2 | Los 3 módulos montados y los 5 reefers reportando; nada se pierde si se corta la red; aviso de módulo mudo y **de sonda que se desvía de las otras del mismo reefer**; puertas y defrost validados; una semana sin falsas alarmas. *Se acepta con:* desenchufar una sonda y que llegue la alarma; cortar la red 20 minutos sin perder lecturas; abrir una puerta 4 minutos y que avise; **forzar el defrost de un reefer y que el que comparte módulo siga alarmando**. | a las 5 semanas |
+| 3 | Acceso seguro: cada módulo y cada usuario con su propia credencial. *Se acepta con:* con una credencial dada de baja ya no se puede escribir, y todos los módulos siguen reportando. | a las 10 semanas |
+| 4 | Actualizaciones de los equipos a distancia, sin tocarlos. *Se acepta con:* tres actualizaciones seguidas por aire, al primer intento, en todos los módulos. | a las 12 semanas |
+| 5 | Panel para la empresa (usuarios de solo lectura), accionamiento de las salidas de alarma e informe mensual descargable. *Se acepta con:* un usuario de la empresa entra solo, baja el informe y acciona una salida desde el panel. | a las 15 semanas |
 
 **Qué cuesta.**
 
-| Concepto | USD |
-|---|---|
-| Módulo de exterior para los dos reefers que están juntos a la intemperie (gabinete estanco IP65 apto para exterior, fuente, 2 salidas a relé, y por cada reefer 3 sondas + sensor de puerta + entrada de defrost; probado en banco con 25 m de cable) — 1 × 700 | 700 |
-| Módulo para un reefer bajo techo (gabinete, fuente, 2 salidas a relé, 3 sondas + sensor de puerta + entrada de defrost; probado en banco con 25 m de cable) — 4 × 600 | 2.400 |
-| Kit de repuestos en sitio (1 módulo completo armado y probado, que puede reemplazar a cualquiera de los cinco, + 3 sondas + 1 sensor de puerta) | 350 |
-| Puesta en marcha y ajuste en sitio, 5 hitos | 1.550 |
-| **Total equipos y puesta en marcha** | **5.000** |
-| **Servicio mensual** — **USD 100 por reefer por mes**, 5 reefers en servicio (nube, alertas, soporte, reposición sin cargo, informe mensual) | **500 / mes** |
+| Concepto | Unid. | USD |
+|---|---|---|
+| Módulo de exterior para los dos reefers que están juntos a la intemperie (gabinete estanco IP65 apto para exterior, fuente, 2 relés, y por cada reefer 3 sondas + puerta + defrost por un solo cable; probado en banco con 25 m) | 1 | 950 |
+| Módulo de interior para dos reefers que están juntos bajo techo (gabinete, fuente, 2 relés, y por cada reefer 3 sondas + puerta + defrost por un solo cable; probado en banco con 25 m) — 2 × 900 | 2 | 1.800 |
+| Kit de repuestos en sitio (1 módulo completo, con sus 6 sondas y 2 sensores de puerta, que reemplaza a cualquiera de los tres) | 1 | 400 |
+| Puesta en marcha y ajuste en sitio (los 5 hitos de arriba, con su plazo; incluidos en el precio, no se facturan aparte; el montaje lo hace personal del campamento con los equipos preconfigurados y guía por videollamada: no hay línea de instalación ni viáticos) | 5 hitos | 1.650 |
+| **Total equipos y puesta en marcha** | | **4.800** |
+| **Servicio mensual** — USD 100 por reefer por mes, 5 reefers en servicio: nube, alertas, soporte, reposición sin cargo, informe mensual | | **500 / mes** |
 
-*No incluye cable ni tendido entre reefers.*
+*No incluye cable ni tendido.*
 
-**Cómo se paga.** **50 % con la orden de compra** (anticipo de materiales) y **50 % contra los equipos instalados y reportando**. El servicio mensual arranca con el primer equipo andando.
+**Cómo se paga.**
 
 | | **A. Equipos + servicio mensual** | **B. Anual adelantado** |
 |---|---|---|
-| Para quién | Compra activos y paga el servicio mes a mes | Tiene presupuesto de inversión y no quiere 12 facturas |
-| Equipos y puesta en marcha | USD 5.000 (50 % con la OC, 50 % contra instalación) | Incluidos |
-| Pago inicial total | USD 5.000 | USD 10.400 (equipos + 12 meses de servicio, con 10 % de descuento sobre el servicio) |
+| Pago inicial | USD 4.800 (50 % con la OC, 50 % contra instalación) | USD 10.200 (equipos + 12 meses de servicio, con 10 % de descuento sobre el servicio) |
 | Mensual | USD 500 — USD 100 por reefer, completo desde el primer mes | — el primer año; renovación anual USD 5.400 |
-| Los equipos | Son del cliente | Son del cliente |
-| **Total a 12 meses** | **11.000** | **10.400** |
-| **Total a 24 meses** | **17.000** | **15.800** |
+| Los equipos | Son del cliente en las dos formas | |
+| **Total a 12 meses** | **10.800** | **10.200** |
+| **Total a 24 meses** | **16.800** | **15.600** |
 
-Facturación en dólares estadounidenses. De abonarse en pesos, se toma el tipo de cambio vendedor del Banco de la Nación Argentina de la fecha de pago. *Referencia al 4-sep-2026 (BNA vendedor $ 1.535): USD 5.000 ≈ $ 7.675.000 · USD 500 ≈ $ 767.500 · USD 10.400 ≈ $ 15.964.000.*
+Facturación en dólares estadounidenses. De abonarse en pesos, se toma el tipo de cambio vendedor del Banco de la Nación Argentina de la fecha de pago. *Ref. al 8-sep-2026 (BNA vendedor $ 1.530): USD 4.800 ≈ $ 7.344.000 · USD 500 ≈ $ 765.000 · USD 10.200 ≈ $ 15.606.000.*
 
 **Incluido en el servicio mensual:** nube con 12 meses de historial · alertas por temperatura, puerta abierta, sonda caída y equipo mudo · reposición sin cargo de cualquier módulo o sonda fallada, envío incluido · actualizaciones · soporte por WhatsApp y teléfono el mismo día hábil · informe mensual por reefer.
 
-**Lo que hay que saber.** El sistema avisa; no garantiza la mercadería ni reemplaza la revisión del reefer. Sin energía en el módulo no mide: lo que avisa en ese caso es la nube, diciendo que dejó de reportar. La entrada de defrost necesita que el reefer tenga una señal o un contacto accesible; si alguno no lo tiene, esa entrada queda libre y el resto funciona igual. Las 2 salidas a relé vienen en el módulo; la sirena o baliza que se conecte no está incluida. Cada módulo necesita llegar a la red del campamento. El tendido del cable entre los dos reefers de la intemperie lo hace el cliente. Si un módulo de interior se queda sin energía queda **ese** reefer sin vigilancia; si es el de exterior, quedan los **dos** de la intemperie: para eso está el módulo de repuesto en el campamento. Los plazos de los hitos 1 y 2 suponen que el montaje en sitio se hace dentro de la ventana prevista, que depende de personal del campamento.
+**Lo que hay que saber.** El sistema avisa; no garantiza la mercadería ni reemplaza la revisión del reefer. Sin energía en el módulo no mide: lo que avisa en ese caso es la nube, diciendo que dejó de reportar. La entrada de defrost necesita una señal o un contacto accesible; si algún reefer no lo tiene, esa entrada queda libre y el resto funciona igual. Las 2 salidas a relé vienen en el módulo; la sirena o baliza que se conecte no está incluida. Cada módulo necesita llegar a la red del campamento. El tendido del cable de cada reefer al módulo lo hace el cliente. Si un módulo se queda sin energía quedan **sus dos** reefers sin vigilancia: para eso está el módulo de repuesto en el campamento. Los plazos de los hitos 1 y 2 suponen que el montaje en sitio se hace dentro de la ventana prevista, que depende de personal del campamento.
 
-*Contacto en sitio: Andrés Leiva Chavez · Contacto comercial: Matías Alegre — Ingeniería Electrónica, UTN Facultad Regional Bahía Blanca · Grupo de investigación GIMAP · Encargado de proyectos de sistemas, Montagne · Mundo Outdoor · Termovigía, Bahía Blanca · 2920 59-1019 · alegrematias08@gmail.com · termovigia.vercel.app*
+*Se puede ver en vivo antes de decidir. Contacto en sitio: Andrés Leiva Chavez · Matías Alegre — Ingeniería Electrónica, UTN Facultad Regional Bahía Blanca · Grupo de investigación GIMAP · Encargado de proyectos de sistemas — Montagne · Mundo Outdoor · Termovigía, Bahía Blanca · 2920 59-1019 · alegrematias08@gmail.com · termovigia.vercel.app*
 
 — — — — — — — — — — corte: lo de abajo NO se manda — — — — — — — — — —
 
@@ -130,87 +126,83 @@ Facturación en dólares estadounidenses. De abonarse en pesos, se toma el tipo 
 | Hecho | Evidencia |
 |---|---|
 | 1 equipo instalado en el campamento, `REEFER_01_SCZ`, firmware `firmware_revival` 2.6.21 | Puesto el 21-ago; reconectado por Andrés el 3-sep |
-| Reportando cada ~5 s | Consulta a la base de Santa Cruz, 3-sep |
-| **1 sola sonda y está FUERA del reefer** — mide ambiente | Andrés espera confirmación de Matías para meterlas |
-| Elección de red abierta con internet real: probada 128 ciclos | `ESTADO_HONESTO.md` |
+| Reportando cada ~5 s, **con 1 sola sonda y FUERA del reefer** — mide ambiente | Base de Santa Cruz, 3-sep; Andrés espera confirmación para meterlas |
 | **Sin contrato y sin un peso cobrado** | `PLATA.md` |
-| **"Acá no pueden haber cables aéreos"** | Andrés, WhatsApp 3-sep 17:11 |
-| **"Son aprox 20/25 metros, el problema es que hay que pasar los cables con caño Daisa"** | Andrés, WhatsApp **3-sep 23:33** |
-| **2 reefers están a la intemperie y JUNTOS; 4 están adentro, bajo techo** | Andrés a Matías, **4-sep** |
+| "Acá no pueden haber cables aéreos" | Andrés, WhatsApp 3-sep 17:11 |
+| **2 reefers a la intemperie y JUNTOS; 4 adentro, bajo techo, también de a dos** | Andrés, 4-sep y **8-sep** |
 | **De los 4 de adentro, uno está fuera de servicio: hoy hay 5 reefers activos** | Matías, 4-sep |
 | Ya se mandó al sitio una **caja estanca IP65 apta para exterior** | Matías, 4-sep |
-| **CONFIGURACIÓN DEFINITIVA — Matías: *"¿los de afuera uno, y los otros uno cada uno sería?"* → Andrés: *"Así sería"*** | Chat, **4-sep 15:23**. Es el dato que fija esta versión |
-| **"No es mucho lo de los cables. Los saco de acá."** — el cable lo resuelve el sitio | Andrés, **4-sep 15:23** |
-| **Andrés ya recibió el PDF de la v6.1 (4 módulos, USD 4.600)** | WhatsApp, **4-sep 14:01**. Condiciona el mensaje de §6.1 |
+| **CONFIGURACIÓN v9 — Andrés: *"con tres módulos solucionamos lo de Cerro Moro, un módulo para dos reefer; al estar juntos de a dos es fácil hacer la conexión; pongo la caja sobre la unión de los dos y saco las sondas"*** | WhatsApp, **8-sep**. Es el dato que fija esta versión |
+| **Andrés midió casi 3 °C de diferencia entre la puerta y el fondo de un reefer** | WhatsApp, 8-sep. **Argumento de las 3 sondas, con dato del sitio** |
+| **Matías: 3 sondas por reefer se mantienen (*"3 es mucho mejor para calibración"*); *"rehago el presupuesto, queda más o menos lo mismo, porque le tengo que meter un poco más de electrónica adentro de la caja y programación"*** | WhatsApp, 8-sep. Fija el precio objetivo |
+| Andrés tiene en el celular un presupuesto anterior (v6.1 de 4.600 del 4-sep 14:01 seguro; la v8.0 de 5.000 si se mandó el 5-sep) | Condiciona el WhatsApp de §6.1: *"reemplaza al anterior"*, sin cifra vieja |
+| **La placa Mini tiene UN bus 1-Wire (GPIO 4, hasta 6 sondas) y deja GPIO 18/23 reservados para un 2.º bus** | `PINOUT_MINI.md` filas 4 y "libres". Es la "más electrónica" de esta versión |
 | **Firmware de módulo doble: escrito y en auditoría, veredicto APTO CON CORRECCIONES** | `C:\Proyectos\frioseguro-v31\firmware_modular\VERIFICACION_V3.1_2026-09-04.md` — correcciones en curso |
 
 ### 2.2 Qué módulo va en cada reefer
 
 | Ubicación | Reefers | Módulos | Gabinete | Por módulo |
 |---|---:|---|---|---|
-| **Intemperie** (los 2 están **juntos**) | 2 | **1 doble** | **IP65 estanco de exterior** (Roker PRG357, $ 44.419) | 6 sondas, 2 puertas, 2 defrost |
-| **Bajo techo** | 4 (uno hoy fuera de servicio) | **4 simples, uno por reefer** | interior (Genrod IP65 210×310×110, $ 21.203) | 3 sondas, 1 puerta, 1 defrost |
-| Repuesto en el campamento | — | **1 doble** | interior | armado y probado, cubre a cualquiera de los 5 |
-| **Total** | **6** | **5 instalados + 1 repuesto** | | |
+| **Intemperie** (los 2 están juntos) | 2 | **1 doble** | **IP65 estanco de exterior** (Roker PRG357, $ 44.419) — ya hay una en el sitio | 6 sondas, 2 puertas, 2 defrost, 2 relés · un cable de 3 hilos a cada reefer |
+| **Bajo techo, de a dos** (uno de los 4 fuera de servicio) | 4 | **2 dobles**, uno por par | interior (Genrod IP65 210×310×110, $ 21.203) | ídem · el par con el reefer parado arranca con 3 sondas conectadas y 3 en espera |
+| Repuesto en el campamento | — | **1 doble** | interior | completo, con 6 sondas y 2 reed: reemplaza a cualquiera de los 3 |
+| **Total** | **6** | **3 instalados + 1 repuesto** | | 4 placas Mini idénticas, las 4 con el 2.º bus poblado |
 
-> Las v4 y v5 discutieron dos versiones enteras si convenía un equipo por reefer o uno cada dos. La v7.0 se fue del todo al "uno cada dos". **El 4-sep 15:23 el sitio zanjó la discusión: adentro, uno por reefer; afuera, uno para los dos que están pegados.**
+> Las v4 y v5 discutieron si convenía un equipo por reefer o uno cada dos; la v7.0 se fue al "uno cada dos"; la v8.0 volvió a "uno por reefer adentro". **El 8-sep Andrés la cerró desde el sitio, con la caja en la mano: los seis están de a dos, y la caja va sobre la unión de cada par.**
 
-**La regla que quedó, en una frase:** *se comparte módulo sólo cuando los dos reefers están físicamente pegados — y en este sitio eso pasa únicamente afuera. Adentro, uno por reefer.* **Y es la que dijo el sitio, no la que dedujimos nosotros.**
+**La regla que quedó, en una frase:** *un módulo por cada par de reefers pegados, montado sobre la unión, con un cable de 3 hilos a cada reefer.* Es la que dijo el sitio, no la que dedujimos nosotros. Y es la que **menos cable** tiene de todas las versiones.
 
 **Qué se gana:**
-- **Cero cable entre reefers de interior.** Cada módulo se monta en su contenedor. De **3 tiradas** (v7.0) a **una sola**, la del par de afuera. Andrés lo cerró él mismo: *"No es mucho lo de los cables. Los saco de acá."*
-- **Los 4 de interior corren el firmware que YA anda.** 3 sondas (`SONDAS_MAX` está en 4), 1 puerta, 1 defrost: es literalmente lo que hace hoy `REEFER_01_SCZ`. **El firmware de módulo doble deja de ser crítico para el pedido entero** (§2.5 punto 2).
-- **Una falla ciega un reefer, no dos** — salvo en el módulo de afuera.
-- **El módulo del reefer fuera de servicio queda instalado y de alta**, no colgado de un canal libre ajeno: el sexto entra sin abrir ninguna otra caja.
-- **La plataforma se reparte entre 5 módulos vendidos, no entre 3**: USD 333 → **200 por módulo**. Es lo que permite que el simple siga costando USD 600 como en la v6.1 **pero con margen sano** (31,7 %) en vez del 25 % flaco, y que el doble caiga en 700 (§3.1).
-- **El repuesto cubre el 100 % del parque con una sola caja**: los 5 módulos son la misma placa (`BOM_CERRO_MORO.md` §1).
+- **3 puntos de red** en vez de 5 (era el riesgo que más había subido en la v8.0).
+- **Ningún cable entre contenedores**: la caja está sobre la unión y cada reefer recibe el suyo, corto.
+- **Dos cajas menos** que comprar, armar, probar y despachar: 4 bultos en vez de 6.
+- **Un solo diseño de módulo** para los cuatro (3 + repuesto): un firmware, un stock, un runbook.
+- **El sexto reefer entra gratis**, porque el doble de su par ya trae sus sondas.
+- El argumento de las 3 sondas ahora tiene **dato del sitio**: casi 3 °C entre puerta y fondo.
 
 **Qué se pierde, y hay que tenerlo escrito:**
-- **5 puntos de red en vez de 3.** Es lo que más empeora y es el precio de tener un módulo por reefer: cada uno tiene que llegar solo al WiFi del campamento. Pregunta 1 de §5.2. Si alguno queda corto, repetidor **antes** de despachar.
-- **5 altas remotas, credenciales y OTA** en vez de 3: +4 h de puesta en marcha (§3.2).
-- **Un equipo más que comprar, armar, probar y despachar**, y **6 bultos** en vez de 4.
+- **El firmware doble vuelve a ser crítico para los tres módulos** (§2.5 punto 1). En la v8.0 los simples corrían lo que ya anda; acá no hay simples.
+- **Un módulo sin energía deja dos reefers sin vigilancia, siempre.** Mitigación real y cotizada: el repuesto en el campamento y el aviso de equipo mudo desde la nube.
+- **La plataforma se reparte entre 3 módulos** (USD 333 c/u en vez de 200): es la mitad de por qué un doble cuesta 900 y no 700.
+- **Hay una decisión de placa antes de pedir la PCB**: poblar el 2.º bus (§2.3).
 
-**El riesgo del bus, ahora acotado a UNA tirada.** Andrés dijo *"son aprox 20/25 metros"* (3-sep 23:33) y el límite prudente que fijó @muestreador para este bus es **15 m**; además el cable ata las masas de **dos contenedores metálicos con puesta a tierra separada** por el hilo de datos (`ALCANCE_1WIRE.md` §2.6: *"el riesgo dominante de esta instalación"*). **Con esta configuración eso aplica a un solo módulo: el de afuera.** Los 4 de interior tienen las 3 sondas dentro de su propio reefer, con el módulo al lado: tiradas cortas, sin cruce de tierras entre contenedores. **Matías conoce el dato y acepta el riesgo.** Mitigaciones que se mantienen:
+**El riesgo del bus, ahora repartido en seis tiradas cortas.** El límite prudente que fijó @muestreador es **15 m** (`ALCANCE_1WIRE.md`); con la caja sobre la unión, cada tirada es del gabinete a la sonda más lejana de un reefer: unos metros. Lo que sí queda: **cada módulo ata por el hilo de masa dos contenedores metálicos con puesta a tierra separada** (§2.6 de ALCANCE: *"el riesgo dominante de esta instalación"*). Con **un bus por reefer** (2.º bus en GPIO 18) los dos reefers no comparten hilo de datos, el defrost de uno no puede callar al otro por diseño y una sonda en corto en un reefer no tumba las del vecino. **Matías conoce el dato y acepta el riesgo.** Mitigaciones:
+- **Un bus 1-Wire por reefer**: poblar el 2.º bus de la Mini (pull-up 2k2 con alternativa 1k, 100 Ω serie, clamps; **sin el TVS D2 que @hardware demostró que rompe el bus a 25 m**, `BOM_CERRO_MORO.md` §5.1). A definir con @esquematico **antes de mandar la PCB a JLCPCB**.
+- **Las 8 salidas a reefer (4 módulos × 2) se prueban en banco con 25 m de cable real antes de despachar**, con sus 3 sondas colgadas cada una.
+- **Especificación de cable** (3 hilos, el par DQ/GND junto, sin empalmes, apto exterior para el par de afuera): **queda interna**. Si Andrés pregunta qué comprar, se le dice.
+- Sondas sujetas con aislación respecto de la chapa; defrost por optoacoplador; reed es contacto seco.
 
-- **Pull-up de 2k2 con posición alternativa de 1k** en la placa (@esquematico lo está poniendo). El 1k es la carta que se juega si el bus no cierra a 25 m.
-- **Los 5 módulos se prueban en banco con 25 m de cable real antes de despachar**, con todas sus sondas colgadas. No sale nada que no haya cerrado a la distancia real.
-- **Especificación de cable** (par trenzado exterior, el par DQ/GND junto, sin empalmes, canalizado): **queda interna**, no se manda al cliente — el cable no lo provee Matías. **Pero si Andrés pregunta qué comprar para el tramo de afuera, se le dice, y ahí no se negocia.**
-- Si aun así el bus de afuera no cierra en sitio, la salida técnica existe y es barata: segundo bus con su propio pin, o repetidor 1-Wire. **No hay escenario en el que haya que devolver plata.**
-
-**Lo que NO se le dice al cliente:** que esto es un riesgo. En el documento va la nota de que el cable y el tendido no están incluidos, y nada más sobre el cable. La mitigación real (prueba de banco con 25 m) tampoco se explica: se hace y punto.
-
-**Y el tendido no se cotiza** (decisión de Matías, textual: *"no contemples el tema de las tiradas"*). La cuenta del caño de la v5 queda archivada en §3.3 **como historia y como argumento**, no como renglón: el precio que mandamos es firme y no depende de nada que pase en una zanja.
+**Lo que NO se le dice al cliente:** que esto es un riesgo. En el documento van *"No incluye cable ni tendido"* y *"El tendido del cable de cada reefer al módulo lo hace el cliente"*, y nada más. **Y el tendido no se cotiza** (*"no contemples el tema de las tiradas"*): la cuenta del caño queda archivada en §3.3 como historia y como argumento.
 
 ### 2.3 Qué lleva cada módulo, y qué de eso anda HOY (verificado en el código el 3-sep)
 
-| Función | Simple de interior (×4) | Doble de exterior (×1) | Qué hace el firmware hoy | Evidencia |
-|---|---|---|---|---|
-| Sondas DS18B20 | **3** | **6** | Cada una identificada por ROM de 64 bits y reportada por separado; enganche en caliente; aviso si se desconecta; **offset de calibración por sonda en NVS**. **`SONDAS_MAX` está en 4: alcanza tal cual para los simples; sólo el doble pide subirlo a 8** — es el tamaño de un arreglo, una línea | `sondas.h`: `sondasEscanear`, `sondasLeer`, `sondasCalibrar`; línea 31 |
-| **Verificación cruzada entre sondas** | — | — | **NO existe.** `sondasCalibrar()` iguala las sondas en un momento dado; el lazo de lectura **no compara sondas entre sí** ni alerta por deriva | ídem. Vendida en el **hito 2**, con la aclaración escrita en la página del cliente |
-| Sensor de puerta | **1** | **2** | Implementado **para una sola puerta**: GPIO5, alerta por puerta abierta > 180 s, suprime la alerta de temperatura mientras está abierta. Viene deshabilitado por defecto (`SENSOR_DOOR_ENABLED false`). **Los 4 simples usan lo que ya está; la segunda puerta hace falta sólo en el doble** | `config.h` 72-74, 105, 119 · `.ino` 804-890 |
-| Entrada de defrost | **1** | **2** | Implementada **para una sola entrada**: GPIO33, NA/NC configurable, deshabilita alertas durante el ciclo con 30 min de enfriamiento. **La segunda hay que agregarla sólo en el doble, y tiene que silenciar solo el reefer que descongela** | `config.h` 91-96, 122 · `.ino` 54-55, 100-101, 872-878 |
-| Salidas a relé | 2 | 2 | **1 gobernada**: GPIO26, se activa sola con la alerta si `relayEnabled`. La segunda queda cableada y disponible. **El accionamiento manual desde el panel NO existe** | `config.h` 76-77, 140-150 · `.ino` 369-375, 483-488, 915-944 · `comandos_nube.h` sin comando de relé → **hito 5** |
-| Gabinete | Genrod IP65 210×310×110, **$ 21.203** | Roker PRG357 IP65 200×200×155, **$ 44.419** | — | `BOM_CERRO_MORO.md` §3 · caja de exterior ya enviada al sitio (4-sep) |
+**Los cuatro módulos (3 + repuesto) son la misma placa Mini, poblada entera y con el 2.º bus.** Ya no hay "simple": lo que corre hoy en `REEFER_01_SCZ` sirve para el hito 1 y como plan B parcial, no para el pedido.
 
-**Es la misma placa en los cinco.** La Mini se puebla entera (6 sondas + puertas + 2 defrost + 2 relés) y en el simple simplemente **se cablean menos borneras** (`BOM_CERRO_MORO.md` §1). Una PCB, un firmware, un stock de repuestos — y el repuesto doble reemplaza a cualquiera de los cinco.
+| Función | Doble (×3 + rep.) | Qué hace el firmware hoy | Evidencia |
+|---|---|---|---|
+| Sondas DS18B20 | **6** (3 + 3) | Cada una identificada por ROM de 64 bits y reportada por separado; enganche en caliente; aviso si se desconecta; **offset de calibración por sonda en NVS**. `SONDAS_MAX` está en 4: **hay que subirlo a 8 y asignar cada ROM a su reefer** — con un bus por reefer la asignación es por pin, no por tabla | `sondas.h`: `sondasEscanear`, `sondasLeer`, `sondasCalibrar`; línea 31 · `PINOUT_MINI.md` GPIO 4 / 18 |
+| **Verificación cruzada entre sondas** | — | **NO existe.** `sondasCalibrar()` iguala las sondas en un momento dado; el lazo de lectura **no compara sondas entre sí** ni alerta por deriva. Con 3 °C reales entre puerta y fondo, la comparación tiene que ser **contra la propia historia de cada sonda**, no contra el promedio del reefer | ídem. Vendida en el **hito 2** |
+| Sensor de puerta | **2** | Implementado **para una sola puerta**: GPIO5, alerta > 180 s, suprime la alerta de temperatura mientras está abierta. Deshabilitado por defecto (`SENSOR_DOOR_ENABLED false`). **La segunda puerta hace falta en los tres** | `config.h` 72-74, 105, 119 · `.ino` 804-890 |
+| Entrada de defrost | **2** | Implementada **para una sola entrada**: GPIO33, NA/NC, deshabilita alertas durante el ciclo con 30 min de enfriamiento. **La segunda hace falta en los tres, y tiene que silenciar sólo el reefer que descongela** — es la prueba de aceptación del hito 2 | `config.h` 91-96, 122 · `.ino` 54-55, 100-101, 872-878 |
+| Salidas a relé | 2 | **1 gobernada**: GPIO26, se activa sola con la alerta si `relayEnabled`. La segunda queda cableada y disponible. **El accionamiento manual desde el panel NO existe** | `config.h` 76-77, 140-150 · `.ino` 369-375, 483-488, 915-944 · `comandos_nube.h` sin comando de relé → **hito 5** |
+| Gabinete | 1 | Interior: Genrod IP65 210×310×110, $ 21.203 (×2 + repuesto). Exterior: Roker PRG357 IP65 200×200×155, $ 44.419 (×1, ya en el sitio) | `BOM_CERRO_MORO.md` §3 |
 
 **Regla de venta.** Lo que **no** está andando hoy y va vendido con hito, nunca como característica de hoy:
-- **Segunda puerta, segundo defrost por reefer y `SONDAS_MAX` a 8** — el software del módulo doble. Costeado en §3.2, hito 2. **Ahora sólo lo necesitan el módulo de afuera y el repuesto.**
+- **Segunda puerta, segundo defrost por reefer, `SONDAS_MAX` a 8, reparto de sondas por reefer (un bus por reefer) y panel que muestra dos reefers por módulo** — el software del módulo doble. Costeado (18 h, §3.2), hito 2. **Lo necesitan los tres módulos y el repuesto.**
 - **Verificación cruzada entre sondas** — hito 2.
 - **Accionamiento manual del relé desde el panel** — hito 5.
 
-**Lo que esta configuración desactiva, y hay que decirlo:** en la v7.0 los tres módulos eran dobles y **sin firmware doble no reportaba nadie**. **Acá los 4 de interior son simples y corren lo que ya anda hoy en `REEFER_01_SCZ`**, así que el firmware doble queda como requisito de **un solo módulo instalado más el repuesto**: si se atrasa, **arrancan igual 4 de los 6 reefers**. Estado real: **escrito y en auditoría** — `C:\Proyectos\frioseguro-v31\firmware_modular\VERIFICACION_V3.1_2026-09-04.md`, veredicto **APTO CON CORRECCIONES**, correcciones en curso. **No se vende como cosa hecha: se vende en el hito 2, como siempre.**
+**⚠ El riesgo que VOLVIÓ: sin firmware doble no reporta ningún módulo nuevo.** Como en la v7.0. Estado real: **APTO CON CORRECCIONES** (auditoría 4-sep), correcciones en curso, **sin fecha de cierre confirmada por @firmware**. Lo que lo hace tolerable: el hito 1 no depende de él (es `REEFER_01_SCZ` con lo que ya anda + 2 sondas), y si se atrasa hay un plan B parcial: **cada doble arranca vigilando un solo reefer con el firmware actual** (3 de 5) mientras se cierra. **No se vende como cosa hecha: se vende en el hito 2, como siempre. Y esto hay que decírselo al Director: volvió al camino crítico de la venta.**
 
-**Detalle que no se puede pasar por alto en el diseño del doble:** **el defrost de un reefer no puede silenciar las alarmas del otro.** Hoy el defrost deshabilita *todas* las alertas del equipo. En el módulo doble tiene que silenciar **solo las sondas del reefer que está descongelando**. Está dentro de las horas de §3.2 y hay que probarlo antes del hito 2. **Ahora afecta a 1 módulo y 2 reefers, no a 3 módulos y 6.**
-
-**Orden de armado:** identificación por ROM sí o sí (si se lee por índice, cuando cae una sonda la otra se reporta con el nombre equivocado). **Cuál de las dos líneas se despacha — `firmware_revival` extendido o `firmware_modular` v3.1 — lo define @firmware cuando cierren las correcciones de la auditoría del 4-sep; con esta configuración esa decisión ya NO bloquea a los 4 simples.** **Pull-up 2k2 con posición alternativa de 1k** (@esquematico), 3 hilos (nada de parasite power), 100 nF + 10 µF al pie de la sonda más lejana de cada rama. **Habilitar `SENSOR_DOOR_ENABLED`, probar la puerta y el defrost de cada canal de los 5 módulos, y correr la prueba de banco con 25 m de cable en los cinco antes de despachar.**
+**Orden de armado:** identificación por ROM sí o sí. **Un bus por reefer** (GPIO 4 y 18), cada uno con pull-up 2k2 y alternativa 1k, 3 hilos, 100 nF + 10 µF al pie de la sonda más lejana, **sin D2**. **Cuál de las dos líneas se despacha — `firmware_revival` extendido o `firmware_modular` v3.1 — lo define @firmware** cuando cierren las correcciones; **esta vez la decisión bloquea a los tres.** Habilitar `SENSOR_DOOR_ENABLED`, probar puerta y defrost de **los dos canales de los 4 módulos**, y correr la prueba de banco con 25 m en las 8 salidas antes de despachar.
 
 ### 2.4 Lo que se instala, y quién
 
-**Módulo doble de exterior (×1, para el par de afuera):** **gabinete estanco IP65 apto para exterior** (Roker PRG357 200×200×155), fuente de 5 V 2 A, placa Mini con borneras a tornillo, ESP32 en zócalo, módulo de 2 relés, **prensacables en todas las entradas**, 6 sondas DS18B20 estancas, 2 reed de puerta, 2 entradas de defrost.
-**Módulo simple de interior (×4, uno por cada reefer bajo techo):** gabinete IP65 de interior (Genrod 210×310×110 o las de stock si pasan la medición `M9`), **la misma placa**, 3 sondas, 1 reed, 1 defrost.
-**Kit de repuesto (×1):** un **módulo doble** completo — la placa es la misma en los cinco, así que **cubre a cualquiera** — + 3 sondas + 1 reed. Va con gabinete de interior: **si el que falla es el de afuera, la electrónica se pasa a la caja estanca que ya está en sitio** (queda escrito en el runbook).
-**El cable no lo mandamos** (decisión del 4-sep): adentro no hace falta tirada entre reefers, y la del par de afuera la provee y la hace el cliente (*"los saco de acá"*, Andrés).
+**Módulo doble de exterior (×1, USD 950):** gabinete estanco IP65 apto para exterior (Roker PRG357 200×200×155), fuente de 5 V 2 A, placa Mini con borneras a tornillo y **2 buses 1-Wire**, ESP32 en zócalo, módulo de 2 relés, **prensacables en todas las entradas**, 6 sondas DS18B20 estancas, 2 reed de puerta, 2 entradas de defrost — para el par de afuera, montado sobre la unión.
+**Módulo doble de interior (×2, USD 900):** uno por cada par bajo techo. Gabinete IP65 de interior (Genrod 210×310×110 o las de stock si pasan la medición `M9`), **la misma placa**, 6 sondas, 2 reed, 2 defrost. El par con el reefer parado arranca con 3 sondas puestas y 3 en espera, ya calibradas.
+**Kit de repuesto (×1, USD 400):** un **módulo doble completo** — la placa es la misma en los cuatro, así que **cubre a cualquiera** — con 6 sondas y 2 reed. Va con gabinete de interior: **si el que falla es el de afuera, la electrónica se pasa a la caja estanca que ya está en sitio** (queda escrito en el runbook).
+**El cable no lo mandamos** (decisión del 4-sep): son seis tiradas cortas de la unión a cada reefer, y las hace el cliente.
+**Qué pasa con `REEFER_01_SCZ`:** cumple el hito 1 con sus 3 sondas; en el hito 2 su reefer pasa al doble de su par, **sus 3 sondas ya calibradas se reaprovechan** y el kit viejo queda en el campamento como segundo respaldo o vuelve a Bahía (decide Matías, pendiente 7).
 
 **Montaje: Andrés (o quien la empresa designe), con kit preconfigurado y probado en banco + videollamada.** Dos pasajes a Santa Cruz, alojamiento, inducción y 5 días de ingeniero rondan los $ 2.500.000, y Matías no puede viajar en octubre (parada de Dreyfus). Eso es lo que esta propuesta no cobra.
 
@@ -218,95 +210,77 @@ Facturación en dólares estadounidenses. De abonarse en pesos, se toma el tipo 
 
 ### 2.5 Los riesgos técnicos abiertos
 
-1. **⚠ EL RIESGO QUE SUBIÓ: cobertura de red en 5 puntos**, contra 3 en la v7.0 y 4 en la v6.1. Es el peor número de todas las versiones y es el precio de tener un módulo por reefer: cada uno tiene que llegar solo al WiFi del campamento. Si alguno queda corto se resuelve con un repetidor barato, **pero hay que saberlo antes de despachar**. Pregunta 1 de §5.2 — **ahora es la pregunta más importante de la lista**, y no frena el envío pero sí lo condiciona.
-2. **✅ EL RIESGO QUE BAJÓ, y era el más grande: el firmware de módulo doble ya no es crítico para todo el pedido.** En la v7.0 los tres módulos eran dobles y sin ese firmware no reportaba nadie. **Acá los 4 simples corren lo que ya anda hoy en `REEFER_01_SCZ`** (3 sondas ≤ `SONDAS_MAX` 4, 1 puerta, 1 defrost). El firmware doble lo necesitan **el módulo de afuera y el repuesto**: si se atrasa, **arrancan igual 4 de los 6 reefers** y el hito 2 se cumple parcial en vez de caer entero. Estado real, verificado: `C:\Proyectos\frioseguro-v31\firmware_modular\VERIFICACION_V3.1_2026-09-04.md`, **APTO CON CORRECCIONES**, correcciones **en curso**. **Sigue habiendo que cerrarlo, pero salió del camino crítico de la venta** — y eso hay que decírselo al Director.
-3. **✅ Una sola tirada de 20-25 m, la de afuera** (eran 3 en la v7.0). Riesgo asumido, mitigaciones en §2.2. Interno: cable apto exterior, sin empalmes, canalizado. Adentro no hay cruce de tierras entre contenedores porque no hay cable entre contenedores.
-4. **El defrost cruzado** (§2.3): que el descongelamiento de un reefer no ciegue al otro. **Ahora aplica a 1 módulo y 2 reefers**, no a 3 módulos y 6. Trabajo de software, costeado, y es lo que hay que probar antes del hito 2.
-5. **Si cae un módulo de interior queda 1 reefer ciego; si cae el de afuera, 2.** Mejor que la v7.0, donde cualquier caída ciegaba dos. Mitigación real y ya cotizada: el **módulo de repuesto queda en el campamento** y sirve para cualquiera de los cinco.
-6. **La caja de exterior a la intemperie de Santa Cruz** es la única parte del equipo sin antecedente de campo largo, y **de ella dependen 2 reefers**. La que se mandó al sitio el 4-sep es, de hecho, **la prueba de campo**: conviene pedirle a Andrés una foto después del primer temporal.
-7. **Plazo de fabricación — el cuello nuevo.** @hardware avisa (`BOM_CERRO_MORO.md` §7.2) que con la PCB Mini el despacho realista es **semana 4-5, no 2**, y que el hito 2 caería en la **7-8**. En el documento del cliente los hitos quedan como están (decisión de mantener la v6.1); **internamente esto es lo que Matías tiene que resolver con @hardware antes de firmar**, y la salida que recomienda @hardware es **pedir la PCB ahora** (USD 43, sirve igual para las demos de Bahía si Cerro Moro no compra).
+1. **⚠ EL QUE VOLVIÓ: el firmware doble es crítico para los tres módulos.** Como en la v7.0. APTO CON CORRECCIONES, en curso, sin fecha. Plan B parcial: cada doble arranca con un solo reefer (3 de 5). **@firmware tiene que dar fecha antes de que Matías prometa el hito 2 por teléfono.**
+2. **Una caja sin energía = dos reefers ciegos, siempre.** Mitigación cotizada: repuesto en el campamento + aviso de equipo mudo. Está escrito en "Lo que hay que saber" del PDF, sin dramatizar.
+3. **Decisión de placa: poblar el 2.º bus antes de pedir la PCB.** La Mini deja GPIO 18/23 reservados. Con un bus por reefer el reparto es por pin y el defrost cruzado es trivial; con un solo bus de 6 sondas hay que repartir por tabla de ROM y probar el bus a 6 sondas con dos ramas. **Lo define @esquematico con Matías esta semana; después de JLCPCB ya no.**
+4. **✅ Cobertura de red: 3 puntos.** Mejor que los 5 de la v8.0 y que los 4 de la v6.1. Sigue siendo pregunta para Andrés antes de despachar.
+5. **✅ Cable: seis tiradas cortas, ninguna entre contenedores.** Queda el cruce de masas entre los dos contenedores de cada par por el hilo de GND: un bus por reefer lo aísla en datos, no en masa. Riesgo asumido (§2.2).
+6. **El defrost cruzado, ahora en los tres.** Es la prueba de aceptación del hito 2 (*"forzar el defrost de un reefer y que el que comparte módulo siga alarmando"*) y aplica a los 3 pares.
+7. **La caja de exterior a la intemperie de Santa Cruz** es la única parte del equipo sin antecedente de campo largo, y de ella dependen 2 reefers. La que se mandó el 4-sep es la prueba de campo: pedirle a Andrés una foto tras el primer temporal.
+8. **⚠ Plazo de fabricación — sigue siendo el cuello.** @hardware: con la PCB Mini el despacho realista es **semana 4-5, no 2**, y el hito 2 caería en la **7-8** (`BOM_CERRO_MORO.md` §7.2). Son 4 placas en vez de 6, pero el plazo lo pone JLCPCB + DHL, no la cantidad. En el documento del cliente los hitos quedan como están; **Matías resuelve con @hardware antes de firmar** (pedir la PCB ya, USD 43, sirve igual para las demos de Bahía).
+
+**Resumen para el Director, en una línea:** contra la v8.0 **bajaron** la red (5 → 3 puntos), el cable (1 tirada larga → 6 cortas), las cajas (5 → 3) y el precio (−200); **subieron** el firmware doble (vuelve a bloquear a todos) y el alcance de una caída (siempre 2 reefers). El cuello de fabricación es el mismo. **Saldo: mejor negocio, mismo riesgo de plazo, un riesgo técnico más concentrado.**
 
 ### 2.6 Opcionales, después de la primera orden
 
-**El sexto reefer cuando vuelva a servicio: USD 260 + USD 100/mes** — **su módulo ya está instalado y de alta**, así que es conectar 3 sondas, el reed y el defrost, sin abrir la caja de ningún vecino. El precio no cambió respecto de la v7.0 porque los componentes son exactamente los mismos; lo que cambió es que ahora no depende de que quede un canal libre. Ya está escrito con precio en el documento del cliente: no hay que venderlo de nuevo, solo ejecutarlo. **Es el upsell más probable y el de mejor margen de esta cuenta.** · **Sirena o baliza: a USD 40 NO deja margen** — @hardware midió que la BR300 de exterior sale $ 39.530 (USD 26) **más su propia fuente de 12 V**, porque el relé entrega contacto seco (`BOM_CERRO_MORO.md` §4.5). **Propuesta: USD 70 instalada**, o baliza LED de 12 V que es mucho más barata. **Decide Matías.** · **cuarta sonda** en un reefer (USD 40 + USD 5/mes) · base con batería y 4G, la única que avisa el corte de energía por sí misma (a cotizar) — **especialmente vendible para el módulo de la intemperie, del que ahora dependen dos reefers**. Se ofrecen cuando las sondas estén andando, no antes.
+**El sexto reefer cuando vuelva a servicio: sin costo de equipo, +USD 100/mes.** El doble de su par ya trae sus 3 sondas, su reed y su defrost. Es conectar y subir el abono de 500 a 600. Está escrito con ese precio (cero) en el documento del cliente: no hay que venderlo de nuevo, solo ejecutarlo. **Es el upsell más probable y de mejor margen de esta cuenta, y ahora no tiene fricción de compra.** · **Sirena o baliza: a USD 40 NO deja margen** — @hardware midió que la BR300 de exterior sale $ 39.530 (USD 26) **más su propia fuente de 12 V**, porque el relé entrega contacto seco (`BOM_CERRO_MORO.md` §4.5). **Propuesta: USD 70 instalada**, o baliza LED de 12 V. **Decide Matías.** · **Cuarta sonda** en un reefer (USD 40 + USD 5/mes) — con 3 °C entre puerta y fondo, puede pedirse sola · **base con batería y 4G**, la única que avisa el corte de energía por sí misma (a cotizar) — especialmente vendible para la caja de la intemperie, de la que dependen dos reefers. Se ofrecen cuando las sondas estén andando, no antes.
 
 ---
 
 ## PARTE 3 — Números de respaldo
 
-Base: **`BOM_CERRO_MORO.md` rev A (@hardware, 4-sep)**, precios de MercadoLibre AR y JLCPCB verificados en vivo ese día. Cambio $ → USD al BNA vendedor 1.535.
+Base: **`BOM_CERRO_MORO.md` rev A (@hardware, 4-sep)**, precios de MercadoLibre AR y JLCPCB verificados en vivo ese día. Cambio $ → USD al BNA vendedor **1.530 (8-sep)**: los mismos pesos dan los mismos dólares redondeados que al 1.535 de la v8.0.
 
-### 3.1 Los tres precios, con el MISMO margen: simple 600 · doble 700 · repuesto 350
+### 3.1 Los tres precios, con el MISMO margen: interior 900 · exterior 950 · repuesto 400
 
-| | Simple interior (ARS) | USD | Doble exterior (ARS) | USD |
+| | Doble interior (ARS) | USD | Doble exterior (ARS) | USD |
 |---|---:|---:|---:|---:|
-| Electrónica: ESP32 + módulo de 2 relés + fuente 5 V 2 A + PCB Mini prorrateada + consumibles de placa y prensacables | ~46.000 | **30** | ~46.000 | **30** |
+| Electrónica: ESP32 + módulo de 2 relés + fuente 5 V 2 A + PCB Mini prorrateada + consumibles y prensacables **+ 2.º bus 1-Wire con su protección, 2.ª entrada de defrost, borneras y prensacables ×2** (30 de la v8 + ~8) | ~58.000 | **38** | ~58.000 | **38** |
 | **Gabinete** — interior Genrod IP65 210×310×110 **$ 21.203** · exterior **Roker PRG357 IP65 200×200×155 $ 44.419** | 21.203 | **14** | 44.419 | **29** |
-| Sondas DS18B20 estancas moldeadas de 3 m ($ 10.587 c/u): **3** en el simple, **6** en el doble | 31.761 | **21** | 63.522 | **41** |
-| Sensores magnéticos de puerta cableados: 1 / 2 | 8.137 | **5** | 16.274 | **11** |
-| Envío a Santa Cruz, prorrateado en 6 bultos | | **10** | | **12** |
-| Armado + **prueba de banco documentada con 25 m de cable** + garantía de reposición amortizada | | **130** | | **150** |
-| Parte de plataforma del desarrollo: USD 1.000 repartidos en **5** módulos vendidos | | **200** | | **200** |
-| **Costo** | | **410** | | **473** |
-| Margen (**~32 % en los dos**) | | **190** | | **227** |
-| **Precio** | | **600** | | **700** |
+| Sondas DS18B20 estancas moldeadas de 3 m ($ 10.587 c/u): **6** por módulo | 63.522 | **41** | 63.522 | **41** |
+| Sensores magnéticos de puerta cableados: **2** por módulo | 16.274 | **11** | 16.274 | **11** |
+| Envío a Santa Cruz, prorrateado en **4** bultos (eran 6) | | **15** | | **17** |
+| Armado + **prueba de banco documentada de los DOS buses con 25 m de cable** + garantía de reposición amortizada (era 150 en el doble de la v8) | | **160** | | **160** |
+| Parte de plataforma del desarrollo: USD 1.000 repartidos en **3** módulos vendidos (eran 5 → 200) | | **333** | | **333** |
+| **Costo** | | **612** | | **629** |
+| Precio a 32 % sobre venta (costo / 0,68), redondeado | | **900** | | 925 → **950** |
 
-**El margen elegido: 32 % sobre el precio de venta, igual en los tres ítems.** Matías liberó el precio del doble (*"no dejes fijado a 850 el exterior... pensalo vos bien"*), así que lo pensé desde el costo. **Por qué 32 y no 25:** el 25 % que tenía el simple es margen de reventa, no de producto propio con soporte, garantía de reposición con envío incluido y respuesta a **1.500 km** — donde **una sola placa que haya que rehacer se come USD 90 y un viaje se come el margen entero** (@hardware, `BOM_CERRO_MORO.md` §6). **Por qué 32 y no 40:** este es el **primer** cliente del producto y es una corrida de 6 unidades, la más cara que vamos a hacer nunca — la PCB sola pasa de USD 4,31 a ~1,9 por placa a 20 unidades. Y **el equipo es el ticket de entrada, no el negocio: el negocio es el abono al 74 %.** Un inicial caro pone en riesgo lo único que importa, que es el 500/mes.
+**El margen elegido: 32 % sobre el precio de venta, el mismo criterio de la v8.0**, aplicado a los costos nuevos. Por qué 32 y no 25, y por qué 32 y no 40: igual que en la v8.0 — es producto propio con soporte, garantía de reposición y respuesta a 1.500 km (una placa a rehacer se come USD 90; un viaje, el margen entero), y a la vez es el primer cliente en la corrida más cara que se va a hacer nunca, y **el negocio es el abono al 76 %**, no el equipo.
 
 **Los tres precios, para que Matías pueda defender cualquiera sin abrir nada más:**
 
 | Ítem | Costo | Margen | **Precio** | % |
 |---|---:|---:|---:|---:|
-| **Simple de interior** (×4) | 410 | 190 | **600** | **31,7 %** |
-| **Doble de exterior** (×1) | 473 | 227 | **700** | **32,4 %** |
-| **Repuesto doble** (×1, sin cargo de plataforma) | 232 | 118 | **350** | **33,7 %** |
-| **Total equipos + repuesto** | **2.345** | **1.105** | **3.450** | **32,0 %** |
+| **Doble de interior** (×2) | 612 | 288 | **900** | **32,0 %** |
+| **Doble de exterior** (×1) — redondeado a 950: caja de intemperie, de la que dependen 2 reefers, y mayor plazo | 629 | 321 | **950** | **33,8 %** |
+| **Repuesto doble** (×1, completo, sin cargo de plataforma) — redondeado a 400 hacia abajo: queda en estante | 279 | 121 | **400** | **30,2 %** |
+| **Total equipos + repuesto** | **2.132** | **1.018** | **3.150** | **32,3 %** |
 
-**Por qué el doble sale 700 y no 1.200: la cuenta, renglón por renglón.** Es lo que hay que mostrar si alguien pone los dos precios uno al lado del otro — y en una compra corporativa eso pasa siempre.
+**Por qué un doble sale 900 y no 1.200 (ni 700).** Contra dos simples de la v8 (2 × 600): ESP32 + fuente + relés + PCB + gabinete + envío + alta + punto de red **NO se duplican**; sondas y reed **sí**. Contra el doble de la v8 (700): **+8 de electrónica** (2.º bus, 2.º defrost, borneras), **+10 de armado** (dos buses a probar), **+5 de envío** (menos bultos) y **+133 de plataforma** (USD 1.000 entre 3 y no entre 5). Costo 473 → 612 (+139); precio 700 → 900 (+200). **Se le dice al cliente sin abrir la cuenta: menos cajas, más electrónica y más programación por caja.** Y si la abren, los tres ítems tienen el mismo margen.
 
-| Renglón | Simple | Doble | ¿Se duplica? |
-|---|---:|---:|---|
-| ESP32 + fuente + módulo de relé + PCB + consumibles | 30 | 30 | **NO** — es **un solo equipo** |
-| Gabinete | 14 (Genrod interior) | 29 (Roker estanco) | no se duplica, pero **la caja de exterior cuesta el doble** |
-| Sondas DS18B20 | 21 (3) | 41 (6) | **SÍ** |
-| Reed de puerta | 5 (1) | 11 (2) | **SÍ** |
-| Envío prorrateado | 10 | 12 | casi no — **un solo bulto** |
-| Armado + prueba de banco con 25 m | 130 | 150 | no — **la misma placa**, más canales que verificar |
-| Plataforma (USD 1.000 / 5 módulos) | 200 | 200 | **NO** — **un solo alta remota, una sola credencial, una sola OTA, un solo punto de red** |
-| **Costo** | **410** | **473** | **+63** |
-| **Precio a 32 %** | **600** | **700** | **+100** |
+**Por qué el total baja 200 y no 1.000: dos cajas menos no son dos precios menos.** v8: 4 × 600 + 700 + 350 = 3.450 en equipos. v9: 2 × 900 + 950 + 400 = **3.150**. **−300 en equipos (−8,7 %)**, con la misma plataforma (1.000), las mismas 15 sondas en servicio (y 6 más en el repuesto) y 4 placas en vez de 6. Puesta en marcha 1.550 → 1.650 (**+100**: +8 h de software del doble que ahora corre en todos, −4 h por 3 altas en vez de 5). **Neto −200.** El margen absoluto de equipos baja de 1.105 a 1.018 (−87): es lo que cuesta que Andrés tenga razón — y la tiene: menos cable, menos red, menos cajas.
 
-**En una frase, y es el argumento de venta:** *dos reefers pegados se cubren con un equipo, y por eso salen **700 en vez de 1.200**. El cliente se ahorra **USD 500** por el solo hecho de que esos dos contenedores estén al lado.* **Se duplica lo que va adentro del reefer (sondas y reed); no se duplica lo que va adentro de la caja.** Y a diferencia de la versión con el doble a 850, **acá el desglose se puede abrir sin que quede nadie mal parado**: los tres ítems tienen el mismo margen.
+**Cómo llegó a 4.800, y por qué no se forzó a 5.000.** Se costeó cada ítem desde el BOM rev A con los tres cambios reales (2.º bus, plataforma entre 3, dos buses a probar), se aplicó el 32 % de la v8.0 y se redondeó cada unitario (900 / 950 / 400); la puesta en marcha se recontó hora por hora (66). **La suma dio 4.800 sola.** Matías dijo *"más o menos lo mismo"*, no *"lo mismo"*: −4 % es exactamente eso, y es honesto con el cliente que propuso la configuración más barata de instalar. **Alternativa si Matías prefiere sostener los 5.000:** exterior 1.000 · interior 950 × 2 · repuesto 400 · puesta 1.700 (68 h) = 5.000, margen de equipos 36 % — defendible, pero desparejo con el 32 % que ya se escribió en la v8.0 y con lo que se le dijo a Andrés. **Recomiendo 4.800. Decide Matías.**
 
-**El margen del conjunto sube de 23 % a 32 %, y ahora es parejo.** Ingreso de equipos + repuesto: **4 × 600 + 700 + 350 = USD 3.450**. Costo directo: 4 × 410 + 473 + 232 = **USD 2.345**. **Margen USD 1.105 = 32,0 %.** Cruza contra la cuenta independiente de @hardware (`BOM_CERRO_MORO.md` §6, que da 27,6 % para 5 placas con **dos** cajas de intemperie y la plataforma repartida distinto): **la diferencia es exactamente el reparto entre 5 módulos y la segunda caja Roker que ya no se compra.** Cierra. *Dato para que no se pierda: el ingreso total y el margen total son **idénticos** a los de la versión con el doble a 850 — lo único que cambió es **cómo se reparte entre los ítems**. Por eso el total sigue en 5.000 y el WhatsApp no cambia de cifra.*
+**Dónde está la plata de esta cuenta, igual:** en el **abono (76 % de margen, §3.4)** y en la **puesta en marcha**. Los equipos son el ticket de entrada, no el negocio. **Eso es exactamente el modelo de PLATA.md.**
 
-**Dónde está la plata de esta cuenta, igual:** en el **abono (74 % de margen, §3.4)** y en la **puesta en marcha**. Los equipos son el ticket de entrada, no el negocio. **Eso es exactamente el modelo de PLATA.md** — y por eso el abono no se toca ni un dólar aunque el inicial haya subido 400.
-
-**Por qué el total quedó en 5.000 otra vez, y por qué no lo forcé.** Los precios salieron de aplicar 32 % al costo de cada ítem y redondear cada unitario a la decena: **600, 700 y 350**. **La suma dio 5.000 sola** (con los unitarios sin redondear da 4.998,4). **Es coincidencia y la digo como tal:** la versión anterior también daba 5.000 con el doble a 850 y el simple a 550, porque lo que se movió fue el reparto, no la torta. Se podía haber puesto el simple en 620 para llegar a 5.100 o en 575 para "amortiguar" la suba: **no se hace ninguna de las dos.** El cliente que ve unitarios redondos con margen parejo entiende que el número está calculado y no negociado, y eso es lo que hace creíble el 500/mes, que es donde está el negocio.
-
-**Cómo se sostiene la diferencia contra los USD 4.600 que Andrés ya vio (v6.1, 14:01 de hoy).** En dos líneas, que es lo que hay que poder decir por teléfono: **(1) hay un equipo más — 5 módulos en vez de 4 — porque cada reefer de adentro lleva el suyo, que es lo que él confirmó a las 15:23; (2) eso agrega un reefer entero con su propio módulo y saca todo el cable entre contenedores de adentro.** **El unitario del módulo de interior no subió: sigue en USD 600, el mismo número de la v6.1** — y ahora esos 600 son por una caja de interior, no por una estanca de intemperie. **+USD 400 sobre 4.600 = +8,7 %, y el abono no se movió.**
-
-**El repuesto baja de 400 a USD 350**, por el mismo criterio de margen parejo (costo 232, 33,7 %). Cubre **el 100 % del parque** con una sola caja, porque los 5 módulos son la misma placa. **Es el único renglon que baja respecto de la primera cuenta de la v8, y baja porque no había motivo para que llevara más margen que el resto.**
-
-### 3.2 Puesta en marcha, USD 1.550
+### 3.2 Puesta en marcha, USD 1.650
 
 | Trabajo | h |
 |---|---:|
-| Sondas, rangos y umbrales por reefer + **calibración de las 15 sondas** contra referencia y registro de offsets | 10 |
-| **Software del módulo doble: segunda puerta, segundo defrost con silenciado por reefer, `SONDAS_MAX` a 8, validación del bus a 25 m** | 10 |
+| Sondas, rangos y umbrales por reefer + **calibración de las 15 sondas** contra referencia y registro de offsets (con los 3 °C puerta-fondo de Andrés como primer dato de rango) | 10 |
+| **Software del módulo doble, ahora en los tres: segunda puerta, segundo defrost con silenciado por reefer, `SONDAS_MAX` a 8, un bus por reefer con asignación de sondas por bus, panel que muestra dos reefers por módulo, validación de los dos buses a 25 m** (10 h en la v8 + 8 del reparto por reefer y el panel) | 18 |
 | Registro exportable con código de verificación | 14 |
 | Panel multi-equipo y usuarios de lectura | 10 |
-| Puesta en marcha remota (alta, credencial, OTA verificada, prueba de puerta y defrost), pruebas de campo con Andrés, runbook y capacitación — **5 módulos** | 14 |
+| Puesta en marcha remota (alta, credencial, OTA verificada, prueba de puerta y defrost de los dos canales), pruebas de campo con Andrés, runbook y capacitación — **3 módulos** (eran 5 → 14 h) | 10 |
 | Salud de bus, histéresis de 3 barridos y **verificación cruzada entre sondas** | 4 |
-| **Total a USD 25/h** | **62 = USD 1.550** |
+| **Total a USD 25/h** | **66 = USD 1.650** |
 
-**Subió de 58 a 62 h, y sube sólo en el renglón que corresponde: la puesta en marcha remota por módulo.** Son **5 altas, 5 credenciales, 5 OTA verificadas y 5 pruebas de puerta y defrost** en vez de 3. La serie de las versiones anteriores era 3 módulos → 10 h y 4 → 12 h: **5 → 14 h**, o sea 2 h por módulo sobre una base de 4 h de runbook y capacitación que no depende de la cantidad. Todo lo demás queda idéntico.
-
-**Las 10 h del software del doble NO bajan aunque ahora lo use un solo módulo instalado.** El código se escribe una vez, se use en uno o en tres, y el repuesto también lo lleva. **Lo que cambió es el riesgo, no el costo** (§2.5 punto 2). *El firmware está escrito y auditado (APTO CON CORRECCIONES, 4-sep) pero las correcciones no están cerradas. **Si @firmware dice que son más horas, salen del margen, no del precio.***
+De 62 a 66 h: **+8 h en el software del doble** (es la "programación" que Matías le dijo a Andrés: repartir por reefer lo que entra por dos buses, silenciar por reefer y mostrar dos reefers por caja) y **−4 h** en altas remotas (3 en vez de 5). Si @firmware dice que son más horas, **salen del margen, no del precio**.
 
 ### 3.3 **LA CUENTA DEL CAÑO** — archivo, y por qué ya no entra en el precio
 
-> Se conserva de la v5 **como historia y como argumento**, no como parte del presupuesto. **El tendido lo hace y lo paga el cliente, y no aparece en el documento que se manda.** Con la v8 queda **una sola tirada**: la del par de afuera, que está pegado y debería ser corta. **Adentro no hay tirada entre reefers** — cada módulo se monta en su contenedor.
+> Se conserva de la v5 **como historia y como argumento**, no como parte del presupuesto. **El tendido lo hace y lo paga el cliente, y no aparece en el documento que se manda.** Con la v9 **no queda ninguna tirada entre contenedores**: la caja va sobre la unión de cada par y de ahí sale un cable corto a cada reefer. Esta cuenta era la de UNA tirada de 25 m con caño Daisa; hoy sirve para saber cuánto se ahorró el sitio con la configuración que propuso Andrés.
 
 | Ítem (por par, 25 m de recorrido) | Subtotal |
 |---|---:|
@@ -318,97 +292,81 @@ Base: **`BOM_CERRO_MORO.md` rev A (@hardware, 4-sep)**, precios de MercadoLibre 
 | Mano de obra: 2 jornadas de oficial electricista al piso de tarifa ($ 12.000/h × 16 h) | **$ 192.000 ≈ USD 125** |
 | **Total por par** | **$ 439.700 ≈ USD 286** |
 
-**Para qué sirve esta cuenta ahora que no la cotizamos.** Tres cosas concretas:
-1. **Saber el tamaño de lo que el cliente gasta por su lado** — y con esta configuración es **una sola tirada corta entre dos contenedores pegados**, mucho menos que esta cuenta, que además **Andrés ya dijo que resuelve él** (*"no es mucho lo de los cables, los saco de acá"*). Si igual dicen "esto de la obra no lo teníamos previsto", la respuesta ya está: **la configuración la describieron ellos**.
-2. **La variante de rescate ya está aplicada.** Era *"un módulo por reefer, sin obra"* — y es exactamente lo que ahora se cotiza adentro. **Ya no hay obra que pueda frenar la venta salvo en el par de afuera.**
-3. **Que nadie regale la instalación.** Si aparece la tentación de "se lo hacemos nosotros para cerrar", el número a tener en la cabeza es **USD 286 por tirada**, más pasajes y estadía.
+**Para qué sirve esta cuenta ahora que no la cotizamos.** (1) **Saber cuánto vale lo que Andrés resolvió con la caja en la mano:** tres pares que hubieran costado hasta USD 286 cada uno de canalización se convirtieron en seis cables cortos. Si igual dicen "esto de la obra no lo teníamos previsto": **la configuración la describieron ellos, y es la de menos obra posible**. (2) **El argumento del precio del doble:** si alguien compara 900 contra "dos simples de 600", acá está lo que NO se paga — ni canalización entre contenedores ni un segundo punto de red por par. (3) **Que nadie regale la instalación:** si aparece la tentación de "se lo hacemos nosotros para cerrar", el número a tener en la cabeza es **USD 286 por tirada**, más pasajes y estadía. Los renglones de cuplas, curvas, cajas y grampas son estimados a precio de plaza; el caño y la mano de obra, relevados. **Nosotros no la cotizamos y no la ejecutamos.**
 
 ### 3.4 Servicio mensual: qué cuesta servir y qué se cobra
 
-| Costo directo mensual | v2 (12 sondas) | **v8.0 (15 sondas, 5 reed, 5 módulos)** |
+| Costo directo mensual | v8.0 (5 módulos) | **v9.0 (15 sondas, 5 reed, 3 módulos)** |
 |---|---:|---:|
 | Supabase Pro | 25 | 25 |
-| Reposición amortizada (módulos y sondas en garantía) | 10 | **18** |
-| Soporte (2 h → 2,5 h a USD 25) | 50 | **62** |
+| Reposición amortizada (módulos y sondas en garantía) | 18 | **15** |
+| Soporte (2,5 h → 2,3 h a USD 25) | 62 | **57** |
 | Informe mensual | 25 | 25 |
-| **Total** | **110** | **130** |
+| **Total** | **130** | **122** |
 
-*(Reposición y soporte suben respecto de la v7.0 —15 y 57— porque hay 5 equipos en campo, no 3.)*
+**Tarifa: USD 100 por reefer por mes × 5 = USD 500/mes** (decisión de Matías, **no se toca con la configuración nueva**). Costo directo 122 → **margen bruto USD 378 (76 %)**. **Con el inicial en 4.800, el abono paga el equipamiento entero en 12,7 meses de margen.** La justificación, si preguntan: **mantenimiento del servidor, custodia de los datos y seriedad del servicio**.
 
-**Tarifa: USD 100 por reefer por mes × 5 = USD 500/mes** (decisión de Matías, 4-sep, **no se toca con la configuración nueva**). Costo directo 130 → **margen bruto USD 370 (74 %)**. **Con el inicial en 5.000, el abono paga el equipamiento entero en 13,5 meses de margen: sigue siendo el renglón que sostiene la cuenta.** La justificación, y es la que hay que decir si preguntan: **mantenimiento del servidor, custodia de los datos y seriedad del servicio** — el registro que se entrega tiene que estar disponible y ser defendible dentro de un año, y eso se paga todos los meses aunque no pase nada.
+**El abono es estrictamente proporcional a los reefers, no a los equipos**: 5 = 500, 6 = 600. Pasamos de 5 cajas a 3 y se vigila lo mismo. **Y esta vez la regla juega al revés y también sirve:** si preguntan *"¿con menos equipos no baja el mensual?"*, la respuesta está escrita desde la v2: **el servicio se cobra por reefer vigilado, no por caja instalada.** Cuando entre el sexto, los USD 100 adicionales son margen puro: el equipo ya está puesto y las sondas también.
 
-**El abono es estrictamente proporcional a los reefers, no a los equipos**: 5 reefers = 500, 6 = 600. **Eso es lo que permite mover el inicial sin tocar el abono**: pasamos de 3 cajas a 5 y se vigila lo mismo — 5 reefers. Y **ahora juega a favor**: si alguien intenta *"pusieron dos equipos más, ¿el mensual no sube?"*, la respuesta está escrita desde la v2: **el servicio se cobra por reefer vigilado, no por caja instalada.** **Cuando entre el sexto, los USD 100 adicionales son casi margen puro** y el equipo ya está puesto.
-
-**El escalón de los primeros 3 meses al 50 % sigue eliminado** (decisión de Matías, 4-sep): abono completo desde el primer mes en las dos formas. Lo justifica que el servicio ya está corriendo —servidor, custodia y guardia de alertas— desde el primer equipo que reporta.
+**El escalón de los primeros 3 meses al 50 % sigue eliminado** (decisión de Matías, 4-sep): abono completo desde el primer mes en las dos formas.
 
 ### 3.5 Condiciones de pago — 50 / 50, y por qué no 25
 
-**50 % con la orden de compra (anticipo de materiales) y 50 % contra los equipos instalados y reportando.** El abono arranca con el primer equipo andando.
-
-El fundamento es de caja: hay que comprar y armar **6 módulos** (5 + el repuesto) antes de ver un peso del segundo tramo, y cobrar ese tramo a un contratista que todavía no tiene nombre. Con el 50 % (**USD 2.500 ≈ $ 3.837.500**) la compra completa de materiales —**≈ $ 821.000, §3.7**— queda cubierta **más de cuatro veces** antes de tocar un componente. Con el 25 % (USD 1.250 ≈ $ 1.919.000) también alcanzaría para los materiales; lo que no cubriría es el **riesgo de cobranza del segundo tramo**, que es lo que en realidad se está financiando. *(La holgura cayó de 8× a 4× respecto de la v7.0 porque el BOM real de @hardware es más caro que la estimación vieja de perfboard — sigue siendo cómoda, pero ya no es infinita.)*
-
-Los hitos siguen existiendo **como compromiso de entrega con plazo**, y así está escrito en el documento del cliente: *"no se facturan aparte, están incluidos en el precio"*. **Punto para que Matías confirme:** cobrar antes de entregar los hitos es más cómodo para la caja y más exigente con la palabra.
+**50 % con la orden de compra (anticipo de materiales) y 50 % contra los equipos instalados y reportando.** El abono arranca con el primer equipo andando. Hay que comprar y armar **4 módulos dobles** (3 + el repuesto) antes de ver un peso del segundo tramo. Con el 50 % (**USD 2.400 ≈ $ 3.672.000**) la compra completa de materiales —**≈ $ 749.000, §3.7**— queda cubierta **casi cinco veces**. Con el 25 % (USD 1.200 ≈ $ 1.836.000) también alcanzaría para los materiales; lo que no cubriría es el **riesgo de cobranza del segundo tramo**, que es lo que en realidad se está financiando. Los hitos siguen existiendo **como compromiso de entrega con plazo**. **Punto para que Matías confirme:** cobrar antes de entregar los hitos es más cómodo para la caja y más exigente con la palabra.
 
 ### 3.6 Las dos formas de pagar, y por qué se cayó la tercera
 
-**A. Equipos + servicio mensual.** 5.000 + 12 × 500 = **11.000** el primer año; 6.000/año después; **24 meses 17.000**.
+**A. Equipos + servicio mensual.** 4.800 + 12 × 500 = **10.800** el primer año; 6.000/año después; **24 meses 16.800**.
+**B. Anual adelantado, 10 % de descuento sobre el año de servicio.** 4.800 + (12 × 500) × 0,9 = 4.800 + 5.400 = **USD 10.200**; renovación 5.400/año; **24 meses 15.600**. El descuento le ahorra **USD 600 el primer año** y compra **cero riesgo de cobranza durante 12 meses**, una factura en lugar de doce, y caja para armar los equipos.
+**C, eliminada.** Matías: *"el de la inversión inicial no lo ofrecería"*. **No se vuelve a ofrecer sin contrato validado por contador y un cliente con historial de pago.**
+**Sin cláusulas condicionales:** el tendido es del cliente y el precio es firme.
 
-**B. Anual adelantado, 10 % de descuento sobre el año de servicio.** 5.000 + (12 × 500) × 0,9 = 5.000 + 5.400 = **USD 10.400**; renovación 5.400/año; **24 meses 15.800**. El descuento le ahorra **USD 600 el primer año** y lo que compra es concreto: **cero riesgo de cobranza durante 12 meses con un contratista que probablemente pague a 60-90 días, una factura en lugar de doce, y caja para armar los equipos.**
+### 3.7 Los 4 módulos: qué falta comprar y cuánto sale (estimación — pide rev B a @hardware)
 
-**C, eliminada.** Matías: *"el de la inversión inicial no lo ofrecería"*. Era la única que ponía USD ~5.000 nuestros en manos de un contratista a 1.500 km, sin poder retirar los equipos y sin contrato con permanencia. **No se vuelve a ofrecer sin contrato validado por contador y un cliente con historial de pago.** Con dos opciones el comprador elige; con tres se paraliza.
+**Qué hace falta.** 4 placas Mini: **1 doble de exterior + 2 dobles de interior + 1 doble de repuesto, las 4 con el 2.º bus**. Gabinetes: 1 de intemperie (ya en sitio) + 3 de interior. Sondas: 18 en los dobles (las 3 de `REEFER_01_SCZ`, ya calibradas, se reaprovechan) + 6 del repuesto = **21 a comprar**. Reed: 6 + 2 − 1 existente = **7**. Defrost: 6 entradas (opto, cable y bornera). Reservados **3 ESP32 para las galgas de Dreyfus** (P0 de octubre).
 
-**Sin cláusulas condicionales.** La propuesta no tiene condición de metros, ni de canalización, ni corrección de precio: **el tendido es del cliente y el precio es firme.**
-
-### 3.7 **Los 6 módulos: qué falta comprar y cuánto sale**
-
-**Qué hace falta.** 6 placas Mini: **1 doble de exterior + 4 simples de interior + 1 doble de repuesto**. Gabinetes: **1 de intemperie + 5 de interior**. Sondas: 15 instaladas + 3 de repuesto = **18**. Reed: 5 instalados + 1 de repuesto = **6**. Defrost: 5 entradas (cable y bornera, sin componente caro). Reservados **3 ESP32 para las galgas de Dreyfus**, que es P0 de octubre.
-
-**La cuenta arranca del BOM real de @hardware, no de la estimación vieja.** `BOM_CERRO_MORO.md` rev A costeó **5 placas** en escenario RECOMENDADO (sondas moldeadas de 3 m + gabinetes de interior nuevos) en **$ 828.490 ≈ USD 541**. De ahí a la v8:
-
-| Ajuste a la v8 | $ |
+| Ajuste a la v9 (desde los ≈ $ 821.000 de la v8, 6 placas) | $ |
 |---|---:|
-| **+1 placa** (6 en vez de 5): 1 ESP32 más ($ 14.999), 1 fuente más ($ 10.579), 1 gabinete de interior más ($ 21.203) y su juego de consumibles, borneras, optos y prensacables | **+$ 80.000** |
-| **−1 caja Roker de intemperie**: la v8 tiene **un** módulo de exterior, no dos | **−$ 44.419** |
-| **−1 rollo de UTP Cat5e exterior**: sin tiradas entre reefers de interior alcanza **1 rollo de 50 m** para la prueba de banco (el cable del tramo de afuera lo pone el cliente) | **−$ 43.200** |
-| Sondas (18), reeds (6) y módulos de relé: **sin cambio** | 0 |
-| **TOTAL v8** | **≈ $ 821.000 ≈ USD 535** |
+| **−2 placas** (4 en vez de 6): 2 ESP32 ($ 14.999), 2 fuentes ($ 10.579), 2 gabinetes de interior ($ 21.203) y sus consumibles, borneras, optos y prensacables | **−$ 160.000** |
+| **+2.º bus 1-Wire en las 4 placas**: pull-up + alternativa, resistencia serie, clamps, bornera, prensacable y opto de la 2.ª entrada de defrost (≈ $ 12.000 por placa, estimado; los pines ya están) | **+$ 48.000** |
+| **+3 sondas** (21 en vez de 18: los dobles van completos y el repuesto también) | **+$ 31.761** |
+| **+1 reed** (7 en vez de 6) | **+$ 8.137** |
+| Rollo de UTP para la prueba de banco, módulos de relé, caja Roker (ya comprada): sin cambio | 0 |
+| **TOTAL v9 (estimado)** | **≈ $ 749.000 ≈ USD 490** |
 
-**Bajan si:** las 3 cajas IP65 de stock pasan la medición **`M9`** (**−$ 63.609**) y las 5 fuentes de stock resultan de **2 A** (**−$ 52.895**). **Las dos mediciones juntas valen USD 76 y son 10 minutos con un calibre** (`BOM_CERRO_MORO.md` §7.1).
+**Bajan si:** las 3 cajas IP65 de stock pasan la medición **`M9`** (**−$ 63.609** — ahora alcanzan justo para los 3 gabinetes de interior) y las fuentes de stock resultan de **2 A** (**−$ 52.895**). **Contra el anticipo del 50 % (USD 2.400 ≈ $ 3.672.000), la compra completa es el 20 %.** **Lo que hay que pedirle a @hardware:** rev B del BOM para 4 placas dobles con 2 buses y sin D2, y confirmar si el stock de 20 sondas y 10 reed de `PLATA.md` sirve (escenario A, rearmar) o se compran moldeadas (B, recomendado). **El margen del 32 % aguanta ± USD 40 por placa sin tocar precios.**
 
-⚠ **Corrección honesta contra las versiones anteriores:** el §3.7 de la v7.0 decía ≈ $ 375.000 de compra. **Ese número era del Kit v1 de perfboard con sondas rearmadas y sin PCB.** Con la Mini (PCB fabricada + sondas moldeadas de 3 m, que evitan 18 empalmes dentro de un reefer a −20 °C) el número real es el de arriba. **El margen igual cierra en 32 %** (§3.1) porque el ingreso también subió al haber más módulos.
+**La PCB es el renglón de mayor plazo de entrega: se pide primero, y con el 2.º bus ya decidido.** Orden de pago el día de la OC: 1. PCB a JLCPCB (10 placas: las 4 de Cerro Moro + demos de Bahía) · 2. los ESP32, todos al mismo vendedor y en la misma orden · 3. sondas y cable · 4. gabinetes de interior si `M9` no pasa · 5. el resto. **Nada antes del conteo de stock de 30 minutos.**
 
-**Contra el anticipo del 50 % (USD 2.500 ≈ $ 3.837.500), la compra completa es el 21 %.** No hay problema de plata ni de cantidades. **La caja IP65 de intemperie sigue siendo el renglón de mayor plazo de entrega: se pide primero** (y ya hay una en el sitio, que es la prueba de campo). Orden de pago el día de la OC (`BOM_CERRO_MORO.md` §8): **1.** caja Roker · **2.** PCB a JLCPCB · **3.** los ESP32, todos al mismo vendedor y en la misma orden (la separación de filas del DevKit de 38 p varía por fabricante) · **4.** sondas y cable, que bloquean la prueba de banco · **5.** el resto. **Nada antes del conteo de stock de 30 minutos.**
-
-**Por qué el hito 1 SÍ es alcanzable.** El hito 1 es *"el equipo que ya está instalado, con sus 3 sondas dentro del reefer, calibradas, rangos definidos y primera alerta real"*. **No depende de que lleguen los módulos nuevos ni del firmware doble: depende de que lleguen 2 sondas** (el equipo instalado ya tiene 1, y ahora son 3 por reefer). `REEFER_01_SCZ` está montado y reportando desde el 21-ago con **1 sola sonda, y está fuera del reefer**.
-
-**El plan arranca cuando aceptan, no antes.** Semana 0 = aceptación + anticipo del 50 %. Hasta que eso pase **no se compra, no se arma y no se despacha nada**, y a Andrés no se le pide que reserve ninguna ventana: trabaja por turnos de 15 días y no es él quien aprueba.
+**El plan arranca cuando aceptan, no antes.** Semana 0 = aceptación + anticipo del 50 %. Hasta que eso pase **no se compra, no se arma y no se despacha nada**. **Única excepción, y es de diseño, no de compra:** decidir el 2.º bus con @esquematico esta semana, porque condiciona la PCB.
 
 | Paso | Plazo desde la aceptación | Quién |
 |---|---|---|
-| Conteo del stock real + las mediciones `M1`-`M5` (huellas), `M7`, la `M9` (interior de las 3 cajas) y la etiqueta V/A de las fuentes | semana 0 | Gonza |
-| Compra del faltante — **la caja de exterior y la PCB primero** | semana 0-1 | Gonza / Matías |
+| **Decisión del 2.º bus en la Mini** (GPIO 18, sin D2) — antes de pedir la PCB | esta semana | Matías / @esquematico |
+| Conteo del stock real + mediciones `M1`-`M5`, `M7`, `M9` y etiqueta V/A de las fuentes | semana 0 | Gonza |
+| Compra del faltante — **la PCB primero** | semana 0-1 | Gonza / Matías |
 | Despacho de 2 sondas para el equipo ya instalado (encomienda, 5-8 días hábiles) | semana 1 | — |
-| **Cierre de las correcciones del firmware doble** (auditoría 4-sep, APTO CON CORRECCIONES) + 2ª puerta, 2º defrost por reefer, `SONDAS_MAX` a 8 — **bloquea sólo al módulo de afuera y al repuesto** | semana 1-2 | Matías / @firmware |
-| Alta, calibración remota, rangos y primera alerta real | semana 2 | Andrés + Matías |
+| **Cierre del firmware doble** (correcciones + 2.ª puerta, 2.º defrost por reefer, `SONDAS_MAX` a 8, un bus por reefer) — **bloquea a los tres módulos** | semana 1-3 | Matías / @firmware |
+| Alta, calibración remota, rangos y primera alerta real en `REEFER_01_SCZ` | semana 2 | Andrés + Matías |
 | **HITO 1** | **semana 2** | — |
-| Armado de los 6 módulos + **prueba de banco de los cinco con 25 m de cable** | semana 1-3 | Gonza / Sergio |
-| Despacho de los 6 bultos (5 módulos + repuesto) a Cerro Moro | semana 2-3 | — |
-| **Tendido del cable del par de afuera** (cable apto exterior) | semana 3 | **cliente** |
-| Montaje de los módulos por personal del campamento | semana 3-4 | campamento |
-| Alta y calibración de las 12 sondas nuevas (las 3 de `REEFER_01_SCZ` ya quedaron en el hito 1) | semana 4 | Matías |
-| **HITO 2** (los 5 reefers reportando + una semana sin falsas alarmas) | **semana 5** | — |
+| Armado de los 4 módulos + **prueba de banco de las 8 salidas con 25 m de cable** | semana 1-3 | Gonza / Sergio |
+| Despacho de los 4 bultos (3 módulos + repuesto) a Cerro Moro | semana 2-3 | — |
+| **Tendido de los 6 cables cortos**, de la unión de cada par a cada reefer (apto exterior en el par de afuera) | semana 3 | **cliente** |
+| Montaje de las 3 cajas sobre la unión de cada par; el reefer de `REEFER_01_SCZ` pasa a su doble con sus 3 sondas | semana 3-4 | campamento |
+| Alta y calibración de las 12 sondas nuevas | semana 4 | Matías |
+| **HITO 2** (los 3 módulos y los 5 reefers reportando + una semana sin falsas alarmas) | **semana 5** | — |
 
-**El riesgo que hay que decir en voz alta: el hito 2 sigue apretado, pero cambió de dueño.** Ya **no** depende del firmware doble para todo (los 4 simples arrancan con lo que ya anda hoy) **ni** de una obra ajena en tres pares (ahora es una sola tirada corta que Andrés dijo que resuelve él). **Lo que ahora lo aprieta es la fabricación:** @hardware dice que con la PCB Mini el despacho realista es **semana 4-5** y el hito 2 caería en la **7-8** (`BOM_CERRO_MORO.md` §7.2, §2.5 punto 7 de acá). **Matías no debería prometer el hito 2 por teléfono con más firmeza que la que dice el papel, y esto hay que resolverlo con @hardware antes de firmar.**
+**El riesgo que hay que decir en voz alta: el hito 2 tiene dos dueños otra vez.** **La fabricación** (@hardware: despacho realista semana 4-5, hito 2 en la 7-8) **y el firmware doble**, que en la v8.0 había salido del camino crítico y **acá vuelve para los tres módulos**. Lo que ya no aprieta: la obra del cliente y la red. **Matías no debería prometer el hito 2 por teléfono con más firmeza que la que dice el papel.**
 
-**Por qué se puede empezar a armar antes de la orden de compra, sin exponer un peso nuevo.** Los kits **ya estaban planificados como las unidades de demostración del plan comercial de Bahía**. Si Cerro Moro no compra, **no quedan colgados: van a su destino original**. **La contracara para el Director: si Cerro Moro compra, Bahía se queda sin demos, y ahora son 6 módulos, no 4.** Recomendación: **la reposición de los kits de Bahía se dispara en el mismo pedido que la orden de compra**, no después. *(Las 10 placas de JLCPCB por USD 43,10 ya contemplan las de sobra para eso: pedir 10 en vez de 5 cuesta USD 5,70.)*
+**Por qué se puede empezar a armar antes de la orden de compra, sin exponer un peso nuevo.** Los kits ya estaban planificados como las unidades de demostración de Bahía. Si Cerro Moro no compra, van a su destino original. **La contracara para el Director: si Cerro Moro compra, Bahía se queda sin demos — ahora son 4 módulos, no 6.** Recomendación: reposición en el mismo pedido que la OC.
 
 ### 3.8 Moneda, validez, facturación
 
-**Facturación en USD, pago en pesos al BNA vendedor de la fecha de pago, sin validez en el PDF.** Nota interna: revisar precios si pasan más de 6 meses desde el 4-sep. Antes de la cotización firme hay que saber: monotributo vs. RI, plazo de pago, si acepta la cláusula de moneda, quién firma. Se pregunta cuando la empresa tenga nombre.
+**Facturación en USD, pago en pesos al BNA vendedor de la fecha de pago, sin validez en el PDF.** Referencia impresa: **BNA vendedor billete $ 1.530 del 8-sep-2026** (bna.com.ar/Personas, cotización de las 09:50; compra $ 1.480). Nota interna: revisar precios si pasan más de 6 meses desde el 8-sep. Antes de la cotización firme: monotributo vs. RI, plazo de pago, cláusula de moneda, quién firma. Se pregunta cuando la empresa tenga nombre.
 
 ### 3.9 Contra una pérdida y contra la competencia
 
-Una pérdida de 3 t valuada al precio de novillo en pie ($ 4.181/kg, INMAG jul-2026) son $ 12,5 M: **16 meses de servicio** al abono de USD 500 (≈ $ 767.500 por mes). testo Saveris 2-T2: USD 318 por unidad y mide **un** punto; para cubrir los 15 puntos de esta propuesta harían falta 15 unidades = **USD 4.770** antes de importación — **casi el total de esta propuesta, que es 5.000** — sin nube, sin puerta, sin relé, sin defrost, sin repuesto en sitio — y se configura con una red WiFi y una clave, que es exactamente lo que este sitio no tiene. **Y ninguna de esas unidades es apta para la intemperie sin gabinete adicional.**
+Una pérdida de 3 t valuada al precio de novillo en pie ($ 4.181/kg, INMAG jul-2026) son $ 12,5 M: **16 meses de servicio** al abono de USD 500 (≈ $ 765.000 por mes). testo Saveris 2-T2: USD 318 por unidad y mide **un** punto; para cubrir los 15 puntos de esta propuesta harían falta 15 unidades = **USD 4.770** antes de importación — **prácticamente el total de esta propuesta** — sin nube, sin puerta, sin relé, sin defrost, sin repuesto en sitio, y se configura con una red WiFi y una clave, que es exactamente lo que este sitio no tiene. **Y ninguna de esas unidades es apta para la intemperie sin gabinete adicional.**
 
 ---
 
@@ -419,14 +377,12 @@ Las duraciones se cuentan **en semanas desde la aceptación**, no contra el cale
 | Hito (cliente) | Etapa interna | Desde | Hasta | Cómo se acepta |
 |---|---|---|---|---|
 | 1 — El equipo ya instalado con sus 3 sondas adentro y calibradas, rangos, primera alerta real | E0 | semana 0 | **semana 2** | Captura de la alerta en el celular + registro en nube + **planilla de calibración con el offset de las 3 sondas de `REEFER_01_SCZ`** |
-| 2 — Los 5 módulos y los 5 reefers reportando; nada se pierde, nada sobra | E1: buffer offline, alertas encoladas, alerta de sonda caída, vigía de equipo mudo, discriminador de bus + histéresis, **detección de sonda que se desvía de las otras del mismo reefer**, **segunda puerta y segundo defrost con silenciado por reefer — en el módulo de exterior y en el repuesto** | semana 2 | **semana 5** | Los 5 módulos montados con sus 15 sondas calibradas; desenchufar una sonda y que llegue la alarma; cortar la red 20 min sin perder lecturas; abrir una puerta 4 min y que avise; **forzar el defrost de uno de los dos reefers de afuera y verificar que el otro sigue alarmando**; **una semana sin falsas alarmas** |
-| 3 — Acceso seguro | E2: RLS cerrada, credencial por módulo, secretos fuera del binario, revocar claves quemadas | semana 5 | **semana 10** | Con la clave vieja no se escribe; los 5 módulos siguen reportando |
+| 2 — Los 3 módulos y los 5 reefers reportando; nada se pierde, nada sobra | E1: buffer offline, alertas encoladas, alerta de sonda caída, vigía de equipo mudo, discriminador de bus + histéresis, **detección de sonda que se desvía de las otras del mismo reefer**, **segunda puerta y segundo defrost con silenciado por reefer, un bus por reefer — en los tres módulos y en el repuesto** | semana 2 | **semana 5** | Los 3 módulos montados con sus 15 sondas calibradas; desenchufar una sonda y que llegue la alarma; cortar la red 20 min sin perder lecturas; abrir una puerta 4 min y que avise; **forzar el defrost de un reefer y verificar que el que comparte módulo sigue alarmando**; **una semana sin falsas alarmas** |
+| 3 — Acceso seguro | E2: RLS cerrada, credencial por módulo, secretos fuera del binario, revocar claves quemadas | semana 5 | **semana 10** | Con la clave vieja no se escribe; los 3 módulos siguen reportando |
 | 4 — Actualización a distancia | E3: OTA con manifiesto inmutable | semana 10 | **semana 12** | Tres actualizaciones seguidas por aire al primer intento, en todos los módulos |
-| 5 — Panel e informe | E4: usuarios de lectura, vista de los reefers, exportación con código, informe mensual automático, **comando de relé desde el panel** | semana 12 | **semana 15** | Un usuario de la empresa entra solo, baja el informe y acciona una salida desde el panel |
+| 5 — Panel e informe | E4: usuarios de lectura, vista de los reefers (dos por módulo), exportación con código, informe mensual automático, **comando de relé desde el panel** | semana 12 | **semana 15** | Un usuario de la empresa entra solo, baja el informe y acciona una salida desde el panel |
 
-**El hito 2 es el apretado** (§3.7): la semana sin falsas alarmas arranca cuando los 5 módulos reportan, alrededor de la semana 4, y vence en la 5. **Sin colchón — pero ahora el cuello es la fabricación de la PCB, no el firmware doble (los 4 simples corren lo que ya anda) ni la obra del cliente (queda una sola tirada).**
-
-Lo que hoy está roto y cada hito arregla (llave maestra en el binario, datos perdidos sin red, umbral en 50 °C, equipo muerto que no avisa, OTA que entra 1 de 4) está en `AUDITORIA_HALLAZGOS.md`; no cambió.
+**El hito 2 es el apretado**: la semana sin falsas alarmas arranca cuando los 3 módulos reportan, alrededor de la semana 4, y vence en la 5. Sin colchón — y con dos cuellos: la fabricación de la PCB y el firmware doble, que ahora necesitan los tres. Lo que hoy está roto y cada hito arregla está en `AUDITORIA_HALLAZGOS.md`; no cambió.
 
 ---
 
@@ -434,123 +390,126 @@ Lo que hoy está roto y cada hito arregla (llave maestra en el binario, datos pe
 
 ### 5.1 De la empresa, cuando tenga nombre
 
-Quién firma, cómo factura (monotributo/RI, plazo), si acepta la cláusula de moneda, **cuál de las dos formas de pago elige (A o B)**, y confirmación de que el montaje **y el tendido del cable del par de afuera** los hace personal del campamento (sin personal nuestro en sitio no corresponde ART ni legajo de contratista).
+Quién firma, cómo factura (monotributo/RI, plazo), si acepta la cláusula de moneda, **cuál de las dos formas de pago elige (A o B)**, y confirmación de que el montaje **y el tendido de los 6 cables cortos de cada reefer a su caja** los hace personal del campamento (sin personal nuestro en sitio no corresponde ART ni legajo de contratista).
 
 ### 5.2 De Andrés: lo que sigue abierto
 
 **Ninguna de estas frena el envío.**
 
-1. **⚠ LA MÁS IMPORTANTE AHORA: ¿la red del campamento llega bien a los 5 puntos donde van los módulos?** Con un módulo por reefer son 5 puntos, no 3. Si alguno queda corto se resuelve con un repetidor barato, pero **hay que saberlo antes de despachar**.
-2. **¿Los reefers tienen una señal o contacto de defrost accesible?** Si alguno no lo tiene, esa entrada queda libre y el resto funciona igual — ya está dicho así en el documento del cliente, sin letra chica. **@hardware pide además saber si es 12-24 V o contacto seco**: hay una mitigación de costo cero (dos puentes de soldadura en la placa) que hace que la misma placa sirva para las dos posibilidades, pero se define **antes de rutear**.
-3. **¿Cuál de los 4 de adentro es el que está fuera de servicio?** Ya **no** cambia el armado —cada uno lleva su módulo igual— pero sirve para nombrar bien los equipos y para no salir a calibrar sondas que no están puestas.
-4. **¿Cuántos metros hay entre los dos de afuera?** Es la **única** tirada que queda; están juntos, así que debería ser corta, pero es la única a la intemperie y conviene saber el número antes de armar.
-5. **¿Para quién trabaja Andrés?** (empleado de PAAS o de una contratista). No es técnica: decide la Parte 7.
+1. **¿Cuál de los 4 de adentro es el que está fuera de servicio?** Ahora **sí** cambia algo: define qué par tiene un solo reefer activo hoy, y por lo tanto qué módulo arranca con 3 sondas conectadas y 3 en espera.
+2. **¿Cuántos metros hay de la unión de cada par a la sonda más lejana de cada reefer?** Con la caja sobre la unión deberían ser pocos; conviene el número antes de cortar cable de prueba.
+3. **¿La red del campamento llega bien a los 3 puntos donde van las cajas?** Son 3, no 5: mejoró. Si alguno queda corto, repetidor **antes** de despachar.
+4. **¿Los reefers tienen una señal o contacto de defrost accesible?** Y **¿es 12-24 V o contacto seco?** (@hardware: dos puentes de soldadura en la placa, se define **antes de rutear**).
+5. **¿Cómo midió los 3 °C?** Pedirle el dato o la foto: sirve para fijar rangos por reefer y es evidencia del argumento de las 3 sondas.
+6. **¿Para quién trabaja Andrés?** (empleado de PAAS o de una contratista). No es técnica: decide la Parte 7.
 
 ---
 
 ## PARTE 6 — Para Andrés (aparte del PDF)
 
-### 6.1 WhatsApp — lo manda Matías
+### 6.1 WhatsApp — lo manda Matías, junto con el PDF nuevo
 
-> **⚠ Andrés ya tiene en el celular el PDF de 4 módulos y USD 4.600: se lo mandaste hoy a las 14:01.** Este mensaje lo corrige. **Va corto y de frente, sin justificarse de más.**
+> Andrés tiene en el celular un presupuesto anterior (el de 4.600 del 4-sep seguro; el de 5.000 si se mandó). Este mensaje lo reemplaza **sin citar la cifra vieja**, así cubre los dos casos.
 
 ```
-Andrés, quedó como me confirmaste: uno por reefer adentro y uno doble
-para los dos de afuera, que están juntos. Son 5 módulos, por eso sube
-respecto del PDF que te mandé recién: queda en USD 5.000. El abono es
-el mismo, USD 100 por reefer por mes = 500 por los cinco que andan.
+Andrés, ahí va el presupuesto rehecho como lo armaste vos: tres
+módulos, uno por cada par de reefers, con la caja sobre la unión de los
+dos y un solo cable de 3 hilos a cada reefer. Queda en USD 4.800: son
+menos cajas, pero cada una lleva más electrónica adentro y más
+programación para repartir por reefer, así que queda más o menos lo
+mismo, como te dije. El abono es el mismo, USD 100 por reefer por mes
+= 500 por los cinco que andan.
 
-El de afuera va en caja estanca para intemperie y atiende a los dos.
-Los cuatro de adentro llevan uno cada uno, así que entre reefers de
-adentro no hay que pasar ningún cable: queda sólo el tramo de los dos
-de afuera, que lo resolvés vos como me dijiste.
+Mantengo las 3 sondas por reefer: con los casi 3 grados que mediste
+entre la puerta y el fondo, con una sola sonda no sabés qué temperatura
+tiene la carga. Van puerta, medio y fondo por el mismo cable, y se
+calibran las tres juntas.
 
-Por cada reefer: 3 sondas adentro, sensor de puerta y la señal de
-defrost, así no suena la alarma cada vez que descongela. Los módulos los
-pruebo acá en el banco con 25 metros de cable puestos antes de
-despacharlos.
+El de afuera va en caja estanca para intemperie. Los módulos los pruebo
+acá en el banco con 25 metros de cable antes de despacharlos.
 
-El reefer que está fuera de servicio lleva su módulo igual, instalado y
-andando. El día que vuelva se le conectan las sondas nomás, sin equipo
-nuevo.
+El reefer que está parado ya queda cubierto por el módulo de su
+vecino, con sus sondas incluidas: el día que vuelva se conectan y
+listo, sin comprar nada.
 
-Te mando el presupuesto corregido, mismas dos hojas y sin nombre de
-empresa. Ignorá el anterior.
+Mismas dos hojas, sin nombre de empresa. Este reemplaza al anterior.
 ```
 
 > **Por qué está escrito así, para que no se suavice al copiarlo:**
-> **(a)** **La suba va en el primer párrafo, con el motivo pegado y en la misma oración:** *"Son 5 módulos, por eso sube."* Sin preámbulo y sin disculpa. El que sube un precio con vueltas pierde exactamente lo mismo que el que lo baja sin motivo: credibilidad.
-> **(b)** **Arranca con "quedó como me confirmaste".** Él dio el dato a las 15:23; lo primero que lee es que se hizo exactamente eso.
-> **(c)** **Que el abono NO cambia se dice en la misma frase que la suba.** Ahí se corta la conversación de *"¿y el mensual también sube?"* antes de que exista.
-> **(d)** **Se le devuelve su propia frase sobre el cable** (*"lo resolvés vos como me dijiste"*) y se remarca lo que él gana: **entre reefers de adentro no hay cable**. Es lo mejor que tiene esta configuración para el que la va a defender adentro. Lo que **no** va es la spec de cable ni la palabra riesgo (decisión de Matías).
-> **(e)** **La prueba con 25 m compra confianza técnica.** Dice, sin decirlo: sé que hay distancia y me hago cargo.
-> **(f)** **El sexto reefer aparece como previsión, no como recorte** — y ahora es más fuerte: *"lleva su módulo igual, instalado y andando"*.
-> **(g)** **"Ignorá el anterior", explícito.** Un PDF viejo de USD 4.600 dando vueltas en un grupo de WhatsApp de la empresa es el peor escenario posible.
-> **(h)** **No le pide nada.** Andrés trabaja por turnos de 15 días y **no es él quien aprueba**.
-> **(i)** **No menciona el material de la caja ni cómo se fabrica.** Ni acá ni en el PDF.
-> **(j)** **No se manda hasta que el PDF corregido esté listo.** Los dos juntos, o el mensaje pierde la mitad.
+> **(a)** **Arranca con "rehecho como lo armaste vos".** La configuración es de él; lo primero que lee es que se hizo exactamente eso, con sus dos frases (caja sobre la unión, un cable por reefer).
+> **(b)** **El número va una sola vez, con el motivo pegado en la misma oración**, y es el mismo motivo que Matías ya le dijo por chat; cierra con "como te dije": coherencia entre lo hablado y lo escrito.
+> **(c)** **No cita la cifra vieja.** No sabemos con certeza si tiene el de 4.600 o el de 5.000. "Este reemplaza al anterior" sirve para los dos.
+> **(d)** **Que el abono NO cambia se dice en la misma frase que el total.** Y con menos cajas y el mismo abono, la regla "por reefer vigilado, no por caja" queda demostrada por segunda vez.
+> **(e)** **Las 3 sondas se defienden con SU dato** (casi 3 °C puerta-fondo). No se discute con teoría: se le devuelve su medición y se le dice qué haría una sola sonda con ese gradiente.
+> **(f)** **"Por el mismo cable"** anticipa la objeción de los 9 hilos.
+> **(g)** **La prueba con 25 m compra confianza técnica**, y 25 m es más que cualquier tirada de esta configuración.
+> **(h)** **El sexto reefer aparece como previsión, y ahora gratis.** Es lo que él gana adentro para defender la compra.
+> **(i)** **No le pide nada. No menciona material de caja ni riesgo.**
+> **(j)** **No se manda hasta que el PDF esté al lado.** Los dos juntos, o el mensaje pierde la mitad.
 
 ### 6.2 Guion de 5 líneas para que la presente él
 
 1. **Arrancá por el problema, no por el producto:** "un reefer que se corta un fin de semana es la comida de todo el campamento, y hoy nadie se entera hasta que abren la puerta."
-2. **Mostrá lo que ya anda:** abrí el panel en el celular y mostrá la temperatura de ahora del equipo instalado — sigue reportando mientras la propuesta se evalúa. Si podés, sacá una sonda al aire un minuto y que vean subir la curva. Eso convence más que el PDF.
-3. **Decilo en una frase:** "los cuatro de adentro llevan un equipo cada uno, y los dos de afuera comparten uno estanco porque están pegados. Tres sondas adentro de cada reefer, te avisa al celular si se sale de rango o si queda la puerta abierta, y arma el registro mensual solo."
-4. **Si preguntan por el cable:** "adentro no hay que pasar cable de un contenedor a otro: cada reefer tiene su equipo al lado. Queda una sola tirada corta, la de los dos de afuera, y esa la resolvemos nosotros."
+2. **Mostrá lo que ya anda:** abrí el panel en el celular y mostrá la temperatura de ahora del equipo instalado — sigue reportando mientras la propuesta se evalúa. Si podés, sacá una sonda al aire un minuto y que vean subir la curva.
+3. **Decilo en una frase:** "tres equipos, uno por cada par de reefers, con la caja sobre la unión. Tres sondas adentro de cada reefer —medí casi 3 grados entre la puerta y el fondo—, te avisa al celular si se sale de rango o si queda la puerta abierta, y arma el registro mensual solo."
+4. **Si preguntan por el cable:** "un solo cable de tres hilos de la caja a cada reefer, corto, porque la caja va entre los dos. No hay que cruzar nada de un contenedor a otro."
 5. **Lo que NO prometés:** que garantiza la mercadería (avisa, no garantiza) · que avisa el corte de luz (avisa que el equipo dejó de reportar) · que la sirena está incluida (van las salidas, la sirena se conecta) · que está terminado (hay una puesta en marcha por hitos, y está en el precio) · fechas o precios distintos a los del PDF. Cualquier pregunta técnica o de números: "eso lo contesta Matías, lo llamamos ahora."
 
 ---
 
 ## PARTE 7 — La relación con Andrés (para que Matías decida)
 
-**Lo que cambió:** en la v1 Andrés era el contacto en sitio de un cliente (Panamerican) y la regla era simple: **ningún pago ni beneficio ligado a que su empleador compre.** Ahora es él quien **ofrece y presenta** la propuesta a una tercera empresa que él elige. Está haciendo de referidor, de hecho.
+**Lo que cambió:** en la v1 Andrés era el contacto en sitio de un cliente y la regla era simple: **ningún pago ni beneficio ligado a que su empleador compre.** Ahora es él quien **ofrece y presenta** la propuesta a una tercera empresa que él elige, **y quien armó la configuración final** con la caja en la mano. Está haciendo de referidor —y de co-diseñador— de hecho.
 
-**Lo que sigue vigente, sin discusión:** si el comprador termina siendo Pan American Silver, o una contratista que opera bajo su Código de Conducta de Proveedores (que alcanza a proveedores **y a sus subcontratistas**), **no hay comisión ni reconocimiento material.** Y hay que ser honesto con la probabilidad: **cualquier empresa que opere dentro del campamento de Cerro Moro está, casi seguro, bajo ese código.**
+**Lo que sigue vigente, sin discusión:** si el comprador termina siendo Pan American Silver, o una contratista que opera bajo su Código de Conducta de Proveedores (que alcanza a proveedores **y a sus subcontratistas**), **no hay comisión ni reconocimiento material.** Cualquier empresa que opere dentro del campamento está, casi seguro, bajo ese código.
 
-**El conflicto de interés, escrito:** Andrés trabaja adentro (no sabemos todavía si es empleado de PAAS o de una contratista — **hay que preguntarlo**), elige a quién ofrecerle el sistema y lo presenta con la credibilidad de su puesto. Si cobra por eso, pasa de "el que trajo un proveedor bueno" a "el que le vendió algo a la empresa de al lado y se llevó una parte". **El costo de un reconocimiento mal puesto sigue siendo mayor que el negocio.**
+**El conflicto de interés, escrito:** Andrés trabaja adentro (no sabemos si es empleado de PAAS o de una contratista — **hay que preguntarlo**), elige a quién ofrecerle el sistema y lo presenta con la credibilidad de su puesto. Si cobra por eso, pasa de "el que trajo un proveedor bueno" a "el que le vendió algo a la empresa de al lado y se llevó una parte". **El costo de un reconocimiento mal puesto sigue siendo mayor que el negocio.**
 
 | Opción | Qué es | A favor | En contra |
 |---|---|---|---|
-| **1. Nada material, todo el reconocimiento no monetario** (status quo) | Agradecer por escrito, darle el acceso y la hoja de una carilla para que quede bien adentro, nombrarlo como contacto en sitio, contarle el caso como logro suyo | Cero riesgo. Es lo que él pidió (*"la gente de acá no lo vio"*): quedar bien, no cobrar | Si el negocio crece por él y no recibe nada, el empuje puede enfriarse |
+| **1. Nada material, todo el reconocimiento no monetario** (status quo) | Agradecer por escrito, darle el acceso y la hoja de una carilla, nombrarlo como contacto en sitio, contarle el caso como logro suyo — **y la configuración como idea suya, porque lo es** | Cero riesgo. Es lo que él pidió (*"la gente de acá no lo vio"*): quedar bien, no cobrar | Si el negocio crece por él y no recibe nada, el empuje puede enfriarse |
 | **2. Referidor formal solo para leads AJENOS al campamento** (Bahía, Venado Tuerto, futuros) | Reconocimiento único equivalente a 1 mes de abono del cliente referido, pagado después del 3er abono cobrado; **excluye** a PAAS, sus contratistas y cualquier empresa de Cerro Moro; condicionado a que su empleador lo permita | Es honesto, separa los mundos, y **ya tiene un caso real: Venado Tuerto lo trajo él** | Hay que escribirlo y preguntarle si su empleador tiene política de actividades externas |
 | **3. Reconocimiento en especie, fuera del negocio** | Un equipo Termovigía para uso propio, o capacitación, sin vínculo con ninguna compra | Barato, tangible | Si se da mientras Cerro Moro está en discusión, se lee igual que una comisión |
 
-**Mi recomendación honesta:** 1 ahora, 2 por escrito cuando Venado Tuerto avance, y **preguntarle a Andrés para quién trabaja y si su empresa tiene política de actividades externas** antes de ofrecerle cualquier cosa. La 3, nunca durante la negociación de Cerro Moro. **No decido: decide Matías.**
+**Mi recomendación honesta:** 1 ahora, 2 por escrito cuando Venado Tuerto avance, y **preguntarle a Andrés para quién trabaja** antes de ofrecerle cualquier cosa. La 3, nunca durante la negociación de Cerro Moro. **No decido: decide Matías.**
 
-**Lo bueno de esta vuelta:** a Andrés le llega **exactamente el sistema que él describió**, armado sobre datos que dio él (los metros, el caño, la intemperie, que los de afuera están juntos, que adentro va uno por reefer y que el cable lo saca de ahí). **Lo incómodo:** el precio sube una hora después de haberle mandado un PDF. **Eso se compensa con velocidad y con el motivo dicho de frente** — y con lo que él gana adentro para defenderlo: un equipo por reefer, independientes entre sí, y sin obra de cableado entre contenedores.
+**Lo bueno de esta vuelta:** a Andrés le llega **exactamente el sistema que él armó**, con sus tres frases adentro y su medición de los 3 °C como argumento. **Lo que hay que cuidar:** es el tercer presupuesto en cuatro días. Se compensa con que esta vez el número **baja** y con que la razón es suya. **Cuarta vuelta no hay: la próxima conversación es de aceptación, no de configuración.**
 
 ---
 
 ## Anexo — Fuentes consultadas
 
-- **Configuración definitiva: chat con Andrés, 4-sep 15:23** (*"¿los de afuera uno, y los otros uno cada uno sería?"* → **"Así sería"**; *"No es mucho lo de los cables. Los saco de acá."*).
-- Alcance del bus, pull-ups, tierras entre contenedores, estrella no conmutada y límite prudente de 15 m: `C:\Proyectos\frioseguro\hardware\ALCANCE_1WIRE.md` (@muestreador), §2.6.
-- **Costos reales, gabinetes, PCB, plazos y margen:** `C:\Proyectos\frioseguro\hardware\mini\BOM_CERRO_MORO.md` rev A (@hardware, 4-sep-2026) — §1 configuración de placas, §3 gabinetes (Roker PRG357 $ 44.419 / Genrod $ 21.203), §4 lista de compras, §4.5 la sirena a USD 40 no deja margen, §6 margen, §7 mediciones y plazos, §8 orden de pago.
+- **Configuración v9:** WhatsApp de Andrés, 8-sep (*"con tres módulos solucionamos lo de Cerro Moro, un módulo para dos reefer; al estar juntos de a dos es fácil hacer la conexión; pongo la caja sobre la unión de los dos y saco las sondas"*; *"casi 3 °C entre la puerta y el fondo"*) y respuesta de Matías (*"3 es mucho mejor para calibración"*; *"rehago el presupuesto, queda más o menos lo mismo, porque le tengo que meter un poco más de electrónica adentro de la caja y programación"*).
+- **Un solo bus en la Mini y pines reservados para el 2.º:** `C:\Proyectos\frioseguro\hardware\mini\PINOUT_MINI.md` (GPIO 4 bus DS18B20 hasta 6 sondas; 18 y 23 "quedan para un 2.º bus 1-Wire si hace falta").
+- Alcance del bus, pull-ups, tierras entre contenedores y límite prudente de 15 m: `C:\Proyectos\frioseguro\hardware\ALCANCE_1WIRE.md` (@muestreador), §2.6.
+- **Costos reales, gabinetes, PCB, plazos y margen:** `C:\Proyectos\frioseguro\hardware\mini\BOM_CERRO_MORO.md` rev A (@hardware, 4-sep-2026) — §5.1 D2 rompe el bus a 25 m.
 - **BOM de la placa:** `C:\Proyectos\frioseguro\hardware\mini\BOM_MINI.md` rev A (@esquematico, 4-sep-2026).
-- **Firmware de módulo doble — el que ahora hace falta sólo en el módulo de exterior y en el repuesto:** `C:\Proyectos\frioseguro-v31\firmware_modular\VERIFICACION_V3.1_2026-09-04.md`, veredicto **APTO CON CORRECCIONES**, correcciones en curso.
+- **Firmware de módulo doble:** `C:\Proyectos\frioseguro-v31\firmware_modular\VERIFICACION_V3.1_2026-09-04.md`, APTO CON CORRECCIONES, correcciones en curso.
 - Estado real y auditoría: `C:\Proyectos\frioseguro\entrega_scz\docs\ESTADO_HONESTO.md` · `AUDITORIA_HALLAZGOS.md`.
-- **Qué hace hoy el firmware con sondas, puerta, relé y defrost (leído el 3-sep-2026):** `firmware_revival/sondas.h` (línea 31, `SONDAS_MAX`) · `config.h` 67-150 · `firmware_revival.ino` 369-375, 483-488, 804-944 · `comandos_nube.h` (**sin** comando de relé).
+- Qué hace hoy el firmware (leído el 3-sep-2026): `firmware_revival/sondas.h` línea 31 · `config.h` 67-150 · `firmware_revival.ino` 369-375, 483-488, 804-944 · `comandos_nube.h` (sin comando de relé).
 - Contrato base: `MATI-HQ\comercial\CONTRATO_TERMOVIGIA_v4.md`.
-- Precios de canalización (§3.3, archivo), 1-Wire AN148, testo Saveris 2-T2, novillo INMAG, dólar BNA vendedor 1.535, Supabase Pro y Código de Conducta de Proveedores de PAAS: enlaces conservados en la v5.2 de este archivo (historial de git).
+- **Dólar BNA vendedor billete $ 1.530, 8-sep-2026 09:50** (bna.com.ar/Personas; compra $ 1.480). Precios de canalización, 1-Wire AN148, testo Saveris 2-T2, novillo INMAG, Supabase Pro y Código de Conducta de Proveedores de PAAS: enlaces conservados en la v5.2 de este archivo (historial de git).
+- **Generadores y verificación:** `comercial/panamerican/armar_cliente_v7.py` · `armar_interno_v7.py` · `render_v7.py` (guarda: SIN FUGAS, 2 páginas, márgenes OK) · verificación independiente del texto del PDF contra `calcular()` (8-sep): TODO OK.
 
 ## Anexo — Lo que quedó abierto (para Matías, antes de mandar)
 
-1. **Los números, con MARGEN PAREJO del ~32 % en los tres ítems** (liberaste el 850, así que lo recalculé desde el costo): **simple de interior 600 × 4 = 2.400** · **doble de exterior 700 × 1** · **repuesto 350** · puesta en marcha **1.550** (62 h) · **inicial USD 5.000** (era 4.600 en la v6.1, **+400, +8,7 %**) · abono **500/mes, sin tocar** · B = **10.400** · anticipo 50 % = **2.500**. **El total NO se movió respecto de la versión con el doble a 850: cambió el reparto, no la torta** — así que @diseno maqueta el mismo total y el WhatsApp no cambia de cifra. **¿Van?**
-2. **⚠ EL PUNTO MÁS INCÓMODO Y HAY QUE MIRARLO: Andrés ya tiene el PDF de 4.600 desde las 14:01 de hoy.** El WhatsApp de §6.1 pone la suba en el primer párrafo con el motivo pegado y cierra con *"ignorá el anterior"*. **No mandes el mensaje sin el PDF corregido al lado**: un PDF viejo circulando adentro de la empresa es peor que llegar dos horas más tarde.
-3. **Ya no hay un ítem con margen raro: 31,7 % el simple, 32,4 % el doble, 33,7 % el repuesto.** Eso significa que **ahora sí podés abrir el desglose de cualquiera de los tres** si te lo piden, cosa que con el 850 (44 % contra 25 %) no convenía. **El argumento del doble, si preguntan por qué 700 y no 1.200:** comparte el ESP32, la fuente, la placa, el gabinete, el alta remota y el punto de red — se duplica lo que va **adentro del reefer** (sondas y reed), no lo que va **adentro de la caja**. **El cliente se ahorra USD 500 por tener esos dos contenedores pegados** (tabla completa en §3.1).
-4. **✅ Se desactivó el riesgo más grande de la v7.0:** los 4 simples corren el firmware que **ya anda hoy** (3 sondas ≤ `SONDAS_MAX` 4, 1 puerta, 1 defrost). **El firmware doble ahora bloquea sólo al módulo de afuera y al repuesto**: si se atrasa, arrancan igual **4 de los 6 reefers**. **Avisale al Director que el firmware doble salió del camino crítico de esta venta.** @firmware igual tiene que confirmar que las 10 h de §3.2 alcanzan; si son más, **salen del margen, no del precio**.
-5. **⚠ El riesgo que SUBIÓ: 5 puntos de red** (eran 3). Es lo primero que hay que preguntarle a Andrés (§5.2 punto 1) y hay que saberlo **antes de despachar**. Repetidor si hace falta.
-6. **⚠ El cuello ahora es la FABRICACIÓN, no el firmware ni la obra del cliente.** @hardware dice que con la PCB Mini el despacho es **semana 4-5, no 2**, y el hito 2 caería en la **7-8** (`BOM_CERRO_MORO.md` §7.2). **En el papel dejé los hitos como estaban. O se corren en el PDF, o se pide la PCB ya (USD 43, sirve igual para las demos de Bahía si Cerro Moro no compra). Decisión tuya, antes de firmar.**
-7. **El cable: una sola tirada, la de afuera, y la resuelve Andrés** (*"no es mucho lo de los cables, los saco de acá"*). En el documento del cliente **no va nada más que la nota al pie** *"No incluye cable ni tendido entre reefers"*, tal cual (tu decisión). **Interno:** ese tramo tiene que ser par trenzado **apto exterior**, sin empalmes, canalizado. Si Andrés pregunta qué comprar, se le dice. **Confirmar con @esquematico que la posición alternativa del 1k queda en la placa.**
-8. **El sexto reefer entra a USD 260 + USD 100/mes**, y ahora es más fuerte de vender: **su módulo ya está instalado y de alta**, no depende de un canal libre en la caja de un vecino. Está escrito en el documento del cliente. **¿Va así?**
-9. **Compra de materiales: ≈ $ 821.000 ≈ USD 535** (§3.7), del BOM real de @hardware. **Es más que los $ 375.000 que decía la v7.0 — ese número era del perfboard, no de la Mini** (PCB fabricada + sondas moldeadas). **El margen igual cierra en 32 %.** Reservados 3 ESP32 para las galgas de Dreyfus (P0 de octubre).
-10. **`M9` vale $ 63.609 y la etiqueta V/A de las fuentes $ 52.895:** 10 minutos con un calibre, antes del pedido. **Es la actividad de mayor rendimiento por minuto de todo el proyecto.** @hardware además tiene que contar stock y hacer `M1`-`M5` y `M7` antes de rutear.
-11. **DECISIÓN DE PORTFOLIO, no comercial:** si Cerro Moro compra, Bahía se queda sin demos, y ahora son **6 módulos**. Recomendación: reposición en el mismo pedido que la OC. Las 10 placas de JLCPCB ya cubren las de sobra. **Decide el Director.**
-12. **Preguntarle a Andrés:** los 5 puntos de red (§5.2.1), cuál de los 4 de adentro está fuera de servicio, cuántos metros hay entre los dos de afuera, y si el defrost es 12-24 V o contacto seco.
-13. **Verificación cruzada entre sondas: hoy NO existe.** Vendida en el hito 2. Si no se puede cumplir, sacar el punto 3 del bloque "por qué 3 sondas".
-14. **Accionamiento del relé desde el panel: tampoco existe.** Hito 5.
-15. **El sensor de puerta viene deshabilitado por defecto** (`SENSOR_DOOR_ENABLED false`): que quede en la orden de armado habilitarlo y probar la puerta y el defrost de **cada canal de los 5 módulos**.
-16. **La sirena a USD 40 no deja margen** (@hardware, `BOM_CERRO_MORO.md` §4.5): la BR300 sale USD 26 más su propia fuente de 12 V porque el relé es contacto seco. **Propongo USD 70 instalada, o baliza LED de 12 V. Decidís vos.**
-17. **La caja de exterior que ya está en el sitio es la prueba de campo** (§2.5 punto 6) y de ella dependen **2 reefers**: pedirle a Andrés una foto después del primer temporal.
-18. **Andrés:** opción 1, 2 o 3 de la Parte 7, y preguntarle para quién trabaja.
-19. **PDF:** @diseno maqueta **un solo** documento de 2 páginas A4, marca Termovigía, sin logo ajeno, sin "Para:", sin validez. **Sin mencionar material de gabinete ni impresión 3D.** Archivo `PRESUPUESTO_CERRO_MORO.pdf` (+ `PRESUPUESTO_CERRO_MORO_INTERNO.pdf`). **Es lo que bloquea el WhatsApp de §6.1.**
-20. Monotributo vs. RI: se pregunta cuando la empresa tenga nombre.
+1. **Los números, con el mismo margen parejo (~32 %) de la v8.0:** doble de interior **900 × 2** · doble de exterior **950** · repuesto **400** · puesta en marcha **1.650** (66 h) · **inicial USD 4.800** (v8.0: 5.000; −4 %) · abono **500/mes, sin tocar** · B = **10.200** · anticipo 50 % = **2.400**. Alternativa para sostener 5.000 en §3.1 (36 %, desparejo). **¿Van?**
+2. **Mandar el WhatsApp de §6.1 junto con el PDF.** Dice "reemplaza al anterior" sin cifra vieja: sirve tanto si Andrés tiene el de 4.600 como el de 5.000.
+3. **⚠ Decisión de placa, esta semana: poblar el 2.º bus 1-Wire de la Mini** (GPIO 18, pines reservados) para tener un bus por reefer, sin D2. Es la "más electrónica" que se le dijo a Andrés y condiciona la PCB. **Después de JLCPCB ya no se cambia.** (Matías / @esquematico)
+4. **⚠ El firmware doble VOLVIÓ al camino crítico: lo necesitan los tres módulos.** @firmware da fecha de cierre y confirma que las 18 h de §3.2 alcanzan; si son más, salen del margen. Plan B parcial: cada doble arranca con un reefer. **Avisar al Director.**
+5. **Preguntarle a Andrés** lo de §5.2: cuál de los 4 está fuera de servicio, metros de la unión a cada reefer, defrost 12-24 V o seco, red en los 3 puntos, cómo midió los 3 °C.
+6. **⚠ El cuello de fabricación sigue:** PCB Mini, despacho semana 4-5, hito 2 en la 7-8. O se corren los hitos en el PDF, o se pide la PCB ya (USD 43, con el 2.º bus decidido). **Decisión tuya, antes de firmar.**
+7. **Qué pasa con `REEFER_01_SCZ` en el hito 2:** su reefer pasa al doble de su par, sus 3 sondas calibradas se reaprovechan; el kit viejo queda como segundo respaldo o vuelve a Bahía como demo.
+8. **El sexto reefer entra sin costo de equipo** y sube el abono a 600. Está escrito así en el documento del cliente. **¿Va así?**
+9. **Compra de materiales ≈ $ 749.000 ≈ USD 490, estimado** sobre el BOM rev A. **@hardware recuesta las 4 placas dobles con 2 buses (rev B)** y confirma si el stock de 20 sondas y 10 reed sirve.
+10. **`M9`** ($ 63.609 — las 3 cajas de stock cubren justo los 3 gabinetes de interior) y **etiqueta V/A** de las fuentes ($ 52.895): 10 minutos con un calibre, antes del pedido. (@hardware)
+11. **Decisión de portfolio:** si Cerro Moro compra, Bahía se queda sin demos — ahora son 4 módulos. Reposición en el mismo pedido que la OC. (Director)
+12. **Verificación cruzada entre sondas: hoy NO existe.** Hito 2. Con 3 °C reales entre puerta y fondo, tiene que comparar cada sonda contra su propia historia, no contra el promedio. Si no se puede cumplir, sacar el punto 3 del bloque "por qué 3 sondas".
+13. **Accionamiento del relé desde el panel: tampoco existe.** Hito 5.
+14. **`SENSOR_DOOR_ENABLED`** viene deshabilitado: habilitar y probar puerta y defrost de **los dos canales de los 4 módulos**.
+15. **Sirena:** a USD 40 no deja margen. Propongo USD 70 instalada, o baliza LED de 12 V.
+16. **Foto de la caja de exterior** después del primer temporal (de ella dependen 2 reefers).
+17. **Andrés:** opción 1, 2 o 3 de la Parte 7, y preguntarle para quién trabaja. Reconocerle la configuración como suya: lo es.
+18. **PDF: hecho y verificado** — 2 páginas A4, sin logo ajeno, sin "Para:", sin validez, sin material de gabinete, **sin "cinco", sin "5 módulos", sin USD 260 ni ninguna cuenta vieja**, texto cruzado contra `calcular()`.
+19. Monotributo vs. RI: se pregunta cuando la empresa tenga nombre.
+20. **Cuarta vuelta no hay.** Tres presupuestos en cuatro días es el límite: si aparece otro cambio de configuración, se contesta por teléfono y se ajusta después de la aceptación, no antes.
