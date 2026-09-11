@@ -523,3 +523,52 @@ mergee. [@bibliotecario]
 reconstruye suponiendo `fs`, así que el jitter del muestreo sigue invisible. Meterle un
 contador de microsegundos a la cabecera cambia el formato de trama (contrato con
 `rx_gimap.py`, el test de protocolo y el firmware): es decisión, no fix de noche.
+
+---
+
+## 2026-09-11 — El piezo que se calibra mudo (datalogger / nodo GIMAP)
+
+Branch `nocturno/local-2026-09-11-el-piezo-que-se-calibra-mudo` (`a8bf1ab`,
+sale del 09-09). Informe: `diario/nocturno-local-2026-09-11.md`. Detalle:
+`docs/piezo-que-se-calibra-mudo.md` en el repo.
+
+**Regla que queda escrita:** *una cadena analógica se declara viva por el
+temblor, no por la amplitud.* Un canal en reposo tiene amplitud chica y está
+sano; un canal muerto tiene amplitud cero y también "parece" sano. Lo único que
+los separa es que **el vivo no repite dos lecturas bit a bit idénticas** — el
+ruido del propio ADC mueve el último código. En el RP2350 (12 bits, escalado a
+16 por `read_u16()`) **1 LSB son 16 cuentas**, así que el temblor es grande y
+fácil de ver. El umbral va en **segundos**, no en muestras, para que siga solo a
+la `fs`.
+
+**El hallazgo de fondo, que no era obvio y vale para todo el portfolio:** *una
+calibración tomada al arranque puede blanquear la falla que debía detectar.*
+`Piezos.cero()` promedia 200 lecturas y adopta el resultado como reposo; si el
+front-end está muerto, promedia 200 veces el mismo número muerto y lo adopta.
+Después `max(0, crudo - base)` da exactamente cero. **El canal muerto se calibra
+a sí mismo para ser indistinguible de uno en reposo**, y aguas abajo no queda ni
+un rastro. Barato de arreglar: la rutina de cero devuelve también la
+**dispersión** de lo que promedió; dispersión 0 = ya estaba muerto, y se sabe
+desde la primera muestra.
+
+**Corolario que ordena el resto:** el `recorte %` (cuántas muestras deja en cero
+el `max(0, ...)`) **no sirve solo como detector**. En reposo sano ronda el 50 %
+—el ruido cruza la base para los dos lados— y con un canal pegado a 0 y base 0
+da 0 %, que se lee como perfecto. Sirve para lo otro: pegado al 100 % dice que
+la base quedó alta y el canal está sordo, que llega por dos caminos reales (el
+banco vibrando al arrancar, o la caída del rectificador derivando con la
+temperatura, ~−2 mV/°C).
+
+**Lo que NO se hizo y es doctrina:** no se re-ancla la línea de base. El nodo
+vive en un banco de vibraciones, donde la señal es continua **por diseño**: un
+seguidor lento se comería lo que se vino a medir, en silencio. Re-cerar es
+decisión del que opera el ensayo (reiniciar), no del firmware. Ojo que **esto no
+se traslada tal cual a galgas**, donde el re-cero periódico sí está sobre la
+mesa por la deriva de +75,5 mV en 4 h 44: allá la señal a detectar es un evento,
+no un régimen.
+
+**Sigue abierto y es mío:** `iguales_max` con los dos canales sanos y la mesa
+quieta, y el `recorte %` real en reposo. **Son los dos únicos números de todo
+esto que no se pueden estimar desde la PC**: salen de mirar el JSON de estado
+después de una corrida real. Si `iguales_max` diera cerca de 2000, el umbral
+está mal y el nodo se declara muerto a sí mismo.
